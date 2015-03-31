@@ -69,11 +69,11 @@ The aspect for LeaderElection program can be found here,
 src/edu/uchicago/cs/ucare/example/election/LeaderElectionAspect.aj 
 
 When a LeaderElection node send a packet to other nodes, the aspect intercepts
-it and informs to model checker server. High level LeaderElection logic thinks that it
-have done send the packet, but actually, the aspect keeps the packet with itself. If
-model checker server decides to make that packet to be really sent, it calls
-callback to the sender node, the aspect, and it really sends the packet this
-time. When the receiver node gets the packet, it acknowledges back to model
-checker. Every communication between LeaderElection program and model checker
-server is done by RMI
+it and informs to model checker server. High level LeaderElection logic thinks
+that it have done send the packet, but actually, the aspect keeps the packet
+with itself. If model checker server decides to make that packet to be really
+sent, it calls callback to the sender node, the aspect, and it really sends the
+packet this time. When the receiver node gets the packet, it acknowledges back
+to model checker. Every communication between LeaderElection program and model
+checker server is done by RMI
 
