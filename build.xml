@@ -24,12 +24,9 @@
     <property name="build.classes" value="${build.dir}"/>
 
 	  <property name="ajlib" value="${env.ASPECTJ_LIB}"/>
+
 	  <path id="aspectj.java.classpath">
 	      <pathelement location="${build.classes}"/>
-	      <!--fileset dir="${additional.lib.dir}">
-	        <include name="${additional.lib.dir.includes}" />
-	        <exclude name="${additional.lib.dir.excludes}" />
-	      </fileset-->
 	      <fileset dir="${lib.dir}">
 	        <include name="${lib.dir.includes}" />
 	        <exclude name="${lib.dir.excludes}" />
@@ -38,6 +35,14 @@
 	        <include name="ant.jar" />
 	      </fileset>
 	      <pathelement path="${ajlib}/aspectjrt.jar" />
+	  </path>
+
+	  <path id="java.classpath">
+	      <pathelement location="${build.classes}"/>
+	      <fileset dir="${lib.dir}">
+	        <include name="${lib.dir.includes}" />
+	        <exclude name="${lib.dir.excludes}" />
+	      </fileset>
 	  </path>
 
     <target name="compile-aspectj" >
@@ -62,5 +67,38 @@
             </manifest>
         </jar>
     </target>
+
+    <property name="build.dir.eclipse" value=".eclipse"/>
+    <property name="build.dir.eclipse-main-classes" value="${build.dir.eclipse}/classes-main"/>
+
+    <target name="eclipse"
+            description="Create eclipse project files">
+      <taskdef name="eclipse"
+               classname="prantl.ant.eclipse.EclipseTask"
+               classpath="antlib/ant-eclipse-1.0-jvm1.2.jar" />
+      <eclipse updatealways="true">
+        <settings>
+          <jdtcore compilercompliance="6.0" />
+          <resources encoding="UTF-8" />
+        </settings>
+        <project name="${ant.project.name}" />
+        <classpath>
+          <source path="${java.src.dir}"
+                  output="${build.dir.eclipse-main-classes}" />
+
+          <output path="${build.dir.eclipse-main-classes}" />
+          <library pathref="java.classpath" exported="true" />
+        </classpath>
+      </eclipse>
+    </target>
+
+    <target name="clean-eclipse" description="Clean eclipse files">
+      <delete file=".classpath" />
+      <delete file=".eclipse" />
+      <delete file=".project" />
+      <delete dir=".settings" />
+      <delete dir="${build.dir.eclipse}" />
+    </target>
+
 
 </project>

@@ -1,6 +1,7 @@
 .classpath
 .project
 .settings
+.eclipse
 bin
 *.log
 leaderelection-*.jar
