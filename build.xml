@@ -23,7 +23,7 @@
     <property name="build.dir" value="${basedir}/bin" />
     <property name="build.classes" value="${build.dir}"/>
 
-	  <property name="ajlib" value="/usr/local/aspectj1.8/lib"/>
+	  <property name="ajlib" value="${env.ASPECTJ_LIB}"/>
 	  <path id="aspectj.java.classpath">
 	      <pathelement location="${build.classes}"/>
 	      <!--fileset dir="${additional.lib.dir}">
