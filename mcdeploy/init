@@ -38,5 +38,5 @@ cp $scriptdir/resource/runnode $working_dir/
 cp $scriptdir/resource/mc_log.properties $working_dir/
 sed "s:WORKING_DIR:$working_dir:" $scriptdir/resource/testrunner.sh > $working_dir/testrunner.sh
 chmod 755 $working_dir/testrunner.sh
-cp $scriptdir/resource/hangcheck.sh $working_dir/
+cp $scriptdir/resource/monitorcheck.sh $working_dir/
 
