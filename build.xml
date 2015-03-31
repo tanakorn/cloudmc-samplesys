@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+
+<project name="LeaderElection" default="jar">
+
+    <property name="Name" value="LeaderElection" />
+    <property name="name" value="leaderelection" />
+
+    <property environment="env"/>
+    
+    <property name="version" value="0.0.1" />
+    <property name="final.name" value="${name}-${version}"/>
+    
+    <property name="javac.target" value="1.6" />
+    <property name="javac.source" value="1.6" />
+
+    <property name="src.dir" value="${basedir}/src" />
+    <property name="java.src.dir" value="${src.dir}" />
+
+    <property name="lib.dir" value="${basedir}/lib" />
+    <property name="lib.dir.includes" value="**/*.jar" />
+    <property name="lib.dir.excludes" value="**/excluded/" />
+
+    <property name="build.dir" value="${basedir}/bin" />
+    <property name="build.classes" value="${build.dir}"/>
+
+	  <property name="ajlib" value="/usr/local/aspectj1.8/lib"/>
+	  <path id="aspectj.java.classpath">
+	      <pathelement location="${build.classes}"/>
+	      <!--fileset dir="${additional.lib.dir}">
+	        <include name="${additional.lib.dir.includes}" />
+	        <exclude name="${additional.lib.dir.excludes}" />
+	      </fileset-->
+	      <fileset dir="${lib.dir}">
+	        <include name="${lib.dir.includes}" />
+	        <exclude name="${lib.dir.excludes}" />
+	      </fileset>
+	      <fileset dir="${ant.home}/lib">
+	        <include name="ant.jar" />
+	      </fileset>
+	      <pathelement path="${ajlib}/aspectjrt.jar" />
+	  </path>
+
+    <target name="compile-aspectj" >
+        <taskdef classpath="${ajlib}/aspectjtools.jar"
+        	resource="org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties"/>
+        <iajc srcdir="${java.src.dir}" destdir="${build.classes}" 
+               target="${javac.target}" source="${javac.source}" 
+               classpathref="aspectj.java.classpath" />
+    </target>
+
+    <target name="jar" depends="compile-aspectj">
+        <exec executable="hostname" outputproperty="host.name"/>
+        <jar jarfile="${basedir}/${final.name}.jar">
+            <fileset dir="${build.classes}" excludes="**/.generated"/>
+            <fileset dir="${java.src.dir}"/>
+            <manifest>
+                <attribute name="Main-Class" value="edu.uchicago.cs.ucare.example.election.LeaderElectionMain" />
+                <attribute name="Built-By" value="${user.name}"/>
+                <attribute name="Built-At" value="${build.time}"/>
+                <attribute name="Built-On" value="${host.name}" />
+                <attribute name="Implementation-Title" value="edu.uchicago.cs.ucare.example.election"/>
+            </manifest>
+        </jar>
+    </target>
+
+</project>
