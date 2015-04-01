@@ -43,15 +43,15 @@ public class LeaderElectionMain {
 		return name;
 	}
 	
-	static int id;
-	static int role;
-	static int leader;
+	public static int id;
+	public static int role;
+	public static int leader;
 	
-	static Map<Integer, InetSocketAddress> nodeMap;
-	static Map<Integer, Sender> senderMap;
-	static Processor processor;
+	public static Map<Integer, InetSocketAddress> nodeMap;
+	public static Map<Integer, Sender> senderMap;
+	public static Processor processor;
 	
-	static Map<Integer, Integer> electionTable;
+	public static Map<Integer, Integer> electionTable;
 	
 	public static void readConfig(String config) throws IOException {
 		nodeMap = new HashMap<Integer, InetSocketAddress>();
@@ -223,8 +223,8 @@ public class LeaderElectionMain {
 	
 	public static class Receiver extends Thread {
 		
-		int otherId;
-		Socket connection;
+		public int otherId;
+		public Socket connection;
 
 		public Receiver(int otherId, Socket connection) {
 			this.otherId = otherId;
@@ -261,10 +261,10 @@ public class LeaderElectionMain {
 	
 	public static class Sender extends Thread {
 		
-		int otherId;
-		Socket connection;
-		LinkedBlockingQueue<ElectionMessage> queue;
-		OutputStream os;
+		public int otherId;
+		public Socket connection;
+		public LinkedBlockingQueue<ElectionMessage> queue;
+		public OutputStream os;
 		
 		public Sender(int otherId, Socket connection) {
 			this.otherId = otherId;

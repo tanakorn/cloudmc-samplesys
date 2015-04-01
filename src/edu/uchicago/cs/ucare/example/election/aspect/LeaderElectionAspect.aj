@@ -1,4 +1,4 @@
-package edu.uchicago.cs.ucare.example.election;
+package edu.uchicago.cs.ucare.example.election.aspect;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -17,14 +17,14 @@ import mc.Interceptor;
 import mc.LeaderElectionLocalState;
 import mc.LocalStateInfoRecorder;
 import mc.PacketReceiveAck;
-import mc.StackTracePrinter;
-import mc.SteadyStateInformedModelChecker;
 import mc.SteadyStateListener;
 import mc.TestRecorder;
 import mc.election.LeaderElectionCallback;
 import mc.election.LeaderElectionPacket;
 import mc.election.LeaderElectionPacketGenerator;
 import mc.election.LeaderElectionAspectProperties;
+import edu.uchicago.cs.ucare.example.election.ElectionMessage;
+import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Processor;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Receiver;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Sender;
@@ -34,11 +34,6 @@ public aspect LeaderElectionAspect {
 	Logger logger = LoggerFactory.getLogger(LeaderElectionAspect.class);
 	
 	int id;
-	/*
-	int role;
-	int leader;
-	Map<Integer, Integer> electionTable;
-	*/
 	LeaderElectionLocalState localState;
 	
 	boolean isBound;
@@ -193,7 +188,6 @@ public aspect LeaderElectionAspect {
 	
 	/* --- compute steady state --- */
 
-//	pointcut reading(Receiver receiver) : call(void Receiver.read(DataInputStream, byte[]) throws IOException) && target(receiver);
 	pointcut reading(Receiver receiver) : call(void Receiver.read(DataInputStream, byte[]) throws IOException) && this(receiver);
 	
 	before(Receiver receiver) : reading(receiver) {
