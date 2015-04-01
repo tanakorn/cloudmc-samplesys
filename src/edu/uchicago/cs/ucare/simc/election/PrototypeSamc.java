@@ -20,7 +20,7 @@ import com.almworks.sqlite4java.SQLiteException;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.simc.event.DiskWrite;
 import edu.uchicago.cs.ucare.simc.event.InterceptPacket;
-import edu.uchicago.cs.ucare.simc.server.SteadyStateInformedModelChecker;
+import edu.uchicago.cs.ucare.simc.server.ModelCheckingServerAbstract;
 import edu.uchicago.cs.ucare.simc.transition.AbstractNodeCrashTransition;
 import edu.uchicago.cs.ucare.simc.transition.AbstractNodeOperationTransition;
 import edu.uchicago.cs.ucare.simc.transition.AbstractNodeStartTransition;
@@ -38,7 +38,7 @@ import edu.uchicago.cs.ucare.simc.util.LocalState;
 import edu.uchicago.cs.ucare.simc.util.SqliteExploredBranchRecorder;
 import edu.uchicago.cs.ucare.simc.util.WorkloadFeeder;
 
-public abstract class PrototypeSamc extends SteadyStateInformedModelChecker {
+public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     
     ExploredBranchRecorder exploredBranchRecorder;
 

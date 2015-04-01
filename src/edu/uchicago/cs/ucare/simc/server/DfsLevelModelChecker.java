@@ -184,9 +184,9 @@ public class DfsLevelModelChecker extends LevelModelChecker {
         return 0;
     } 
     
-    class LevelExplorer extends SteadyStateInformedModelChecker.Explorer {
+    class LevelExplorer extends ModelCheckingServerAbstract.Explorer {
         
-       public LevelExplorer(SteadyStateInformedModelChecker checker) {
+       public LevelExplorer(ModelCheckingServerAbstract checker) {
           super(checker);
       }
      

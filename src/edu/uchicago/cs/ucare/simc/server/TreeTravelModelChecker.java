@@ -20,7 +20,7 @@ import edu.uchicago.cs.ucare.simc.util.LocalState;
 import edu.uchicago.cs.ucare.simc.util.SqliteExploredBranchRecorder;
 import edu.uchicago.cs.ucare.simc.util.WorkloadFeeder;
 
-public abstract class TreeTravelModelChecker extends SteadyStateInformedModelChecker {
+public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract {
     
     protected String stateDir;
     protected ExploredBranchRecorder exploredBranchRecorder;

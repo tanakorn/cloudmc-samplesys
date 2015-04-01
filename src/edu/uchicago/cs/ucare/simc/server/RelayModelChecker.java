@@ -44,9 +44,9 @@ public class RelayModelChecker extends ProgrammableModelChecker {
         currentLevelPackets.clear();
     }
     
-    protected class RelayWorker extends SteadyStateInformedModelChecker.Explorer {
+    protected class RelayWorker extends ModelCheckingServerAbstract.Explorer {
 
-        public RelayWorker(SteadyStateInformedModelChecker checker) {
+        public RelayWorker(ModelCheckingServerAbstract checker) {
             super(checker);
         }
         

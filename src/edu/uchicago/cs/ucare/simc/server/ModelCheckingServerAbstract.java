@@ -83,6 +83,12 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected EnsembleController zkController;
     protected WorkloadFeeder feeder;
     
+    protected LinkedList<Transition> currentEnabledTransitions = new LinkedList<Transition>();
+    protected boolean[] isNodeSteady;
+    protected Boolean isStarted;
+    protected Thread modelChecking;
+    protected int[] numPacketSentToId;
+    
     public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
             String testRecordDirPath, EnsembleController zkController,
             WorkloadFeeder feeder) {
@@ -118,11 +124,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         isNodeOnline = new boolean[numNode];
         senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
         this.resetTest();
-    }
-    
-    @Override
-    public boolean waitPacket(int toId) throws RemoteException {
-        return true;
     }
     
     @Override
@@ -165,17 +166,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         }
     }
     
-    public boolean commit(InterceptPacket packet) {
-        try {
-            PacketReleaseCallback callback = callbackMap.get(packet.getCallbackId());
-            log.info("Commiting " + packet.toString());
-            return callback.callback(packet.getId());
-        } catch (Exception e) {
-            log.warn("There is an error when committing this packet, " + packet.toString());
-            return false;
-        }
-    }
-    
     public void waitForAck(int packetId) throws InterruptedException {
         if (log.isDebugEnabled()) {
             log.debug("Ack waiting for packet id " + packetId);
@@ -187,14 +177,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
             log.warn("Inconsistent ack, wait for " + packetId + 
                         " but got " + ackedId + ", this might be because of some limitation");
         }
-    }
-    
-    public boolean commitAndWait(InterceptPacket packet) throws InterruptedException {
-        if (commit(packet)) {
-            waitForAck(packet);
-            return true;
-        }
-        return false;
     }
     
     public void waitForWrite(DiskWrite write) throws InterruptedException {
@@ -313,8 +295,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         return false;
     }
 
-    abstract protected boolean isSystemSteady();
-
     @Override
     public void setTestId(int testId) {
         log.info("This test has id = " + testId);
@@ -422,7 +402,204 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         }
     }
 
-    @SuppressWarnings("unchecked")
+    public boolean killNode(int id) {
+        zkController.stopNode(id);
+        setNodeOnline(id, false);
+        for (int i = 0; i < numNode; ++i) {
+            senderReceiverQueues[i][id].clear();
+            senderReceiverQueues[id][i].clear();
+        }
+        return true;
+    }
+
+    public boolean runEnsemble() {
+        zkController.startEnsemble();
+        for (int i = 0; i < numNode; ++i) {
+            setNodeOnline(i, true);
+        }
+        return true;
+    }
+
+    public boolean stopEnsemble() {
+        zkController.stopEnsemble();
+        for (int i = 0; i < numNode; ++i) {
+            setNodeOnline(i, false);
+            for (int j = 0; j < numNode; ++j) {
+                senderReceiverQueues[i][j].clear();
+                senderReceiverQueues[j][i].clear();
+            }
+        }
+        return true;
+    }
+
+    public void setNodeOnline(int id, boolean isOnline) {
+        isNodeOnline[id] = isOnline;
+    }
+
+    public boolean isNodeOnline(int id) {
+        return isNodeOnline[id];
+    }
+    
+    public void saveLocalState() {
+        String tmp = "";
+        for (int i = 0 ; i < numNode; ++i) {
+            tmp += !isNodeOnline[i] ? 0 : localState[i];
+            tmp += ",";
+        }
+        tmp += "\n";
+        try {
+            localRecordFile.write(tmp.getBytes());
+        } catch (IOException e) {
+            log.error("", e);
+        }
+    }
+    
+    public boolean write(DiskWrite write) {
+        boolean result = false;
+    	if (writeQueue.contains(write)) {
+            log.info("Enable write " + write.getWriteId());
+            synchronized (write) {
+                writeFinished.put(write, true);
+                write.notify();
+            }
+            writeQueue.remove(write);
+            result = true;
+        }
+        return isNodeOnline(write.getNodeId()) ? result : false;
+    }
+    
+    @Override
+    public boolean waitPacket(int toId) throws RemoteException {
+        while (isNodeOnline(toId)) {
+            if (isSystemSteady() && !isThereOutstandingPacketTransition()) {
+                return false;
+            }
+            synchronized (numPacketSentToId) {
+                if (numPacketSentToId[toId] > 0) {
+                    numPacketSentToId[toId]--;
+                    return true;
+                }
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                log.error("", e);
+            }
+        }
+        return false;
+    }
+    
+    public boolean isThereOutstandingPacketTransition() {
+        boolean isThereProcessingEnabledPacket = false;
+        for (Transition t : currentEnabledTransitions) {
+            if (t instanceof PacketSendTransition && !((PacketSendTransition) t).getPacket().isObsolete()) {
+                isThereProcessingEnabledPacket = true;
+                break;
+            }
+        }
+        return numPacketInSenderReceiverQueue() != 0 || isThereProcessingEnabledPacket;
+    }
+    
+    public boolean commit(InterceptPacket packet) {
+    	boolean result;
+    	try {
+            PacketReleaseCallback callback = callbackMap.get(packet.getCallbackId());
+            log.info("Commiting " + packet.toString());
+            result = callback.callback(packet.getId());
+        } catch (Exception e) {
+            log.warn("There is an error when committing this packet, " + packet.toString());
+            result = false;
+        }
+        if (result) {
+            synchronized (numPacketSentToId) {
+                numPacketSentToId[packet.getToId()]++;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    protected boolean isSystemSteady() {
+        for (int i = 0; i < numNode; ++i) {
+            if (!isNodeSteady(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public void informSteadyState(int id, int runningState) throws RemoteException {
+        setNodeSteady(id, true);
+        if (log.isDebugEnabled()) {
+            log.debug("Node " + id + " is in steady state");
+        }
+        synchronized (isStarted) {
+            if (!isStarted && isSystemSteady()) {
+                isStarted = true;
+                initGlobalState();
+                log.info("First system steady state, start model checker thread");
+                modelChecking.start();
+            }
+        }
+    }
+    
+    @Override
+    public void informActiveState(int id) throws RemoteException {
+        setNodeSteady(id, false);
+    }
+    
+    protected int numPacketInSenderReceiverQueue() {
+        int num = 0;
+        for (int i = 0; i < numNode; ++i) {
+            for (int j = 0; j < numNode; ++j) {
+                num += senderReceiverQueues[i][j].size();
+            }
+        }
+        return num;
+    }
+    
+    protected void setNodeSteady(int id, boolean isSteady) {
+        isNodeSteady[id] = isSteady;
+        
+    }
+
+    protected boolean isNodeSteady(long id) {
+        return isNodeSteady[(int) id] || !isNodeOnline[(int) id];
+    }
+    
+    protected void waitNodeSteady(int id) throws InterruptedException {
+        if (log.isDebugEnabled()) {
+            log.debug("Waiting node " + id + " to be in steady state");
+        }
+        int waitTick = 10;
+        int i = 0;
+        while (!isNodeSteady(id) && i++ < waitTick) {
+//        while (!isNodeSteady(id)) {
+            Thread.sleep(50);
+        }
+        if (i >= waitTick) {
+            log.warn("Steady state for node " + id + " triggered by timeout");
+        }
+        setNodeSteady(id, true);
+    }
+    
+    public boolean commitAndWait(InterceptPacket packet) throws InterruptedException {
+        setNodeSteady(packet.getToId(), false);
+        boolean result = false;
+        if (commit(packet)) {
+            waitForAck(packet);
+            result = true;
+        }
+        if (result) {
+            waitNodeSteady(packet.getToId());
+            return true;
+        } else {
+            setNodeSteady(packet.getToId(), true);
+            return false;
+        }
+    }
+    
     public void resetTest() {
         log.debug("Test reset");
         writeQueue.clear();
@@ -490,81 +667,48 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
                 senderReceiverQueues[i][j] = new ConcurrentLinkedQueue<InterceptPacket>();
             }
         }
+        isNodeSteady = new boolean[numNode];
+        isStarted = false;
+        numPacketSentToId = new int[numNode];
     }
 
     public boolean runNode(int id) {
-        if (isNodeOnline(id)) {
+    	if (isNodeOnline(id)) {
             return true;
         }
         zkController.startNode(id);
         setNodeOnline(id, true);
-        return true;
-    }
-
-    public boolean killNode(int id) {
-        zkController.stopNode(id);
-        setNodeOnline(id, false);
-        for (int i = 0; i < numNode; ++i) {
-            senderReceiverQueues[i][id].clear();
-            senderReceiverQueues[id][i].clear();
-        }
-        return true;
-    }
-
-    public boolean runEnsemble() {
-        zkController.startEnsemble();
-        for (int i = 0; i < numNode; ++i) {
-            setNodeOnline(i, true);
-        }
-        return true;
-    }
-
-    public boolean stopEnsemble() {
-        zkController.stopEnsemble();
-        for (int i = 0; i < numNode; ++i) {
-            setNodeOnline(i, false);
-            for (int j = 0; j < numNode; ++j) {
-                senderReceiverQueues[i][j].clear();
-                senderReceiverQueues[j][i].clear();
-            }
-        }
-        return true;
-    }
-
-    public void setNodeOnline(int id, boolean isOnline) {
-        isNodeOnline[id] = isOnline;
-    }
-
-    public boolean isNodeOnline(int id) {
-        return isNodeOnline[id];
-    }
-    
-    public void saveLocalState() {
-        String tmp = "";
-        for (int i = 0 ; i < numNode; ++i) {
-            tmp += !isNodeOnline[i] ? 0 : localState[i];
-            tmp += ",";
-        }
-        tmp += "\n";
+        setNodeSteady(id, false);
         try {
-            localRecordFile.write(tmp.getBytes());
-        } catch (IOException e) {
-            log.error("", e);
+//          waitNodeSteady(id);
+            // I'm sorry for this, waitNodeSteady now means wait for timeout 200 ms
+            if (log.isDebugEnabled()) {
+                log.debug("Waiting node " + id + " to be in real steady state");
+            }
+            int waitTick = 60;
+            int i = 0;
+            while (!isNodeSteady(id) && i++ < waitTick) {
+//              while (!isNodeSteady(id)) {
+                Thread.sleep(50);
+            }
+            if (i >= waitTick) {
+                log.warn("Steady state for node " + id + " triggered by timeout");
+            }
+            setNodeSteady(id, true);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+        return true;
     }
     
-    public boolean write(DiskWrite write) {
-        boolean result = false;
-    	if (writeQueue.contains(write)) {
-            log.info("Enable write " + write.getWriteId());
-            synchronized (write) {
-                writeFinished.put(write, true);
-                write.notify();
-            }
-            writeQueue.remove(write);
-            result = true;
+    abstract protected static class Explorer extends Thread {
+        
+        protected ModelCheckingServerAbstract checker;
+        
+        public Explorer(ModelCheckingServerAbstract checker) {
+            this.checker = checker;
         }
-        return isNodeOnline(write.getNodeId()) ? result : false;
+        
     }
     
     protected class PacketReceiveAckImpl implements PacketReceiveAck {

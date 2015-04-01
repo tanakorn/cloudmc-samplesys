@@ -17,7 +17,7 @@ import edu.uchicago.cs.ucare.simc.util.EnsembleController;
 import edu.uchicago.cs.ucare.simc.util.LocalState;
 import edu.uchicago.cs.ucare.simc.util.WorkloadFeeder;
 
-public class ProgrammableModelChecker extends SteadyStateInformedModelChecker {
+public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
     
     protected ProgramParser parser;
     protected LinkedList<InterceptPacket> enabledPackets;
@@ -47,9 +47,9 @@ public class ProgrammableModelChecker extends SteadyStateInformedModelChecker {
         enabledPackets = new LinkedList<InterceptPacket>();
     }
     
-    class ProgramExecutor extends SteadyStateInformedModelChecker.Explorer {
+    class ProgramExecutor extends ModelCheckingServerAbstract.Explorer {
 
-        public ProgramExecutor(SteadyStateInformedModelChecker checker) {
+        public ProgramExecutor(ModelCheckingServerAbstract checker) {
             super(checker);
         }
         
