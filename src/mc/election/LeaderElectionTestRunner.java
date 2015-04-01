@@ -11,7 +11,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
 import java.util.Properties;
 
-import mc.CallbackInterceptor;
 import mc.ModelChecker;
 import mc.SpecVerifier;
 import mc.Workload;
@@ -19,6 +18,8 @@ import mc.WorkloadFeeder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import edu.uchicago.cs.ucare.simc.ModelCheckingServer;
 
 public class LeaderElectionTestRunner {
     
@@ -54,7 +55,7 @@ public class LeaderElectionTestRunner {
     
     protected static ModelChecker createLeaderElectionModelCheckerFromConf(String confFile, 
             String workingDir, LeaderElectionEnsembleController leaderElectionController) {
-        CallbackInterceptor modelChecker = null;
+        ModelCheckingServer modelChecker = null;
         try {
             Properties prop = new Properties();
             FileInputStream configInputStream = new FileInputStream(confFile);
@@ -74,7 +75,7 @@ public class LeaderElectionTestRunner {
             LOG.info("State exploration strategy is " + strategy);
             modelChecker = new LeaderElectionSemanticAwareModelChecker(interceptorName, ackName, numNode,
             		numCrash, numReboot, testRecordDir, traversalRecordDir, workingDir, leaderElectionController, feeder);
-            CallbackInterceptor interceptorStub = (CallbackInterceptor) 
+            ModelCheckingServer interceptorStub = (ModelCheckingServer) 
                     UnicastRemoteObject.exportObject(modelChecker, 0);
             Registry r = LocateRegistry.getRegistry();
             r.rebind(interceptorName, interceptorStub);

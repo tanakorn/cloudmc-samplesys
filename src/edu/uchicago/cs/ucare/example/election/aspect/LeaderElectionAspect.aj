@@ -13,7 +13,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import mc.Interceptor;
 import mc.LeaderElectionLocalState;
 import mc.LocalStateInfoRecorder;
 import mc.PacketReceiveAck;
@@ -28,6 +27,7 @@ import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Processor;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Receiver;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Sender;
+import edu.uchicago.cs.ucare.simc.ModelCheckingServer;
 
 public aspect LeaderElectionAspect {
 	
@@ -38,7 +38,7 @@ public aspect LeaderElectionAspect {
 	
 	boolean isBound;
 	
-	Interceptor modelCheckingServer;
+	ModelCheckingServer modelCheckingServer;
 	
 	Map<Integer, LeaderElectionPacket> nodeSenderMap;
 	Map<Integer, Sender> msgSenderMap;
@@ -64,7 +64,7 @@ public aspect LeaderElectionAspect {
 		localState = new LeaderElectionLocalState();
 		isBound = false;
 		try {
-			modelCheckingServer = (Interceptor) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
+			modelCheckingServer = (ModelCheckingServer) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
             infoRecorder = (LocalStateInfoRecorder) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
             testRecorder = (TestRecorder) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
             steadyStateListener = (SteadyStateListener) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());

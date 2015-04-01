@@ -8,7 +8,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class CallbackInterceptorAbstract implements CallbackInterceptor {
+import edu.uchicago.cs.ucare.simc.ModelCheckingServer;
+
+public abstract class CallbackInterceptorAbstract implements ModelCheckingServer {
     
     protected final Logger log;
     protected String interceptorName;

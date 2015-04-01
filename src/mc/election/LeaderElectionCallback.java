@@ -11,7 +11,7 @@ import java.util.Map;
 
 import edu.uchicago.cs.ucare.example.election.ElectionMessage;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Sender;
-import mc.CallbackInterceptor;
+import edu.uchicago.cs.ucare.simc.ModelCheckingServer;
 import mc.PacketReleaseCallback;
 
 public class LeaderElectionCallback implements PacketReleaseCallback {
@@ -52,7 +52,7 @@ public class LeaderElectionCallback implements PacketReleaseCallback {
 			        UnicastRemoteObject.exportObject(this, 0);
             Registry r = LocateRegistry.getRegistry();
             r.rebind(LeaderElectionAspectProperties.getInterceptorName() + "LeaderElectionCallback" + id, callbackStub);
-            CallbackInterceptor callbackInterceptor = (CallbackInterceptor) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
+            ModelCheckingServer callbackInterceptor = (ModelCheckingServer) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
             callbackInterceptor.registerCallback(id, "LeaderElectionCallback" + id);
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
