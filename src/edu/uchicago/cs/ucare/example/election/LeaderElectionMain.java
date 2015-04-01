@@ -16,8 +16,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.uchicago.cs.ucare.autosamc.Event;
-
 public class LeaderElectionMain {
 	
     private static final Logger LOG = LoggerFactory.getLogger(LeaderElectionMain.class);
@@ -249,7 +247,7 @@ public class LeaderElectionMain {
                 while (!connection.isClosed()) {
                 	LOG.info("Reading message for " + otherId);
                 	read(dis, buffer);
-                    @Event(type = "message") ElectionMessage msg = new ElectionMessage(otherId, buffer);
+                    ElectionMessage msg = new ElectionMessage(otherId, buffer);
                     LOG.info("Get message : " + msg.toString());
                     processor.process(msg);
                 }
