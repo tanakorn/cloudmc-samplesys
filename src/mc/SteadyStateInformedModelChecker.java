@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import mc.transition.PacketSendTransition;
 import mc.transition.Transition;
 
-public abstract class SteadyStateInformedModelChecker extends ModelChecker implements SteadyStateListener {
+public abstract class SteadyStateInformedModelChecker extends ModelChecker {
     
     protected LinkedList<Transition> currentEnabledTransitions = new LinkedList<Transition>();
     protected boolean[] isNodeSteady;

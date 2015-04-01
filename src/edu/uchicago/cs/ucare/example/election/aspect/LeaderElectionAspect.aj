@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import mc.LeaderElectionLocalState;
 import mc.PacketReceiveAck;
-import mc.SteadyStateListener;
 import mc.election.LeaderElectionCallback;
 import mc.election.LeaderElectionPacket;
 import mc.election.LeaderElectionPacketGenerator;
@@ -46,7 +45,6 @@ public aspect LeaderElectionAspect {
 	LeaderElectionCallback callback;
 	
     PacketReceiveAck ack;
-    SteadyStateListener steadyStateListener;
     
     int numNode;
 	boolean[] isReading;
@@ -61,7 +59,6 @@ public aspect LeaderElectionAspect {
 		isBound = false;
 		try {
 			modelCheckingServer = (ModelCheckingServer) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
-            steadyStateListener = (SteadyStateListener) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
             ack = (PacketReceiveAck) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName() + "Ack");
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
@@ -136,7 +133,7 @@ public aspect LeaderElectionAspect {
 		if (isReadingForAll() && !isThereSendingMessage() && isBound) {
 			try {
 				System.out.println("node " + id + " is in steady state "); 
-				steadyStateListener.informSteadyState(id, getLocalState());
+				modelCheckingServer.informSteadyState(id, getLocalState());
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -190,7 +187,7 @@ public aspect LeaderElectionAspect {
 		if (isReadingForAll() && !isThereSendingMessage() && isBound) {
 			try {
 				System.out.println("node " + id + " is in steady state "); 
-				steadyStateListener.informSteadyState(id, getLocalState());
+				modelCheckingServer.informSteadyState(id, getLocalState());
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -208,7 +205,7 @@ public aspect LeaderElectionAspect {
 		if (isReadingForAll() && !isThereSendingMessage() && isBound) {
 			try {
 				System.out.println("node " + id + " is in steady state "); 
-				steadyStateListener.informSteadyState(id, getLocalState());
+				modelCheckingServer.informSteadyState(id, getLocalState());
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

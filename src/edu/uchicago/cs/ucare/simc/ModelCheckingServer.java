@@ -26,4 +26,7 @@ public interface ModelCheckingServer extends Remote {
 
 	public void setLocalState(int nodeId, LocalState localState) throws RemoteException;
 
+    public void informActiveState(int id) throws RemoteException;
+    public void informSteadyState(int id, int runningState) throws RemoteException;
+
 }
