@@ -26,7 +26,6 @@
 	  <property name="ajlib" value="${env.ASPECTJ_LIB}"/>
 
 	  <path id="aspectj.java.classpath">
-	      <pathelement location="${build.classes}"/>
 	      <fileset dir="${lib.dir}">
 	        <include name="${lib.dir.includes}" />
 	        <exclude name="${lib.dir.excludes}" />
@@ -38,7 +37,6 @@
 	  </path>
 
 	  <path id="java.classpath">
-	      <pathelement location="${build.classes}"/>
 	      <fileset dir="${lib.dir}">
 	        <include name="${lib.dir.includes}" />
 	        <exclude name="${lib.dir.excludes}" />
