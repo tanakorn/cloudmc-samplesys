@@ -1,6 +1,5 @@
 package edu.uchicago.cs.ucare.simc.util;
 
-import java.io.Serializable;
 import java.util.Map;
 
 public class LeaderElectionLocalState extends LocalState {

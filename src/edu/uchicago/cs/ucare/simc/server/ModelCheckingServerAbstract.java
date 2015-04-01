@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.simc.event.DiskWrite;
 import edu.uchicago.cs.ucare.simc.event.DiskWriteAck;
 import edu.uchicago.cs.ucare.simc.event.InterceptPacket;
@@ -28,6 +29,8 @@ import edu.uchicago.cs.ucare.simc.transition.DiskWriteTransition;
 import edu.uchicago.cs.ucare.simc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.simc.transition.Transition;
 import edu.uchicago.cs.ucare.simc.util.EnsembleController;
+import edu.uchicago.cs.ucare.simc.util.LeaderElectionLocalState;
+import edu.uchicago.cs.ucare.simc.util.LocalState;
 import edu.uchicago.cs.ucare.simc.util.PacketReceiveAck;
 import edu.uchicago.cs.ucare.simc.util.PacketReleaseCallback;
 import edu.uchicago.cs.ucare.simc.util.WorkloadFeeder;
@@ -89,6 +92,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected Thread modelChecking;
     protected int[] numPacketSentToId;
     
+    public LeaderElectionLocalState[] localStates;
+
     public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
             String testRecordDirPath, EnsembleController zkController,
             WorkloadFeeder feeder) {
@@ -123,6 +128,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         resultFile = null;
         isNodeOnline = new boolean[numNode];
         senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
+        localStates = new LeaderElectionLocalState[numNode];
         this.resetTest();
     }
     
@@ -177,6 +183,11 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
             log.warn("Inconsistent ack, wait for " + packetId + 
                         " but got " + ackedId + ", this might be because of some limitation");
         }
+    }
+    
+    @Override
+    public void setLocalState(int nodeId, LocalState localState) throws RemoteException {
+    	localStates[nodeId] = (LeaderElectionLocalState) localState;
     }
     
     public void waitForWrite(DiskWrite write) throws InterruptedException {
@@ -670,6 +681,11 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         isNodeSteady = new boolean[numNode];
         isStarted = false;
         numPacketSentToId = new int[numNode];
+        for (int i = 0; i < localStates.length; ++i) {
+        	localStates[i] = new LeaderElectionLocalState();
+        	localStates[i].setLeader(i);
+        	localStates[i].setRole(LeaderElectionMain.LOOKING);
+        }
     }
 
     public boolean runNode(int id) {

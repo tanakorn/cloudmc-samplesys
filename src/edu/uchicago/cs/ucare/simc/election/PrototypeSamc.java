@@ -7,7 +7,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -17,7 +16,6 @@ import java.util.Set;
 
 import com.almworks.sqlite4java.SQLiteException;
 
-import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.simc.event.DiskWrite;
 import edu.uchicago.cs.ucare.simc.event.InterceptPacket;
 import edu.uchicago.cs.ucare.simc.server.ModelCheckingServerAbstract;
@@ -34,7 +32,6 @@ import edu.uchicago.cs.ucare.simc.transition.TransitionTuple;
 import edu.uchicago.cs.ucare.simc.util.EnsembleController;
 import edu.uchicago.cs.ucare.simc.util.ExploredBranchRecorder;
 import edu.uchicago.cs.ucare.simc.util.LeaderElectionLocalState;
-import edu.uchicago.cs.ucare.simc.util.LocalState;
 import edu.uchicago.cs.ucare.simc.util.SqliteExploredBranchRecorder;
 import edu.uchicago.cs.ucare.simc.util.WorkloadFeeder;
 
@@ -71,7 +68,6 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     LinkedList<Map<Integer, Integer>[]> prevElectionTable;
     */
     
-    LeaderElectionLocalState[] localStates;
     LinkedList<LeaderElectionLocalState[]> prevLocalStates;
     
     /*
@@ -106,8 +102,6 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         electionTable = new Map[numNode];
         */
         
-        localStates = new LeaderElectionLocalState[numNode];
-
         dporInitialPaths = new LinkedList<LinkedList<TransitionTuple>>();
         finishedDporInitialPaths = new HashSet<LinkedList<TransitionTuple>>();
         initialPathSecondAttempt = new HashSet<LinkedList<TransitionTuple>>();
@@ -164,11 +158,6 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     }
     
     @Override
-    public void setLocalState(int nodeId, LocalState localState) throws RemoteException {
-    	localStates[nodeId] = (LeaderElectionLocalState) localState;
-    }
-
-    @Override
     public void resetTest() {
         if (exploredBranchRecorder == null) {
             return;
@@ -198,11 +187,6 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         previousVotingTable = new LinkedList<HashMap<Integer, LeaderElectionVote>[]>();
         previousOnDiskEpoch = new LinkedList<int[]>();
         */
-        for (int i = 0; i < localStates.length; ++i) {
-        	localStates[i] = new LeaderElectionLocalState();
-        	localStates[i].setLeader(i);
-        	localStates[i].setRole(LeaderElectionMain.LOOKING);
-        }
         prevLocalStates = new LinkedList<LeaderElectionLocalState[]>();
     }
     
@@ -506,7 +490,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                 recordEnabledTransitions(globalState2, currentEnabledTransitions);
                 int numLooking = verifier.numLooking(isNodeOnline);
                 if ((currentEnabledTransitions.isEmpty() && numLooking == 0 && numWaitTime >= 6) || numWaitTime >= 12 || numAppliedTranstion > 50) {
-                    boolean verifiedResult = verifier.verify(isNodeOnline);
+                    boolean verifiedResult = verifier.verify();
                     int[] numRole = verifier.numRole(isNodeOnline);
                     saveResult(verifiedResult + " " + numRole[0] + " " + numRole[1] + " " + numRole[2] + "\n");
                     String mainPath = "";

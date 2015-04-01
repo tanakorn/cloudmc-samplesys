@@ -54,7 +54,7 @@ public class LeaderElectionTestRunner {
     
     protected static ModelCheckingServerAbstract createLeaderElectionModelCheckerFromConf(String confFile, 
             String workingDir, LeaderElectionEnsembleController leaderElectionController) {
-        ModelCheckingServer ModelCheckingServerAbstract = null;
+        ModelCheckingServerAbstract modelCheckingServerAbstract = null;
         try {
             Properties prop = new Properties();
             FileInputStream configInputStream = new FileInputStream(confFile);
@@ -69,19 +69,17 @@ public class LeaderElectionTestRunner {
             int numReboot = Integer.parseInt(prop.getProperty("num_reboot"));
             String ackName = "Ack";
             LinkedList<SpecVerifier> specVerifiers = new LinkedList<SpecVerifier>();
-            specVerifiers.add(new LeaderElectionVerifier(workingDir, numNode));
+            LeaderElectionVerifier verifier = new LeaderElectionVerifier();
+            specVerifiers.add(verifier);
             feeder = new WorkloadFeeder(new LinkedList<Workload>(), specVerifiers);
             LOG.info("State exploration strategy is " + strategy);
-            ModelCheckingServerAbstract = new LeaderElectionSemanticAwareModelChecker(interceptorName, ackName, numNode,
+            modelCheckingServerAbstract = new LeaderElectionSemanticAwareModelChecker(interceptorName, ackName, numNode,
             		numCrash, numReboot, testRecordDir, traversalRecordDir, workingDir, leaderElectionController, feeder);
+            verifier.modelCheckingServer = modelCheckingServerAbstract;
             ModelCheckingServer interceptorStub = (ModelCheckingServer) 
-                    UnicastRemoteObject.exportObject(ModelCheckingServerAbstract, 0);
+                    UnicastRemoteObject.exportObject(modelCheckingServerAbstract, 0);
             Registry r = LocateRegistry.getRegistry();
             r.rebind(interceptorName, interceptorStub);
-//            r.rebind(interceptorName + "SteadyState", interceptorStub);
-//            r.rebind(interceptorName + "LeaderElectGlobalStateRecorder", interceptorStub);
-//            r.rebind(interceptorName + "LeaderElectTestIdRecorder", interceptorStub);
-            
         } catch (RemoteException e) {
             e.printStackTrace();
         } catch (FileNotFoundException e) {
@@ -89,7 +87,7 @@ public class LeaderElectionTestRunner {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return (ModelCheckingServerAbstract) ModelCheckingServerAbstract;
+        return (ModelCheckingServerAbstract) modelCheckingServerAbstract;
     }
     
     protected static void startExploreTesting(ModelCheckingServerAbstract checker, int numNode, String workingDir, 
