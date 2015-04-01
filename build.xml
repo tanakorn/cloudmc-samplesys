@@ -45,6 +45,11 @@
 	      </fileset>
 	  </path>
 
+    <target name="clean">
+      <delete dir="${build.dir}"/>
+      <delete file="${basedir}/${final.name}.jar"/>
+    </target>
+
     <target name="compile-aspectj" >
         <taskdef classpath="${ajlib}/aspectjtools.jar"
         	resource="org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties"/>
