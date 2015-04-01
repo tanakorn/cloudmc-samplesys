@@ -86,7 +86,7 @@ public class ProgrammableModelChecker extends SteadyStateInformedModelChecker {
         
         BufferedReader programReader;
         
-        public ProgramParser(ModelChecker checker, File program) throws FileNotFoundException {
+        public ProgramParser(ModelCheckingServerAbstract checker, File program) throws FileNotFoundException {
             this.programReader = new BufferedReader(new FileReader(program));
         }
         
@@ -127,7 +127,7 @@ public class ProgrammableModelChecker extends SteadyStateInformedModelChecker {
     
     abstract class InstructionTransition {
 
-        abstract Transition getRealTransition(ModelChecker checker);
+        abstract Transition getRealTransition(ModelCheckingServerAbstract checker);
 
     }
     
@@ -140,7 +140,7 @@ public class ProgrammableModelChecker extends SteadyStateInformedModelChecker {
         }
         
         @Override
-        Transition getRealTransition(ModelChecker checker) {
+        Transition getRealTransition(ModelCheckingServerAbstract checker) {
             if (packetId == 0) {
                 return (Transition) currentEnabledTransitions.peekFirst();
             }
@@ -179,7 +179,7 @@ public class ProgrammableModelChecker extends SteadyStateInformedModelChecker {
         }
 
         @Override
-        Transition getRealTransition(ModelChecker checker) {
+        Transition getRealTransition(ModelCheckingServerAbstract checker) {
             return new NodeCrashTransition(checker, id);
         }
         
@@ -194,7 +194,7 @@ public class ProgrammableModelChecker extends SteadyStateInformedModelChecker {
         }
 
         @Override
-        Transition getRealTransition(ModelChecker checker) {
+        Transition getRealTransition(ModelCheckingServerAbstract checker) {
             return new NodeStartTransition(checker, id);
         }
         
@@ -209,7 +209,7 @@ public class ProgrammableModelChecker extends SteadyStateInformedModelChecker {
         }
 
         @Override
-        Transition getRealTransition(ModelChecker checker) {
+        Transition getRealTransition(ModelCheckingServerAbstract checker) {
             return new Transition() {
 
                 @Override
@@ -234,7 +234,7 @@ public class ProgrammableModelChecker extends SteadyStateInformedModelChecker {
     class ExitInstructionTransaction extends InstructionTransition {
 
         @Override
-        Transition getRealTransition(ModelChecker checker) {
+        Transition getRealTransition(ModelCheckingServerAbstract checker) {
             return new Transition() {
                 
                 @Override

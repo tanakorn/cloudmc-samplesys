@@ -9,7 +9,7 @@ import edu.uchicago.cs.ucare.simc.transition.Transition;
 import edu.uchicago.cs.ucare.simc.util.EnsembleController;
 import edu.uchicago.cs.ucare.simc.util.WorkloadFeeder;
 
-public abstract class SteadyStateInformedModelChecker extends ModelChecker {
+public abstract class SteadyStateInformedModelChecker extends ModelCheckingServerAbstract {
     
     protected LinkedList<Transition> currentEnabledTransitions = new LinkedList<Transition>();
     protected boolean[] isNodeSteady;

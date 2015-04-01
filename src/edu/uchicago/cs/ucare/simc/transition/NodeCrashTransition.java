@@ -3,7 +3,7 @@ package edu.uchicago.cs.ucare.simc.transition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.uchicago.cs.ucare.simc.server.ModelChecker;
+import edu.uchicago.cs.ucare.simc.server.ModelCheckingServerAbstract;
 
 public class NodeCrashTransition extends NodeOperationTransition {
     
@@ -12,9 +12,9 @@ public class NodeCrashTransition extends NodeOperationTransition {
     public static final String ACTION = "nodecrash"; 
     private static final short ACTION_HASH = (short) ACTION.hashCode();
 
-    protected ModelChecker checker;
+    protected ModelCheckingServerAbstract checker;
     
-    public NodeCrashTransition(ModelChecker checker, int id) {
+    public NodeCrashTransition(ModelCheckingServerAbstract checker, int id) {
         this.checker = checker;
         this.id = id;
     }

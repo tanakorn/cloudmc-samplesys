@@ -9,7 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.simc.event.InterceptPacket;
-import edu.uchicago.cs.ucare.simc.server.ModelChecker;
+import edu.uchicago.cs.ucare.simc.server.ModelCheckingServerAbstract;
+import edu.uchicago.cs.ucare.simc.server.ModelCheckingServerAbstract;
 
 public class PacketSendTransition extends Transition implements Serializable {
     
@@ -26,10 +27,10 @@ public class PacketSendTransition extends Transition implements Serializable {
         }
     };
 
-    protected ModelChecker checker;
+    protected ModelCheckingServerAbstract checker;
     protected InterceptPacket packet;
 
-    public PacketSendTransition(ModelChecker checker, InterceptPacket packet) {
+    public PacketSendTransition(ModelCheckingServerAbstract checker, InterceptPacket packet) {
         this.checker = checker;
         this.packet = packet;
     }
@@ -84,7 +85,7 @@ public class PacketSendTransition extends Transition implements Serializable {
         return "packetsend transition_id=" + getTransitionId() + " " + packet.toString();
     }
     
-    public static PacketSendTransition[] buildTransitions(ModelChecker checker, 
+    public static PacketSendTransition[] buildTransitions(ModelCheckingServerAbstract checker, 
             InterceptPacket[] packets) {
         PacketSendTransition[] packetTransitions = new PacketSendTransition[packets.length];
         for (int i = 0; i < packets.length; ++i) {
@@ -93,7 +94,7 @@ public class PacketSendTransition extends Transition implements Serializable {
         return packetTransitions;
     }
     
-    public static LinkedList<PacketSendTransition> buildTransitions(ModelChecker checker, 
+    public static LinkedList<PacketSendTransition> buildTransitions(ModelCheckingServerAbstract checker, 
             List<InterceptPacket> packets) {
         LinkedList<PacketSendTransition> packetTransitions = 
                 new LinkedList<PacketSendTransition>();

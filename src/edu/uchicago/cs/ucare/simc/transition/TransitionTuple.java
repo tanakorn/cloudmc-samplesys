@@ -2,7 +2,7 @@ package edu.uchicago.cs.ucare.simc.transition;
 
 import java.io.Serializable;
 
-import edu.uchicago.cs.ucare.simc.server.ModelChecker;
+import edu.uchicago.cs.ucare.simc.server.ModelCheckingServerAbstract;
 
 public class TransitionTuple implements Serializable {
 
@@ -67,7 +67,7 @@ public class TransitionTuple implements Serializable {
         }
     }
     
-    public static TransitionTuple getRealTransitionTuple(ModelChecker mc, TransitionTuple t) {
+    public static TransitionTuple getRealTransitionTuple(ModelCheckingServerAbstract mc, TransitionTuple t) {
         if (t.transition instanceof PacketSendTransition) {
             return new TransitionTuple(t.state, new PacketSendTransition(mc, ((PacketSendTransition) t.transition).getPacket()));
         } else if (t.transition instanceof NodeCrashTransition) {

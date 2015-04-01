@@ -2,13 +2,13 @@ package edu.uchicago.cs.ucare.simc.transition;
 
 import java.util.LinkedList;
 
-import edu.uchicago.cs.ucare.simc.server.ModelChecker;
+import edu.uchicago.cs.ucare.simc.server.ModelCheckingServerAbstract;
 
 public abstract class AbstractNodeOperationTransition extends NodeOperationTransition {
 
-    protected ModelChecker checker;
+    protected ModelCheckingServerAbstract checker;
     
-    public AbstractNodeOperationTransition(ModelChecker checker) {
+    public AbstractNodeOperationTransition(ModelCheckingServerAbstract checker) {
         id = -1;
         this.checker = checker;
     }

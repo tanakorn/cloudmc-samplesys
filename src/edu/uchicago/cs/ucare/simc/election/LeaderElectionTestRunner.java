@@ -14,8 +14,8 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.uchicago.cs.ucare.simc.server.ModelChecker;
 import edu.uchicago.cs.ucare.simc.server.ModelCheckingServer;
+import edu.uchicago.cs.ucare.simc.server.ModelCheckingServerAbstract;
 import edu.uchicago.cs.ucare.simc.util.SpecVerifier;
 import edu.uchicago.cs.ucare.simc.util.Workload;
 import edu.uchicago.cs.ucare.simc.util.WorkloadFeeder;
@@ -48,13 +48,13 @@ public class LeaderElectionTestRunner {
         int numNode = Integer.parseInt(testRunnerProp.getProperty("num_node"));
         LeaderElectionEnsembleController leaderElectionontroller = 
                 new LeaderElectionEnsembleController(numNode, workingDir);
-        ModelChecker checker = createLeaderElectionModelCheckerFromConf(workingDir + "/mc.conf", workingDir, leaderElectionontroller);
+        ModelCheckingServerAbstract checker = createLeaderElectionModelCheckerFromConf(workingDir + "/mc.conf", workingDir, leaderElectionontroller);
         startExploreTesting(checker, numNode, workingDir, leaderElectionontroller, isPasuedEveryTest);
     }
     
-    protected static ModelChecker createLeaderElectionModelCheckerFromConf(String confFile, 
+    protected static ModelCheckingServerAbstract createLeaderElectionModelCheckerFromConf(String confFile, 
             String workingDir, LeaderElectionEnsembleController leaderElectionController) {
-        ModelCheckingServer modelChecker = null;
+        ModelCheckingServer ModelCheckingServerAbstract = null;
         try {
             Properties prop = new Properties();
             FileInputStream configInputStream = new FileInputStream(confFile);
@@ -72,10 +72,10 @@ public class LeaderElectionTestRunner {
             specVerifiers.add(new LeaderElectionVerifier(workingDir, numNode));
             feeder = new WorkloadFeeder(new LinkedList<Workload>(), specVerifiers);
             LOG.info("State exploration strategy is " + strategy);
-            modelChecker = new LeaderElectionSemanticAwareModelChecker(interceptorName, ackName, numNode,
+            ModelCheckingServerAbstract = new LeaderElectionSemanticAwareModelChecker(interceptorName, ackName, numNode,
             		numCrash, numReboot, testRecordDir, traversalRecordDir, workingDir, leaderElectionController, feeder);
             ModelCheckingServer interceptorStub = (ModelCheckingServer) 
-                    UnicastRemoteObject.exportObject(modelChecker, 0);
+                    UnicastRemoteObject.exportObject(ModelCheckingServerAbstract, 0);
             Registry r = LocateRegistry.getRegistry();
             r.rebind(interceptorName, interceptorStub);
 //            r.rebind(interceptorName + "SteadyState", interceptorStub);
@@ -89,10 +89,10 @@ public class LeaderElectionTestRunner {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return (ModelChecker) modelChecker;
+        return (ModelCheckingServerAbstract) ModelCheckingServerAbstract;
     }
     
-    protected static void startExploreTesting(ModelChecker checker, int numNode, String workingDir, 
+    protected static void startExploreTesting(ModelCheckingServerAbstract checker, int numNode, String workingDir, 
             LeaderElectionEnsembleController zkController, boolean isPausedEveryTest) throws IOException {
         File gspathDir = new File(workingDir + "/record");
         int testNum = gspathDir.list().length + 1;

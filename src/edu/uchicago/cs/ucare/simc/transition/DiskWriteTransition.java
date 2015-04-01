@@ -1,20 +1,19 @@
 package edu.uchicago.cs.ucare.simc.transition;
 
 import edu.uchicago.cs.ucare.simc.event.DiskWrite;
-import edu.uchicago.cs.ucare.simc.server.ModelChecker;
-import edu.uchicago.cs.ucare.simc.util.StackTraceLogger;
+import edu.uchicago.cs.ucare.simc.server.ModelCheckingServerAbstract;
 
 public class DiskWriteTransition extends Transition {
     
     public static final String ACTION = "diskwrite"; 
     private static final short ACTION_HASH = (short) ACTION.hashCode();
     
-    ModelChecker checker;
+    ModelCheckingServerAbstract checker;
     DiskWrite write;
     boolean obsolete;
     int obsoleteBy;
     
-    public DiskWriteTransition(ModelChecker checker, DiskWrite write) {
+    public DiskWriteTransition(ModelCheckingServerAbstract checker, DiskWrite write) {
         this.checker = checker;
         this.write = write;
         obsolete = false;
