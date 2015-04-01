@@ -3,12 +3,12 @@ package edu.uchicago.cs.ucare.simc.server;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
-import mc.EnsembleController;
-import mc.WorkloadFeeder;
-import mc.transition.NodeCrashTransition;
-import mc.transition.NodeStartTransition;
-import mc.transition.PacketSendTransition;
-import mc.transition.Transition;
+import edu.uchicago.cs.ucare.simc.transition.NodeCrashTransition;
+import edu.uchicago.cs.ucare.simc.transition.NodeStartTransition;
+import edu.uchicago.cs.ucare.simc.transition.PacketSendTransition;
+import edu.uchicago.cs.ucare.simc.transition.Transition;
+import edu.uchicago.cs.ucare.simc.util.EnsembleController;
+import edu.uchicago.cs.ucare.simc.util.WorkloadFeeder;
 
 public class DporTreeTravelModelChecker extends TreeTravelModelChecker {
 

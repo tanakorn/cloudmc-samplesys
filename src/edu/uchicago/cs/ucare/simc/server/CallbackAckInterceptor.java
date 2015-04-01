@@ -7,13 +7,13 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import mc.DiskWrite;
-import mc.DiskWriteAck;
-import mc.InterceptPacket;
-import mc.PacketReceiveAck;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import edu.uchicago.cs.ucare.simc.event.DiskWrite;
+import edu.uchicago.cs.ucare.simc.event.DiskWriteAck;
+import edu.uchicago.cs.ucare.simc.event.InterceptPacket;
+import edu.uchicago.cs.ucare.simc.util.PacketReceiveAck;
 
 public abstract class CallbackAckInterceptor  extends CallbackInterceptorAbstract {
     

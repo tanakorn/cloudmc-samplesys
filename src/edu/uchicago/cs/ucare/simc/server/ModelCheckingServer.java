@@ -3,9 +3,9 @@ package edu.uchicago.cs.ucare.simc.server;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import mc.DiskWrite;
-import mc.InterceptPacket;
-import mc.LocalState;
+import edu.uchicago.cs.ucare.simc.event.DiskWrite;
+import edu.uchicago.cs.ucare.simc.event.InterceptPacket;
+import edu.uchicago.cs.ucare.simc.util.LocalState;
 
 public interface ModelCheckingServer extends Remote {
     

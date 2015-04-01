@@ -11,13 +11,13 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import mc.DiskWrite;
-import mc.EnsembleController;
-import mc.InterceptPacket;
-import mc.WorkloadFeeder;
-import mc.transition.DiskWriteTransition;
-import mc.transition.PacketSendTransition;
-import mc.transition.Transition;
+import edu.uchicago.cs.ucare.simc.event.DiskWrite;
+import edu.uchicago.cs.ucare.simc.event.InterceptPacket;
+import edu.uchicago.cs.ucare.simc.transition.DiskWriteTransition;
+import edu.uchicago.cs.ucare.simc.transition.PacketSendTransition;
+import edu.uchicago.cs.ucare.simc.transition.Transition;
+import edu.uchicago.cs.ucare.simc.util.EnsembleController;
+import edu.uchicago.cs.ucare.simc.util.WorkloadFeeder;
 
 public abstract class ModelChecker extends CallbackAckInterceptor {
 

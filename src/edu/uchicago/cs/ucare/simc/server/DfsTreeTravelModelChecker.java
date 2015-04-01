@@ -3,9 +3,9 @@ package edu.uchicago.cs.ucare.simc.server;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
-import mc.EnsembleController;
-import mc.WorkloadFeeder;
-import mc.transition.Transition;
+import edu.uchicago.cs.ucare.simc.transition.Transition;
+import edu.uchicago.cs.ucare.simc.util.EnsembleController;
+import edu.uchicago.cs.ucare.simc.util.WorkloadFeeder;
 
 public class DfsTreeTravelModelChecker extends TreeTravelModelChecker {
 

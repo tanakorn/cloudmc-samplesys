@@ -4,11 +4,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.LinkedList;
 
-import mc.DiskWrite;
-import mc.EnsembleController;
-import mc.InterceptPacket;
-import mc.WorkloadFeeder;
-import mc.transition.PacketSendTransition;
+import edu.uchicago.cs.ucare.simc.event.DiskWrite;
+import edu.uchicago.cs.ucare.simc.event.InterceptPacket;
+import edu.uchicago.cs.ucare.simc.transition.PacketSendTransition;
+import edu.uchicago.cs.ucare.simc.util.EnsembleController;
+import edu.uchicago.cs.ucare.simc.util.WorkloadFeeder;
 
 public class RelayModelChecker extends ProgrammableModelChecker {
     

@@ -8,15 +8,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.almworks.sqlite4java.SQLiteException;
 
-import mc.EnsembleController;
-import mc.ExploredBranchRecorder;
-import mc.SqliteExploredBranchRecorder;
-import mc.WorkloadFeeder;
-import mc.transition.NodeCrashTransition;
-import mc.transition.NodeOperationTransition;
-import mc.transition.NodeStartTransition;
-import mc.transition.PacketSendTransition;
-import mc.transition.Transition;
+import edu.uchicago.cs.ucare.simc.transition.NodeCrashTransition;
+import edu.uchicago.cs.ucare.simc.transition.NodeOperationTransition;
+import edu.uchicago.cs.ucare.simc.transition.NodeStartTransition;
+import edu.uchicago.cs.ucare.simc.transition.PacketSendTransition;
+import edu.uchicago.cs.ucare.simc.transition.Transition;
+import edu.uchicago.cs.ucare.simc.util.EnsembleController;
+import edu.uchicago.cs.ucare.simc.util.ExploredBranchRecorder;
+import edu.uchicago.cs.ucare.simc.util.SqliteExploredBranchRecorder;
+import edu.uchicago.cs.ucare.simc.util.WorkloadFeeder;
 
 public abstract class LevelModelChecker extends ProgrammableModelChecker {
     

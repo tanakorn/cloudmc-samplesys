@@ -13,18 +13,18 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import mc.LeaderElectionLocalState;
-import mc.PacketReceiveAck;
-import mc.election.LeaderElectionCallback;
-import mc.election.LeaderElectionPacket;
-import mc.election.LeaderElectionPacketGenerator;
-import mc.election.LeaderElectionAspectProperties;
 import edu.uchicago.cs.ucare.example.election.ElectionMessage;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Processor;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Receiver;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Sender;
+import edu.uchicago.cs.ucare.simc.election.LeaderElectionAspectProperties;
+import edu.uchicago.cs.ucare.simc.election.LeaderElectionCallback;
+import edu.uchicago.cs.ucare.simc.election.LeaderElectionPacket;
+import edu.uchicago.cs.ucare.simc.election.LeaderElectionPacketGenerator;
 import edu.uchicago.cs.ucare.simc.server.ModelCheckingServer;
+import edu.uchicago.cs.ucare.simc.util.LeaderElectionLocalState;
+import edu.uchicago.cs.ucare.simc.util.PacketReceiveAck;
 
 public aspect LeaderElectionAspect {
 	

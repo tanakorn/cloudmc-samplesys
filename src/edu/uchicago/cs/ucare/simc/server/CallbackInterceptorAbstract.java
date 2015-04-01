@@ -5,12 +5,12 @@ import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import mc.DiskWrite;
-import mc.InterceptPacket;
-import mc.PacketReleaseCallback;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import edu.uchicago.cs.ucare.simc.event.DiskWrite;
+import edu.uchicago.cs.ucare.simc.event.InterceptPacket;
+import edu.uchicago.cs.ucare.simc.util.PacketReleaseCallback;
 
 public abstract class CallbackInterceptorAbstract implements ModelCheckingServer {
     
