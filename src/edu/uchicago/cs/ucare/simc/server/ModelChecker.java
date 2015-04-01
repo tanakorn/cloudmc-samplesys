@@ -19,7 +19,7 @@ import edu.uchicago.cs.ucare.simc.transition.Transition;
 import edu.uchicago.cs.ucare.simc.util.EnsembleController;
 import edu.uchicago.cs.ucare.simc.util.WorkloadFeeder;
 
-public abstract class ModelChecker extends CallbackAckInterceptor {
+public abstract class ModelChecker extends ModelCheckingServerAbstract {
 
     private static String CODE_DIR = "code";
     private static String PATH_FILE = "path";
