@@ -17,7 +17,6 @@ import mc.LeaderElectionLocalState;
 import mc.LocalStateInfoRecorder;
 import mc.PacketReceiveAck;
 import mc.SteadyStateListener;
-import mc.TestRecorder;
 import mc.election.LeaderElectionCallback;
 import mc.election.LeaderElectionPacket;
 import mc.election.LeaderElectionPacketGenerator;
@@ -47,7 +46,6 @@ public aspect LeaderElectionAspect {
 	LeaderElectionPacketGenerator packetGenerator2;
 	LeaderElectionCallback callback;
 	
-	TestRecorder testRecorder;
 	LocalStateInfoRecorder infoRecorder;
     PacketReceiveAck ack;
     SteadyStateListener steadyStateListener;
@@ -66,7 +64,6 @@ public aspect LeaderElectionAspect {
 		try {
 			modelCheckingServer = (ModelCheckingServer) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
             infoRecorder = (LocalStateInfoRecorder) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
-            testRecorder = (TestRecorder) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
             steadyStateListener = (SteadyStateListener) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
             ack = (PacketReceiveAck) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName() + "Ack");
 		} catch (MalformedURLException e) {
@@ -93,7 +90,7 @@ public aspect LeaderElectionAspect {
 		this.localState.setRole(role);
 		try {
 			infoRecorder.setLocalState(id, localState);
-			testRecorder.updateLocalState(id, getLocalState());
+			modelCheckingServer.updateLocalState(id, getLocalState());
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -106,7 +103,7 @@ public aspect LeaderElectionAspect {
 		this.localState.setLeader(leader);
 		try {
 			infoRecorder.setLocalState(id, localState);
-			testRecorder.updateLocalState(id, getLocalState());
+			modelCheckingServer.updateLocalState(id, getLocalState());
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -121,7 +118,7 @@ public aspect LeaderElectionAspect {
 		this.localState.setElectionTable(electionTable);
 		try {
 			infoRecorder.setLocalState(id, localState);
-			testRecorder.updateLocalState(id, getLocalState());
+			modelCheckingServer.updateLocalState(id, getLocalState());
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -15,7 +15,7 @@ import mc.transition.DiskWriteTransition;
 import mc.transition.PacketSendTransition;
 import mc.transition.Transition;
 
-public abstract class ModelChecker extends CallbackAckInterceptor implements TestRecorder {
+public abstract class ModelChecker extends CallbackAckInterceptor {
 
     private static String CODE_DIR = "code";
     private static String PATH_FILE = "path";
