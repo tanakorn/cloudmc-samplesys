@@ -1,4 +1,4 @@
-package mc;
+package edu.uchicago.cs.ucare.simc.server;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,6 +8,10 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.LinkedList;
 
+import mc.EnsembleController;
+import mc.InterceptPacket;
+import mc.LocalState;
+import mc.WorkloadFeeder;
 import mc.transition.NodeCrashTransition;
 import mc.transition.NodeStartTransition;
 import mc.transition.PacketSendTransition;

@@ -1,4 +1,4 @@
-package edu.uchicago.cs.ucare.simc;
+package edu.uchicago.cs.ucare.simc.server;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

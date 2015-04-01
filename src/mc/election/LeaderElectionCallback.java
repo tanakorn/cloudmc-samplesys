@@ -11,7 +11,7 @@ import java.util.Map;
 
 import edu.uchicago.cs.ucare.example.election.ElectionMessage;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Sender;
-import edu.uchicago.cs.ucare.simc.ModelCheckingServer;
+import edu.uchicago.cs.ucare.simc.server.ModelCheckingServer;
 import mc.PacketReleaseCallback;
 
 public class LeaderElectionCallback implements PacketReleaseCallback {

@@ -6,10 +6,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 import mc.InterceptPacket;
-import mc.ModelChecker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import edu.uchicago.cs.ucare.simc.server.ModelChecker;
 
 public class PacketSendTransition extends Transition implements Serializable {
     

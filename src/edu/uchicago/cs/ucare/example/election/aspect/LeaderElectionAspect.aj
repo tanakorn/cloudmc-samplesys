@@ -24,7 +24,7 @@ import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Processor;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Receiver;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Sender;
-import edu.uchicago.cs.ucare.simc.ModelCheckingServer;
+import edu.uchicago.cs.ucare.simc.server.ModelCheckingServer;
 
 public aspect LeaderElectionAspect {
 	

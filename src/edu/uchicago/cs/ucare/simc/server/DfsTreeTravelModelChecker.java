@@ -1,8 +1,10 @@
-package mc;
+package edu.uchicago.cs.ucare.simc.server;
 
 import java.util.LinkedList;
 import java.util.ListIterator;
 
+import mc.EnsembleController;
+import mc.WorkloadFeeder;
 import mc.transition.Transition;
 
 public class DfsTreeTravelModelChecker extends TreeTravelModelChecker {

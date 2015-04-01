@@ -2,7 +2,7 @@ package mc.transition;
 
 import java.io.Serializable;
 
-import mc.ModelChecker;
+import edu.uchicago.cs.ucare.simc.server.ModelChecker;
 
 public class TransitionTuple implements Serializable {
 

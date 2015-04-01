@@ -1,7 +1,7 @@
 package mc.transition;
 
+import edu.uchicago.cs.ucare.simc.server.ModelChecker;
 import mc.DiskWrite;
-import mc.ModelChecker;
 import mc.tools.StackTraceLogger;
 
 public class DiskWriteTransition extends Transition {

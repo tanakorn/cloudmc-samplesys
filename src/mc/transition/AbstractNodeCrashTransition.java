@@ -2,7 +2,7 @@ package mc.transition;
 
 import java.util.LinkedList;
 
-import mc.ModelChecker;
+import edu.uchicago.cs.ucare.simc.server.ModelChecker;
 
 public class AbstractNodeCrashTransition extends AbstractNodeOperationTransition {
     

@@ -18,6 +18,7 @@ import java.util.Set;
 import com.almworks.sqlite4java.SQLiteException;
 
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
+import edu.uchicago.cs.ucare.simc.server.SteadyStateInformedModelChecker;
 import mc.DiskWrite;
 import mc.EnsembleController;
 import mc.ExploredBranchRecorder;
@@ -25,7 +26,6 @@ import mc.InterceptPacket;
 import mc.LeaderElectionLocalState;
 import mc.LocalState;
 import mc.SqliteExploredBranchRecorder;
-import mc.SteadyStateInformedModelChecker;
 import mc.WorkloadFeeder;
 import mc.transition.AbstractNodeCrashTransition;
 import mc.transition.AbstractNodeOperationTransition;

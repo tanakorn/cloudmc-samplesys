@@ -11,7 +11,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
 import java.util.Properties;
 
-import mc.ModelChecker;
 import mc.SpecVerifier;
 import mc.Workload;
 import mc.WorkloadFeeder;
@@ -19,7 +18,8 @@ import mc.WorkloadFeeder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.uchicago.cs.ucare.simc.ModelCheckingServer;
+import edu.uchicago.cs.ucare.simc.server.ModelChecker;
+import edu.uchicago.cs.ucare.simc.server.ModelCheckingServer;
 
 public class LeaderElectionTestRunner {
     

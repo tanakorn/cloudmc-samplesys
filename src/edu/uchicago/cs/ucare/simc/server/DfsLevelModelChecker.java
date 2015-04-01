@@ -1,4 +1,4 @@
-package mc;
+package edu.uchicago.cs.ucare.simc.server;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,6 +8,8 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
+import mc.EnsembleController;
+import mc.WorkloadFeeder;
 import mc.transition.NodeCrashTransition;
 import mc.transition.NodeOperationTransition;
 import mc.transition.PacketSendTransition;

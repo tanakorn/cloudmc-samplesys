@@ -1,8 +1,11 @@
-package mc;
+package edu.uchicago.cs.ucare.simc.server;
 
 import java.rmi.RemoteException;
 import java.util.LinkedList;
 
+import mc.EnsembleController;
+import mc.InterceptPacket;
+import mc.WorkloadFeeder;
 import mc.transition.PacketSendTransition;
 import mc.transition.Transition;
 

@@ -1,4 +1,4 @@
-package mc;
+package edu.uchicago.cs.ucare.simc.server;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,6 +9,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.almworks.sqlite4java.SQLiteException;
 
+import mc.EnsembleController;
+import mc.ExploredBranchRecorder;
+import mc.InterceptPacket;
+import mc.LocalState;
+import mc.SqliteExploredBranchRecorder;
+import mc.WorkloadFeeder;
 import mc.transition.NodeCrashTransition;
 import mc.transition.NodeStartTransition;
 import mc.transition.PacketSendTransition;
