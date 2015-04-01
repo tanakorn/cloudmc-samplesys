@@ -24,7 +24,6 @@ import mc.ExploredBranchRecorder;
 import mc.InterceptPacket;
 import mc.LeaderElectionLocalState;
 import mc.LocalState;
-import mc.LocalStateInfoRecorder;
 import mc.SqliteExploredBranchRecorder;
 import mc.SteadyStateInformedModelChecker;
 import mc.WorkloadFeeder;
@@ -39,7 +38,7 @@ import mc.transition.PacketSendTransition;
 import mc.transition.Transition;
 import mc.transition.TransitionTuple;
 
-public abstract class PrototypeSamc extends SteadyStateInformedModelChecker implements LocalStateInfoRecorder {
+public abstract class PrototypeSamc extends SteadyStateInformedModelChecker {
     
     ExploredBranchRecorder exploredBranchRecorder;
 
@@ -413,7 +412,7 @@ public abstract class PrototypeSamc extends SteadyStateInformedModelChecker impl
                             int indexOfTuple = currentEnabledTransitions.indexOf(tuple.transition);
                             isThereThisTuple = indexOfTuple != -1;
                             if (isThereThisTuple) {
-                                tuple.transition = currentEnabledTransitions.remove(indexOfTuple);
+                                tuple.transition = (Transition) currentEnabledTransitions.remove(indexOfTuple);
                             }
                         }
                         if (isThereThisTuple) {

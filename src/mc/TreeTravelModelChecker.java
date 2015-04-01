@@ -2,6 +2,7 @@ package mc;
 
 import java.io.File;
 import java.io.IOException;
+import java.rmi.RemoteException;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -165,5 +166,11 @@ public abstract class TreeTravelModelChecker extends SteadyStateInformedModelChe
             }
         }
     }
+    
+    @Override
+	public void setLocalState(int nodeId, LocalState localState) throws RemoteException {
+    	
+    }
+    
 
 }

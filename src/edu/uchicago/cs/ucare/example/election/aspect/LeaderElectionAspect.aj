@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import mc.LeaderElectionLocalState;
-import mc.LocalStateInfoRecorder;
 import mc.PacketReceiveAck;
 import mc.SteadyStateListener;
 import mc.election.LeaderElectionCallback;
@@ -46,7 +45,6 @@ public aspect LeaderElectionAspect {
 	LeaderElectionPacketGenerator packetGenerator2;
 	LeaderElectionCallback callback;
 	
-	LocalStateInfoRecorder infoRecorder;
     PacketReceiveAck ack;
     SteadyStateListener steadyStateListener;
     
@@ -63,7 +61,6 @@ public aspect LeaderElectionAspect {
 		isBound = false;
 		try {
 			modelCheckingServer = (ModelCheckingServer) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
-            infoRecorder = (LocalStateInfoRecorder) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
             steadyStateListener = (SteadyStateListener) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
             ack = (PacketReceiveAck) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName() + "Ack");
 		} catch (MalformedURLException e) {
@@ -89,7 +86,7 @@ public aspect LeaderElectionAspect {
 	after(int role) : setRole(role) {
 		this.localState.setRole(role);
 		try {
-			infoRecorder.setLocalState(id, localState);
+			modelCheckingServer.setLocalState(id, localState);
 			modelCheckingServer.updateLocalState(id, getLocalState());
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
@@ -102,7 +99,7 @@ public aspect LeaderElectionAspect {
 	after(int leader) : setLeader(leader) {
 		this.localState.setLeader(leader);
 		try {
-			infoRecorder.setLocalState(id, localState);
+			modelCheckingServer.setLocalState(id, localState);
 			modelCheckingServer.updateLocalState(id, getLocalState());
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
@@ -117,7 +114,7 @@ public aspect LeaderElectionAspect {
 	after(Map<Integer, Integer> electionTable) : setElectionTable(electionTable) {
 		this.localState.setElectionTable(electionTable);
 		try {
-			infoRecorder.setLocalState(id, localState);
+			modelCheckingServer.setLocalState(id, localState);
 			modelCheckingServer.updateLocalState(id, getLocalState());
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block

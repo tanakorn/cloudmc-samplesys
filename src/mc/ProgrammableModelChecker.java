@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.rmi.RemoteException;
 import java.util.LinkedList;
 
 import mc.transition.NodeCrashTransition;
@@ -137,7 +138,7 @@ public class ProgrammableModelChecker extends SteadyStateInformedModelChecker {
         @Override
         Transition getRealTransition(ModelChecker checker) {
             if (packetId == 0) {
-                return currentEnabledTransitions.peekFirst();
+                return (Transition) currentEnabledTransitions.peekFirst();
             }
             for (int i = 0; i < 15; ++i) {
 //                for (InterceptPacket packet : enabledPackets) {
@@ -145,7 +146,7 @@ public class ProgrammableModelChecker extends SteadyStateInformedModelChecker {
 //                        return new PacketSendTransition(checker, packet);
 //                    }
 //                }
-                for (Transition t : currentEnabledTransitions) {
+                for (Object t : currentEnabledTransitions) {
                     PacketSendTransition p = (PacketSendTransition) t;
                     if (p.getPacket().getId() == packetId) {
                         return p;
@@ -246,5 +247,12 @@ public class ProgrammableModelChecker extends SteadyStateInformedModelChecker {
         }
         
     }
+
+	@Override
+	public void setLocalState(int nodeId, LocalState localState)
+			throws RemoteException {
+		// TODO Auto-generated method stub
+		
+	}
     
 }

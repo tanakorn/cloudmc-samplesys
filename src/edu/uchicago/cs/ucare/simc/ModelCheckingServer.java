@@ -5,6 +5,7 @@ import java.rmi.RemoteException;
 
 import mc.DiskWrite;
 import mc.InterceptPacket;
+import mc.LocalState;
 
 public interface ModelCheckingServer extends Remote {
     
@@ -22,5 +23,7 @@ public interface ModelCheckingServer extends Remote {
     public void updateLocalState(int nodeId, int state) throws RemoteException;
     public void recordCodeTrace(int nodeId, int stackTraceHash) throws RemoteException;
     public void recordProtocol(int nodeId, int protocolHash) throws RemoteException;
+
+	public void setLocalState(int nodeId, LocalState localState) throws RemoteException;
 
 }
