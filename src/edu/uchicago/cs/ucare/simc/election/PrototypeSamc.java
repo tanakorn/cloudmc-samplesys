@@ -488,8 +488,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                 adjustCrashReboot(currentEnabledTransitions);
                 updateGlobalState2();
                 recordEnabledTransitions(globalState2, currentEnabledTransitions);
-                int numLooking = verifier.numLooking(isNodeOnline);
-                if ((currentEnabledTransitions.isEmpty() && numLooking == 0 && numWaitTime >= 6) || numWaitTime >= 12 || numAppliedTranstion > 50) {
+                if (currentEnabledTransitions.isEmpty() && numWaitTime >= 2) {
                     boolean verifiedResult = verifier.verify();
                     int[] numRole = verifier.numRole(isNodeOnline);
                     saveResult(verifiedResult + " " + numRole[0] + " " + numRole[1] + " " + numRole[2] + "\n");

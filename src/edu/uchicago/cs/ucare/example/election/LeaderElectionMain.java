@@ -349,6 +349,9 @@ public class LeaderElectionMain {
 			ElectionMessage msg;
 			while (true) {
 				try {
+					LOG.info("Current role is " + 
+							(role == LEADING ? "Leading" : role == FOLLOWING ? "Following" : "Looking") + 
+							"; current leader is " + leader);
 					msg = queue.take();
 					LOG.info("Process message : " + msg.toString());
                     electionTable.put(msg.getSender(), msg.getLeader());
