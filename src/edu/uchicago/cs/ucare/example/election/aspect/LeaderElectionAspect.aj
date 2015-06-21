@@ -18,13 +18,13 @@ import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Processor;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Receiver;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Sender;
-import edu.uchicago.cs.ucare.simc.election.LeaderElectionAspectProperties;
-import edu.uchicago.cs.ucare.simc.election.LeaderElectionCallback;
-import edu.uchicago.cs.ucare.simc.election.LeaderElectionPacket;
-import edu.uchicago.cs.ucare.simc.election.LeaderElectionPacketGenerator;
-import edu.uchicago.cs.ucare.simc.server.ModelCheckingServer;
-import edu.uchicago.cs.ucare.simc.util.LeaderElectionLocalState;
-import edu.uchicago.cs.ucare.simc.util.PacketReceiveAck;
+import edu.uchicago.cs.ucare.samc.election.LeaderElectionAspectProperties;
+import edu.uchicago.cs.ucare.samc.election.LeaderElectionCallback;
+import edu.uchicago.cs.ucare.samc.election.LeaderElectionPacket;
+import edu.uchicago.cs.ucare.samc.election.LeaderElectionPacketGenerator;
+import edu.uchicago.cs.ucare.samc.server.ModelCheckingServer;
+import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
+import edu.uchicago.cs.ucare.samc.util.PacketReceiveAck;
 
 public aspect LeaderElectionAspect {
 	
