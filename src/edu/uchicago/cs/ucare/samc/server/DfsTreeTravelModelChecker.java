@@ -10,8 +10,8 @@ import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
 public class DfsTreeTravelModelChecker extends TreeTravelModelChecker {
 
     public DfsTreeTravelModelChecker(String interceptorName, String ackName, int numNode,
-            int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir,
-            EnsembleController zkController, WorkloadFeeder feeder) {
+            int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, 
+            String cacheDir, EnsembleController zkController, WorkloadFeeder feeder) {
         super(interceptorName, ackName, numNode, numCrash, numReboot, globalStatePathDir, 
                 packetRecordDir, zkController, feeder);
     }

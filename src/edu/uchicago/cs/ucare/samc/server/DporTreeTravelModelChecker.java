@@ -14,7 +14,7 @@ public class DporTreeTravelModelChecker extends TreeTravelModelChecker {
 
     public DporTreeTravelModelChecker(String interceptorName, String ackName,
             int numNode, int numCrash, int numReboot,
-            String globalStatePathDir, String packetRecordDir,
+            String globalStatePathDir, String packetRecordDir, String cacheDir,
             EnsembleController zkController, WorkloadFeeder feeder) {
         super(interceptorName, ackName, numNode, numCrash, numReboot,
                 globalStatePathDir, packetRecordDir, zkController, feeder);

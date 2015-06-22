@@ -1,19 +1,11 @@
 package edu.uchicago.cs.ucare.samc.election;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
-import edu.uchicago.cs.ucare.samc.transition.AbstractNodeCrashTransition;
-import edu.uchicago.cs.ucare.samc.transition.AbstractNodeOperationTransition;
-import edu.uchicago.cs.ucare.samc.transition.AbstractNodeStartTransition;
-import edu.uchicago.cs.ucare.samc.transition.DiskWriteTransition;
-import edu.uchicago.cs.ucare.samc.transition.NodeCrashTransition;
-import edu.uchicago.cs.ucare.samc.transition.NodeOperationTransition;
-import edu.uchicago.cs.ucare.samc.transition.NodeStartTransition;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.transition.TransitionTuple;

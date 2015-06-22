@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.samc.util.EnsembleController;
 
-public class LeaderElectionEnsembleController implements EnsembleController {
+public class LeaderElectionEnsembleController extends EnsembleController {
     
     private final static Logger LOG = LoggerFactory.getLogger(LeaderElectionEnsembleController.class);
     
@@ -20,15 +20,12 @@ public class LeaderElectionEnsembleController implements EnsembleController {
     	"-Delection.log.dir=%s/log/%d", "-Dlog4j.configuration=%s",
     	"edu.uchicago.cs.ucare.example.election.LeaderElectionMain", "%d", "%s/conf/config" };
     
-    int numNode;
     Process[] leaderElection;
     Thread consoleWriter;
     FileOutputStream[] consoleLog;
-    String workingDir;
     
     public LeaderElectionEnsembleController(int numNode, String workingDir) {
-        this.numNode = numNode;
-        this.workingDir = workingDir;
+        super(numNode, workingDir);
         leaderElection = new Process[numNode];
         consoleLog = new FileOutputStream[numNode];
         consoleWriter = new Thread(new LogWriter());

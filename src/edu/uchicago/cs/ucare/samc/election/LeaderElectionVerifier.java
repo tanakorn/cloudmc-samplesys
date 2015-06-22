@@ -12,7 +12,6 @@ public class LeaderElectionVerifier extends SpecVerifier {
     
     protected static final Logger log = LoggerFactory.getLogger(LeaderElectionVerifier.class);
     
-    public ModelCheckingServerAbstract modelCheckingServer;
     
     public LeaderElectionVerifier() {
     	
