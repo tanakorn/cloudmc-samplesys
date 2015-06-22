@@ -56,7 +56,7 @@ rmiregistry with class path specifying.
 
 8. Go to the working directory that you have specified in mcsystem.conf
 
-9. Run monitorcheck.sh (i.e. `./monitorcheck.sh`), now model checker will keep
+9. Run testrunner.sh (i.e. `./testrunner.sh`), now model checker will keep
 running until it explores all paths.
 
 10. In a log file, mc.log, there should not be ERROR line, and it should keep
