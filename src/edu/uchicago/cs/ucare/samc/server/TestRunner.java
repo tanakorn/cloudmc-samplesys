@@ -80,7 +80,6 @@ public class TestRunner {
             String verifierName = prop.getProperty("verifier");
             String ackName = "Ack";
             LinkedList<SpecVerifier> specVerifiers = new LinkedList<SpecVerifier>();
-//            LeaderElectionVerifier verifier = new LeaderElectionVerifier();
             @SuppressWarnings("unchecked")
             Class<? extends SpecVerifier> verifierClass = (Class<? extends SpecVerifier>) Class.forName(verifierName);
             Constructor<? extends SpecVerifier> verifierConstructor = verifierClass.getConstructor();
@@ -88,13 +87,24 @@ public class TestRunner {
             specVerifiers.add(verifier);
             feeder = new WorkloadFeeder(new LinkedList<Workload>(), specVerifiers);
             LOG.info("State exploration strategy is " + strategy);
-            @SuppressWarnings("unchecked")
-            Class<? extends ModelCheckingServerAbstract> modelCheckerClass = (Class<? extends ModelCheckingServerAbstract>) Class.forName(strategy);
-            Constructor<? extends ModelCheckingServerAbstract> modelCheckerConstructor = modelCheckerClass.getConstructor(String.class, 
-                    String.class, Integer.TYPE, Integer.TYPE, Integer.TYPE, String.class, String.class, 
-                    String.class, EnsembleController.class, WorkloadFeeder.class);
-            modelCheckingServerAbstract = modelCheckerConstructor.newInstance(interceptorName, ackName, numNode, numCrash, numReboot, testRecordDir, 
-                    traversalRecordDir, workingDir, leaderElectionController, feeder);
+            if (strategy.equals("edu.uchicago.cs.ucare.samc.server.ProgrammableModelChecker")) {
+                String programFileName = prop.getProperty("program");
+                if (programFileName == null) {
+                    throw new RuntimeException("No program file specified");
+                }
+                File program = new File(programFileName);
+                modelCheckingServerAbstract = new ProgrammableModelChecker(interceptorName, ackName, numNode, 
+                        testRecordDir, program, leaderElectionController, feeder);
+            } else {
+                @SuppressWarnings("unchecked")
+                Class<? extends ModelCheckingServerAbstract> modelCheckerClass = (Class<? extends ModelCheckingServerAbstract>) Class.forName(strategy);
+                Constructor<? extends ModelCheckingServerAbstract> modelCheckerConstructor = modelCheckerClass.getConstructor(String.class, 
+                        String.class, Integer.TYPE, Integer.TYPE, Integer.TYPE, String.class, String.class, 
+                        String.class, EnsembleController.class, WorkloadFeeder.class);
+                modelCheckingServerAbstract = modelCheckerConstructor.newInstance(interceptorName, ackName, 
+                        numNode, numCrash, numReboot, testRecordDir, traversalRecordDir, workingDir, 
+                        leaderElectionController, feeder);
+            }
             verifier.modelCheckingServer = modelCheckingServerAbstract;
             ModelCheckingServer interceptorStub = (ModelCheckingServer) 
                     UnicastRemoteObject.exportObject(modelCheckingServerAbstract, 0);

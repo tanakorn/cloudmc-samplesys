@@ -57,10 +57,7 @@ public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
         public void run() {
             InstructionTransition instruction;
             while (parser != null && (instruction = parser.readNextInstruction()) != null) {
-//                getOutstandingTcpPacket(enabledPackets);
                 getOutstandingTcpPacketTransition(currentEnabledTransitions);
-//                log.info("korn " + enabledPackets.toString());
-//                log.info("korn " + currentEnabledTransitions.toString());
                 Transition transition = instruction.getRealTransition(checker);
                 if (transition == null) {
                     break;
@@ -71,12 +68,14 @@ public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
                     
                 }
                 if (transition instanceof PacketSendTransition) {
-//                    enabledPackets.remove(((PacketSendTransition) transition).getPacket());
                     currentEnabledTransitions.remove(transition);
                 }
             }
             if (afterProgramModelChecker != null) {
                 afterProgramModelChecker.start();
+            } else {
+                checker.stopEnsemble();
+                System.exit(0);
             }
         }
         
@@ -98,12 +97,12 @@ public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
                 }
                 String[] tokens = transitionString.split(" ");
                 if (tokens[0].equals("packetsend")) {
-                    String packetIdString = tokens[1].split("=")[1];
-                    if (packetIdString.equals("*")) {
+                    String packetTransitionIdString = tokens[1].split("=")[1];
+                    if (packetTransitionIdString.equals("*")) {
                         return new PacketSendInstuctionTransition(0);
                     } else {
-                        long packetId = Long.parseLong(packetIdString);
-                        return new PacketSendInstuctionTransition(packetId);
+                        long packetTransitionId = Long.parseLong(packetTransitionIdString);
+                        return new PacketSendInstuctionTransition(packetTransitionId);
                     }
                 } else if (tokens[0].equals("nodecrash")) {
                     int id = Integer.parseInt(tokens[1].split("=")[1]);
@@ -145,24 +144,17 @@ public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
                 return (Transition) currentEnabledTransitions.peekFirst();
             }
             for (int i = 0; i < 15; ++i) {
-//                for (InterceptPacket packet : enabledPackets) {
-//                    if (packet.getId() == packetId) {
-//                        return new PacketSendTransition(checker, packet);
-//                    }
-//                }
                 for (Object t : currentEnabledTransitions) {
                     PacketSendTransition p = (PacketSendTransition) t;
-                    if (p.getPacket().getId() == packetId) {
+                    if (p.getTransitionId() == packetId) {
                         return p;
                     }
                 }
                 try {
-                    log.info("korn wait for new packet");
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
                     log.error("", e);
                 }
-//                getOutstandingTcpPacket(enabledPackets);
                 getOutstandingTcpPacketTransition(currentEnabledTransitions);
             }
             throw new RuntimeException("No expected enabled packet for " + packetId);
