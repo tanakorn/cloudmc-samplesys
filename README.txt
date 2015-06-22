@@ -1,10 +1,10 @@
 Description
 
-This is a demo project for CloudMC model checker. The program 'LeaderElection' does
+This is a demo project for SAMC model checker. The program 'LeaderElection' does
 only leader election. When you start multiple processes of LeaderElection, these
 processes talk with each other to elect a leader, and become idle.
 
-We integrate CloudMC to the LeaderElection. The model checker will run the cluster
+We integrate SAMC to the LeaderElection. The model checker will run the cluster
 of LeaderElection program and model check it.
 
 
@@ -25,7 +25,7 @@ CLASSPATH="$CLASSPATH:$ASPECTJ_LIB/aspectjweaver.jar"
 CLASSPATH="$CLASSPATH:$ASPECTJ_LIB/org.aspectj.matcher.jar"
 export CLASSPATH
 
-4. Run ant to compile the LeaderElection program integrating with CloudMC.
+4. Run ant to compile the LeaderElection program integrating with SAMC.
 
 
 Running
