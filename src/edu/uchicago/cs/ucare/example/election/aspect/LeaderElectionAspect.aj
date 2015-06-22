@@ -150,7 +150,7 @@ public aspect LeaderElectionAspect {
 		this(sender) && args(msg) && within(Sender);
 	
 	void around(Sender sender, ElectionMessage msg) : write(sender, msg) {
-		LeaderElectionPacket packet = packetGenerator.createNewLeaderElectionPacket("LeaderElectionCallback" + id, id, sender.otherId, msg.toBytes());
+		LeaderElectionPacket packet = packetGenerator.createNewLeaderElectionPacket("LeaderElectionCallback" + id, id, sender.otherId, msg.getRole(), msg.getLeader());
 		nodeSenderMap.put(packet.getId(), packet);
 		msgSenderMap.put(packet.getId(), sender);
 		try {
@@ -164,7 +164,7 @@ public aspect LeaderElectionAspect {
 	pointcut process(ElectionMessage msg) : call(public void Processor.process(ElectionMessage)) && args(msg);
 	
 	before(ElectionMessage msg) : process(msg) {
-		LeaderElectionPacket packet = packetGenerator2.createNewLeaderElectionPacket("LeaderElectionCallback" + id, msg.getSender(), id, msg.toBytes());
+		LeaderElectionPacket packet = packetGenerator2.createNewLeaderElectionPacket("LeaderElectionCallback" + id, msg.getSender(), id, msg.getRole(), msg.getLeader());
 		try {
 			ack.ack(packet.getId(), id);
 		} catch (RemoteException e) {

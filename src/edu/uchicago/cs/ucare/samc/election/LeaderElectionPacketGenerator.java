@@ -11,8 +11,8 @@ public class LeaderElectionPacketGenerator {
         packetCount = new HashMap<Integer, Integer>();
     }
     
-    public LeaderElectionPacket createNewLeaderElectionPacket(String callbackName, int fromId, int toId, byte[] data) {
-        int hash = leaderElectionHashCodeWithoutId(fromId, toId, data);
+    public LeaderElectionPacket createNewLeaderElectionPacket(String callbackName, int fromId, int toId, int role, int leader) {
+        int hash = leaderElectionHashCodeWithoutId(fromId, toId, role, leader);
         Integer count = packetCount.get(hash);
         if (count == null) {
             count = 0;
@@ -20,15 +20,16 @@ public class LeaderElectionPacketGenerator {
         ++count;
         int id = 31 * hash + count;
         packetCount.put(hash, count);
-        return new LeaderElectionPacket(id, callbackName, fromId, toId, data);
+        return new LeaderElectionPacket(id, callbackName, fromId, toId, role, leader);
     }
     
-    private static int leaderElectionHashCodeWithoutId(int fromId, int toId, byte[] data) {
+    private static int leaderElectionHashCodeWithoutId(int fromId, int toId, int role, int leader) {
         final int prime = 31;
         int result = 1;
-        result = prime * result + Arrays.hashCode(data);
         result = prime * result + fromId;
         result = prime * result + toId;
+        result = prime * result + role;
+        result = prime * result + leader;
         return result;
     }
     

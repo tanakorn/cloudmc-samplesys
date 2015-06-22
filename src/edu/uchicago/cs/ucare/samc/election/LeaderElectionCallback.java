@@ -39,8 +39,8 @@ public class LeaderElectionCallback implements PacketReleaseCallback {
 	@Override
 	public boolean callback(int packetId) throws RemoteException {
 		LeaderElectionPacket packet = nodeSenderMap.get(packetId);
-		ElectionMessage message = new ElectionMessage(0, packet.getData());
 		Sender sender = msgSenderMap.get(packetId);
+		ElectionMessage message = new ElectionMessage(sender.otherId, packet.getRole(), packet.getLeader());
 		sender.write(message);
 		return true;
 	}

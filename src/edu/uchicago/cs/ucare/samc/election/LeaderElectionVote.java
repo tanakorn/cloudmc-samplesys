@@ -16,10 +16,9 @@ public class LeaderElectionVote implements Serializable {
     }
     
     public LeaderElectionVote(LeaderElectionPacket leaderElectionPacket) {
-        ByteBuffer c = ByteBuffer.wrap(leaderElectionPacket.getData());
-        sender = c.getInt();
-        role = c.getInt();
-        leader = c.getInt();
+        sender = leaderElectionPacket.getFromId();
+        role = leaderElectionPacket.getRole();
+        leader = leaderElectionPacket.getLeader();
     }
     
     public LeaderElectionVote(int sender, int role, int leader) {

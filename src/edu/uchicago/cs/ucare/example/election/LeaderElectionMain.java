@@ -186,6 +186,7 @@ public class LeaderElectionMain {
 		for (Integer electedLeader : electionTable.values()){
 			count.put(electedLeader, count.containsKey(electedLeader) ? count.get(electedLeader) + 1 : 1);
 		}
+		LOG.info("Election table " + electionTable);
 		LOG.info("Count table " + count);
 		for (Integer electedLeader : count.keySet()) {
 			int totalElect = count.get(electedLeader);
