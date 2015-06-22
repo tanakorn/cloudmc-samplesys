@@ -136,8 +136,8 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                     exploredBranchRecorder.noteThisNode(".packet", nextTransition.toString());
                     try {
                         if (nextTransition.apply()) {
-                            pathRecordFile.write((getGlobalState() + "," + nextTransition.getTransitionId() + 
-                                    " ; " + nextTransition.toString() + "\n").getBytes());
+//                            pathRecordFile.write((getGlobalState() + "," + nextTransition.getTransitionId() + " ; " + nextTransition.toString() + "\n").getBytes());
+                            pathRecordFile.write((nextTransition.toString() + "\n").getBytes());
                             updateGlobalState();
                             if (nextTransition instanceof NodeCrashTransition) {
                                 NodeCrashTransition crash = (NodeCrashTransition) nextTransition;

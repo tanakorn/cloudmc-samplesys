@@ -64,7 +64,7 @@ public class LeaderElectionVerifier extends SpecVerifier {
         return false;
     }
     
-    public int numLooking(boolean[] isNodeOnline) {
+    private int numLooking(boolean[] isNodeOnline) {
     	int numLooking = 0;
     	for (int i = 0; i < isNodeOnline.length; ++i) {
     		if (isNodeOnline[i]) {
@@ -94,6 +94,11 @@ public class LeaderElectionVerifier extends SpecVerifier {
             }
         }
         return new int[] { numLeader, numFollower, numLooking };
+    }
+
+    @Override
+    public String verificationDetail() {
+        return null;
     }
     
 }

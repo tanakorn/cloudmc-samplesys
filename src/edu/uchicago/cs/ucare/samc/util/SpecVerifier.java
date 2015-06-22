@@ -7,5 +7,6 @@ public abstract class SpecVerifier {
     public ModelCheckingServerAbstract modelCheckingServer;
 
     public abstract boolean verify();
+    public abstract String verificationDetail();
 
 }

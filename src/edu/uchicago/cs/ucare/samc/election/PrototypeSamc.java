@@ -452,7 +452,8 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                             tuple.transition = ((AbstractNodeOperationTransition) tuple.transition).getRealNodeOperationTransition();
                             nodeOperationTransition.id = ((NodeOperationTransition) tuple.transition).getId();
                         }
-                        pathRecordFile.write((getGlobalState() + "," + globalState2 + "," + tuple.transition.getTransitionId() + " ; " + tuple.transition.toString() + "\n").getBytes());
+//                        pathRecordFile.write((getGlobalState() + "," + globalState2 + "," + tuple.transition.getTransitionId() + " ; " + tuple.transition.toString() + "\n").getBytes());
+                        pathRecordFile.write((tuple.transition.toString() + "\n").getBytes());
                         numAppliedTranstion++;
                         if (tuple.transition.apply()) {
                             updateGlobalState();
@@ -491,7 +492,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                 if (currentEnabledTransitions.isEmpty() && numWaitTime >= 2) {
                     boolean verifiedResult = verifier.verify();
                     int[] numRole = verifier.numRole(isNodeOnline);
-                    saveResult(verifiedResult + " " + numRole[0] + " " + numRole[1] + " " + numRole[2] + "\n");
+                    saveResult(verifiedResult + " ; leader=" + numRole[0] + ", follower=" + numRole[1] + ", looking=" + numRole[2] + "\n");
                     String mainPath = "";
                     for (TransitionTuple tuple : currentExploringPath) {
                         mainPath += tuple.toString() + "\n";
@@ -542,7 +543,8 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                             transition = ((AbstractNodeOperationTransition) transition).getRealNodeOperationTransition();
                             nodeOperationTransition.id = ((NodeOperationTransition) transition).getId();
                         }
-                        pathRecordFile.write((getGlobalState() + "," + globalState2 + "," + transition.getTransitionId() + " ; " + transition.toString() + "\n").getBytes());
+//                        pathRecordFile.write((getGlobalState() + "," + globalState2 + "," + transition.getTransitionId() + " ; " + transition.toString() + "\n").getBytes());
+                        pathRecordFile.write((transition.toString() + "\n").getBytes());
                         numAppliedTranstion++;
                         if (transition.apply()) {
                             updateGlobalState();

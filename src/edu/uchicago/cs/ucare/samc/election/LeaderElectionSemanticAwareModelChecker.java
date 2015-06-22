@@ -33,13 +33,9 @@ public class LeaderElectionSemanticAwareModelChecker extends PrototypeSamc {
         TransitionTuple lastTransition;
         while ((lastTransition = currentExploringPath.pollLast()) != null) {
             boolean[] oldOnlineStatus = prevOnlineStatus.removeLast();
-//            int[] oldServerState = prevRole.removeLast();
             LeaderElectionLocalState[] oldLocalStates = prevLocalStates.removeLast();
             LinkedList<TransitionTuple> tmpPath = (LinkedList<TransitionTuple>) currentExploringPath.clone();
             Iterator<TransitionTuple> reverseIter = currentExploringPath.descendingIterator();
-//            prevLeader.removeLast();
-//            Iterator<int[]> reverseLeaderIter = prevLeader.descendingIterator();
-//            Iterator<int[]> reverseRoleIter = prevRole.descendingIterator();
             Iterator<LeaderElectionLocalState[]> reverseLocalStateIter = prevLocalStates.descendingIterator();
             Iterator<boolean[]> reverseOnlineStatusIter = prevOnlineStatus.descendingIterator();
             int index = currentExploringPath.size();
@@ -47,8 +43,6 @@ public class LeaderElectionSemanticAwareModelChecker extends PrototypeSamc {
                 index--;
                 TransitionTuple tuple = reverseIter.next();
                 oldLocalStates = reverseLocalStateIter.next();
-//                int[] oldLeader = reverseLeaderIter.next();
-//                oldServerState = reverseRoleIter.next();
                 oldOnlineStatus = reverseOnlineStatusIter.next();
                 Set<Transition> enabledPackets = enabledPacketTable.get(tuple.state);
                 if (enabledPackets.contains(lastTransition.transition)) {
