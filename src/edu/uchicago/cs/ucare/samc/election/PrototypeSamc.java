@@ -32,6 +32,7 @@ import edu.uchicago.cs.ucare.samc.transition.TransitionTuple;
 import edu.uchicago.cs.ucare.samc.util.EnsembleController;
 import edu.uchicago.cs.ucare.samc.util.ExploredBranchRecorder;
 import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
+import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
 import edu.uchicago.cs.ucare.samc.util.SqliteExploredBranchRecorder;
 import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
 
@@ -56,31 +57,10 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     
     int globalState2;
     LinkedList<boolean[]> prevOnlineStatus;
-    LeaderElectionVerifier verifier;
-    
-    /*
-    int[] role;
-    int[] leader;
-    Map<Integer, Integer>[] electionTable;
-    
-    LinkedList<int[]> prevRole;
-    LinkedList<int[]> prevLeader;
-    LinkedList<Map<Integer, Integer>[]> prevElectionTable;
-    */
+    SpecVerifier verifier;
     
     LinkedList<LeaderElectionLocalState[]> prevLocalStates;
     
-    /*
-    HashMap<Integer, LeaderElectionVote> interestingNoti;
-    LinkedList<HashMap<Integer, LeaderElectionVote>> previousInterestingNoti;
-    ServerState[] serverState;
-    LinkedList<ServerState[]> previousServerState;
-    HashMap<Long, LeaderElectionVote>[] votingTable;
-    LinkedList<HashMap<Integer, LeaderElectionVote>[]> previousVotingTable;
-    int[] onDiskEpoch;
-    LinkedList<int[]> previousOnDiskEpoch;
-    */
-
     public PrototypeSamc(String interceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir,
             EnsembleController zkController, WorkloadFeeder feeder) {
@@ -92,22 +72,13 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String cacheDir,
             EnsembleController zkController, WorkloadFeeder feeder) {
         super(inceptorName, ackName, maxId, globalStatePathDir, zkController, feeder);
-//        serverState = new ServerState[numNode];
-//        votingTable = new HashMap[numNode];
-//        onDiskEpoch = new int[numNode];
-
-        /*
-        role = new int[numNode];
-        leader = new int[numNode];
-        electionTable = new Map[numNode];
-        */
         
         dporInitialPaths = new LinkedList<LinkedList<TransitionTuple>>();
         finishedDporInitialPaths = new HashSet<LinkedList<TransitionTuple>>();
         initialPathSecondAttempt = new HashSet<LinkedList<TransitionTuple>>();
         this.numCrash = numCrash;
         this.numReboot = numReboot;
-        verifier = (LeaderElectionVerifier) feeder.allVerifiers.peek();
+        verifier = (SpecVerifier) feeder.allVerifiers.peek();
         dporInitialPaths = new LinkedList<LinkedList<TransitionTuple>>();
         finishedDporInitialPaths = new HashSet<LinkedList<TransitionTuple>>();
         try {
@@ -177,16 +148,6 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         } catch (IOException e) {
             log.error("", e);
         }
-        /*
-        previousInterestingNoti = new LinkedList<HashMap<Integer,LeaderElectionVote>>();
-        interestingNoti = new HashMap<Integer, LeaderElectionVote>();
-        Arrays.fill(serverState, ServerState.LOOKING);
-        Arrays.fill(votingTable, null);
-        Arrays.fill(onDiskEpoch, 0);
-        previousServerState = new LinkedList<QuorumPeer.ServerState[]>();
-        previousVotingTable = new LinkedList<HashMap<Integer, LeaderElectionVote>[]>();
-        previousOnDiskEpoch = new LinkedList<int[]>();
-        */
         prevLocalStates = new LinkedList<LeaderElectionLocalState[]>();
     }
     
@@ -440,19 +401,12 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                         currentExploringPath.add(new TransitionTuple(globalState2, tuple.transition));
                         prevOnlineStatus.add(isNodeOnline.clone());
                         prevLocalStates.add(localStates.clone());
-                        /*
-                        previousInterestingNoti.add((HashMap<Integer, LeaderElectionVote>) interestingNoti.clone());
-//                        updateServerState();
-                        previousServerState.add(serverState.clone());
-                        previousOnDiskEpoch.add(onDiskEpoch.clone());
-                        */
                         saveLocalState();
                         if (tuple.transition instanceof AbstractNodeOperationTransition) {
                             AbstractNodeOperationTransition nodeOperationTransition = (AbstractNodeOperationTransition) tuple.transition;
                             tuple.transition = ((AbstractNodeOperationTransition) tuple.transition).getRealNodeOperationTransition();
                             nodeOperationTransition.id = ((NodeOperationTransition) tuple.transition).getId();
                         }
-//                        pathRecordFile.write((getGlobalState() + "," + globalState2 + "," + tuple.transition.getTransitionId() + " ; " + tuple.transition.toString() + "\n").getBytes());
                         pathRecordFile.write((tuple.transition.toString() + "\n").getBytes());
                         numAppliedTranstion++;
                         if (tuple.transition.apply()) {
@@ -460,16 +414,9 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                             if (tuple.transition instanceof PacketSendTransition) {
                                 InterceptPacket p = ((PacketSendTransition) tuple.transition).getPacket();
                                 int toId = p.getToId();
-                                /*
-                                LeaderElectionVote newNoti = new LeaderElectionVote((LeaderElectionPacket) p);
-                                if (LeaderElectionVote.isMoreInteresting(newNoti, interestingNoti.get(toId), serverState[toId])) {
-//                                   interestingNoti.put(toId, newNoti);
-                                }
-                                */
                             } else if (tuple.transition instanceof DiskWriteTransition) {
                                 if (!((DiskWriteTransition) tuple.transition).isObsolete()) {
                                     DiskWrite write = ((DiskWriteTransition) tuple.transition).getWrite();
-//                                    onDiskEpoch[write.getNodeId()] = write.getDataHash();
                                 }
                             }
                         }
@@ -491,8 +438,8 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                 recordEnabledTransitions(globalState2, currentEnabledTransitions);
                 if (currentEnabledTransitions.isEmpty() && numWaitTime >= 2) {
                     boolean verifiedResult = verifier.verify();
-                    int[] numRole = verifier.numRole(isNodeOnline);
-                    saveResult(verifiedResult + " ; leader=" + numRole[0] + ", follower=" + numRole[1] + ", looking=" + numRole[2] + "\n");
+                    String detail = verifier.verificationDetail();
+                    saveResult(verifiedResult + " ; " + detail + "\n");
                     String mainPath = "";
                     for (TransitionTuple tuple : currentExploringPath) {
                         mainPath += tuple.toString() + "\n";
@@ -531,19 +478,12 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                         prevOnlineStatus.add(isNodeOnline.clone());
                         prevOnlineStatus.add(isNodeOnline.clone());
                         prevLocalStates.add(localStates.clone());
-                        /*
-                        previousInterestingNoti.add((HashMap<Integer, LeaderElectionVote>) interestingNoti.clone());
-//                        updateServerState();
-                        previousServerState.add(serverState.clone());
-                        previousOnDiskEpoch.add(onDiskEpoch.clone());
-                        */
                         saveLocalState();
                         if (transition instanceof AbstractNodeOperationTransition) {
                             AbstractNodeOperationTransition nodeOperationTransition = (AbstractNodeOperationTransition) transition;
                             transition = ((AbstractNodeOperationTransition) transition).getRealNodeOperationTransition();
                             nodeOperationTransition.id = ((NodeOperationTransition) transition).getId();
                         }
-//                        pathRecordFile.write((getGlobalState() + "," + globalState2 + "," + transition.getTransitionId() + " ; " + transition.toString() + "\n").getBytes());
                         pathRecordFile.write((transition.toString() + "\n").getBytes());
                         numAppliedTranstion++;
                         if (transition.apply()) {
@@ -551,18 +491,11 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                             if (transition instanceof PacketSendTransition) {
                                 InterceptPacket p = ((PacketSendTransition) transition).getPacket();
                                 int toId = p.getToId();
-                                /*
-                                LeaderElectionVote newNoti = new LeaderElectionVote((LeaderElectionPacket) p);
-                                if (LeaderElectionVote.isMoreInteresting(newNoti, interestingNoti.get(toId), serverState[toId])) {
-                                   interestingNoti.put(toId, newNoti);
-                                }
-                                */
                             } else if (transition instanceof NodeCrashTransition) {
                                 markPacketsObsolete(currentExploringPath.size() - 1, ((NodeCrashTransition) transition).getId(), currentEnabledTransitions);
                             } else if (transition instanceof DiskWriteTransition) {
                                 if (!((DiskWriteTransition) transition).isObsolete()) {
                                     DiskWrite write = ((DiskWriteTransition) transition).getWrite();
-//                                    onDiskEpoch[write.getNodeId()] = write.getDataHash();
                                 }
                             }
                         }

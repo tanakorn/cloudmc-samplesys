@@ -24,6 +24,7 @@ public class LeaderElectionVerifier extends SpecVerifier {
     @Override
     public boolean verify() {
     	int onlineNode = 0;
+    	int[] supportTable = new int[modelCheckingServer.isNodeOnline.length];
         for (boolean status : modelCheckingServer.isNodeOnline) {
             if (status) {
                 onlineNode++;
@@ -38,10 +39,13 @@ public class LeaderElectionVerifier extends SpecVerifier {
                     LeaderElectionLocalState localState = modelCheckingServer.localStates[j];
                     if (localState.getRole() == LeaderElectionMain.LEADING) {
                         numLeader++;
+                        supportTable[j] = j;
                     } else if (localState.getRole() == LeaderElectionMain.FOLLOWING) {
                         numFollower++;
+                        supportTable[j] = localState.getLeader();
                     } else if (localState.getRole() == LeaderElectionMain.LOOKING) {
-                       numLooking++; 
+                        numLooking++; 
+                        supportTable[j] = -1;
                     }
                 }
             }
@@ -52,6 +56,16 @@ public class LeaderElectionVerifier extends SpecVerifier {
                 }
             } else {
                 if (numLeader == 1 && numFollower == (onlineNode - 1)) {
+                    int leader = -1;
+                    for (int j = 0; j < modelCheckingServer.isNodeOnline.length; ++j) {
+                        if (modelCheckingServer.isNodeOnline[j]) {
+                            if (leader == -1) {
+                                leader = supportTable[j];
+                            } else if (supportTable[j] != leader) {
+                                return false;
+                            }
+                        }
+                    }
                     return true;
                 }
             }
@@ -62,19 +76,6 @@ public class LeaderElectionVerifier extends SpecVerifier {
             }
         }
         return false;
-    }
-    
-    private int numLooking(boolean[] isNodeOnline) {
-    	int numLooking = 0;
-    	for (int i = 0; i < isNodeOnline.length; ++i) {
-    		if (isNodeOnline[i]) {
-    			LeaderElectionLocalState localState = modelCheckingServer.localStates[i];
-                if (localState.getRole() == LeaderElectionMain.LOOKING) {
-                   numLooking++; 
-                }
-    		}
-    	}
-    	return numLooking;
     }
     
     public int[] numRole(boolean[] isNodeOnline) {
@@ -98,7 +99,22 @@ public class LeaderElectionVerifier extends SpecVerifier {
 
     @Override
     public String verificationDetail() {
-        return null;
+        StringBuilder strBuilder = new StringBuilder();
+        for (int i = 0; i < modelCheckingServer.isNodeOnline.length; ++i) {
+            if (modelCheckingServer.isNodeOnline[i]) {
+                LeaderElectionLocalState localState = modelCheckingServer.localStates[i];
+                if (localState.getRole() == LeaderElectionMain.LEADING) {
+                    strBuilder.append("node " + i + " is LEADING ; ");
+                } else if (localState.getRole() == LeaderElectionMain.FOLLOWING) {
+                    strBuilder.append("node " + i + " is FOLLOWING to " + localState.getLeader() + " ; ");
+                } else if (localState.getRole() == LeaderElectionMain.LOOKING) {
+                    strBuilder.append("node " + i + " is still LOOKING ; ");
+                }
+            } else {
+                strBuilder.append("node " + i + " is down ; ");
+            }
+        }
+        return strBuilder.toString();
     }
     
 }

@@ -8,7 +8,6 @@ import java.util.Random;
 
 import com.almworks.sqlite4java.SQLiteException;
 
-import edu.uchicago.cs.ucare.samc.election.LeaderElectionVerifier;
 import edu.uchicago.cs.ucare.samc.transition.NodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeOperationTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeStartTransition;
@@ -16,6 +15,7 @@ import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.util.EnsembleController;
 import edu.uchicago.cs.ucare.samc.util.ExploredBranchRecorder;
+import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
 import edu.uchicago.cs.ucare.samc.util.SqliteExploredBranchRecorder;
 import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
 
@@ -29,7 +29,7 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
     String stateDir;
     Random random;
     
-    LeaderElectionVerifier verifier;
+    SpecVerifier verifier;
     
     public RandomModelChecker(String inceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String cacheDir,
@@ -37,7 +37,7 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
         super(inceptorName, ackName, maxId, globalStatePathDir, zkController, feeder);
         this.numCrash = numCrash;
         this.numReboot = numReboot;
-        verifier = (LeaderElectionVerifier) feeder.allVerifiers.peek();
+        verifier = (SpecVerifier) feeder.allVerifiers.peek();
         stateDir = packetRecordDir;
         try {
             exploredBranchRecorder = new SqliteExploredBranchRecorder(packetRecordDir);
@@ -112,6 +112,7 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
     class PathTraversalWorker extends Thread {
         
         @Override
+        @SuppressWarnings("unchecked")
         public void run() {
             int numWaitTime = 0;
             while (true) {
@@ -119,8 +120,8 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
                 adjustCrashReboot(currentEnabledTransitions);
                 if (currentEnabledTransitions.isEmpty() && numWaitTime >= 2) {
                     boolean verifiedResult = verifier.verify();
-                    int[] numRole = verifier.numRole(isNodeOnline);
-                    saveResult(verifiedResult + " ; leader=" + numRole[0] + ", follower=" + numRole[1] + ", looking=" + numRole[2] + "\n");
+                    String detail = verifier.verificationDetail();
+                    saveResult(verifiedResult + " ; " + detail + "\n");
                     recordTestId();
                     exploredBranchRecorder.markBelowSubtreeFinished();
                     resetTest();

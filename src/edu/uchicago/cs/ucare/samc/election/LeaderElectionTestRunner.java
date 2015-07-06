@@ -82,7 +82,6 @@ public class LeaderElectionTestRunner {
             String verifierName = prop.getProperty("verifier");
             String ackName = "Ack";
             LinkedList<SpecVerifier> specVerifiers = new LinkedList<SpecVerifier>();
-//            LeaderElectionVerifier verifier = new LeaderElectionVerifier();
             @SuppressWarnings("unchecked")
             Class<? extends SpecVerifier> verifierClass = (Class<? extends SpecVerifier>) Class.forName(verifierName);
             Constructor<? extends SpecVerifier> verifierConstructor = verifierClass.getConstructor();
@@ -97,8 +96,6 @@ public class LeaderElectionTestRunner {
                     String.class, EnsembleController.class, WorkloadFeeder.class);
             modelCheckingServerAbstract = modelCheckerConstructor.newInstance(interceptorName, ackName, numNode, numCrash, numReboot, testRecordDir, 
                     traversalRecordDir, workingDir, leaderElectionController, feeder);
-//            modelCheckingServerAbstract = new LeaderElectionSemanticAwareModelChecker(interceptorName, ackName, numNode,
-//            		numCrash, numReboot, testRecordDir, traversalRecordDir, workingDir, leaderElectionController, feeder);
             verifier.modelCheckingServer = modelCheckingServerAbstract;
             ModelCheckingServer interceptorStub = (ModelCheckingServer) 
                     UnicastRemoteObject.exportObject(modelCheckingServerAbstract, 0);
@@ -127,19 +124,12 @@ public class LeaderElectionTestRunner {
                 Process reset = Runtime.getRuntime().exec("resettest " + numNode + 
                         " " + workingDir);
                 reset.waitFor();
-                /*
-                Process setTestId = Runtime.getRuntime().exec("setzkmc_testid " + 
-                        testNum + " " + workingDir);
-                setTestId.waitFor();
-                */
                 zkController.resetTest();
-//                zkController.startEnsemble();
                 checker.runEnsemble();
                 feeder.runAll();
                 while (!waitingFlag.exists()) {
                     Thread.sleep(30);
                 }
-//                zkController.stopEnsemble();
                 checker.stopEnsemble();
                 if (isPausedEveryTest) {
                     System.out.print("enter to continue");
