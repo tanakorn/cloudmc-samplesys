@@ -516,7 +516,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                 } else if (currentEnabledTransitions.isEmpty()) {
                     try {
                         numWaitTime++;
-                        Thread.sleep(500);
+                        Thread.sleep(100);
                     } catch (InterruptedException e) {
                     }
                     continue;

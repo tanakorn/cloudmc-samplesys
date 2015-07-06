@@ -29,7 +29,7 @@ public class LeaderElectionVerifier extends SpecVerifier {
                 onlineNode++;
             }
         }
-        for (int i = 0; i < 200; ++i) {
+        for (int i = 0; i < 3; ++i) {
             int numLeader = 0;
             int numFollower = 0;
             int numLooking = 0;
@@ -56,7 +56,7 @@ public class LeaderElectionVerifier extends SpecVerifier {
                 }
             }
             try {
-                Thread.sleep(50);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
 
             }
