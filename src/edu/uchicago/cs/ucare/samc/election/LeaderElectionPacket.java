@@ -14,7 +14,11 @@ public class LeaderElectionPacket extends InterceptPacket {
 		addKeyValue(LEADER_KEY, leader);
 	}
 	
-	public void setRole(int role) {
+	public LeaderElectionPacket(String callbackId) {
+	    super(callbackId);
+    }
+
+    public void setRole(int role) {
 		addKeyValue(ROLE_KEY, role);
 	}
 	

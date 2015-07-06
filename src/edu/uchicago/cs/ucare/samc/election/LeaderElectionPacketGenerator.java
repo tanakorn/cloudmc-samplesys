@@ -1,7 +1,8 @@
 package edu.uchicago.cs.ucare.samc.election;
 
-import java.util.Arrays;
 import java.util.HashMap;
+
+import edu.uchicago.cs.ucare.example.election.ElectionMessage;
 
 public class LeaderElectionPacketGenerator {
     
@@ -31,6 +32,18 @@ public class LeaderElectionPacketGenerator {
         result = prime * result + role;
         result = prime * result + leader;
         return result;
+    }
+    
+    public int getHash(ElectionMessage msg, int toId) {
+        int hash = leaderElectionHashCodeWithoutId(msg.getSender(), toId, msg.getRole(), msg.getLeader());
+        Integer count = packetCount.get(hash);
+        if (count == null) {
+            count = 0;
+        }
+        ++count;
+        int id = 31 * hash + count;
+        packetCount.put(hash, count);
+        return id;
     }
     
 }
