@@ -25,6 +25,11 @@ public class SqliteExploredBranchRecorder implements ExploredBranchRecorder {
     SQLiteStatement replaceNote;
     SQLiteStatement updateNote;
     SQLiteStatement readNote;
+
+    static {
+        java.util.logging.Logger.getLogger("com.almworks.sqlite4java").setLevel(java.util.logging.Level.WARNING); 
+    }
+    
     
     public SqliteExploredBranchRecorder(String dbDir) throws SQLiteException {
         this.dbDir = dbDir;
