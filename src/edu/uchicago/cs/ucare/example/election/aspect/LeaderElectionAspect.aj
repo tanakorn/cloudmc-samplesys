@@ -146,21 +146,29 @@ public aspect LeaderElectionAspect {
 		callback.bind();
 	}
 	
-	pointcut write(Sender sender, ElectionMessage msg) : call(public void Sender.write(ElectionMessage)) && 
-		this(sender) && args(msg) && within(Sender);
+	pointcut write(Sender sender, ElectionMessage msg) : call(public void Sender.write(ElectionMessage)) 
+        && this(sender) && args(msg) && within(Sender);
 	
 	void around(Sender sender, ElectionMessage msg) : write(sender, msg) {
-		LeaderElectionPacket packet = packetGenerator.createNewLeaderElectionPacket("LeaderElectionCallback" + id, id, sender.otherId, msg.getRole(), msg.getLeader());
+	    LeaderElectionPacket packet = new LeaderElectionPacket("LeaderElectionCallback" + id);
+	    packet.addKeyValue(LeaderElectionPacket.EVENT_ID_KEY, hash(msg, sender.otherId));
+	    packet.addKeyValue(LeaderElectionPacket.SOURCE_KEY, id);
+	    packet.addKeyValue(LeaderElectionPacket.DESTINATION_KEY, sender.otherId);
+	    packet.addKeyValue(LeaderElectionPacket.LEADER_KEY, msg.getRole());
+	    packet.addKeyValue(LeaderElectionPacket.ROLE_KEY, msg.getLeader());
 		nodeSenderMap.put(packet.getId(), packet);
 		msgSenderMap.put(packet.getId(), sender);
 		try {
 			modelCheckingServer.offerPacket(packet);
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
+	String hash(ElectionMessage msg, int toId) {
+	    return packetGenerator.getHash(msg, toId) + "";
+	}
+
 	pointcut process(ElectionMessage msg) : call(public void Processor.process(ElectionMessage)) && args(msg);
 	
 	before(ElectionMessage msg) : process(msg) {

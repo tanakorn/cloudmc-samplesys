@@ -10,6 +10,10 @@ public class InterceptPacket extends Event {
     public InterceptPacket() {
     }
     
+    public InterceptPacket(String callbackId) {
+        super(callbackId);
+    }
+    
     public InterceptPacket(int id, String callbackId, int fromId, int toId) {
         super(id, callbackId);
         addKeyValue(SOURCE_KEY, fromId);
