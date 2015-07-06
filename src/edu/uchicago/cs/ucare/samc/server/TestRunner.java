@@ -56,12 +56,12 @@ public class TestRunner {
         Class<? extends EnsembleController> ensembleControlloerClass = (Class<? extends EnsembleController>) Class.forName(workload);
         Constructor<? extends EnsembleController> ensembleControllerConstructor = ensembleControlloerClass.getConstructor(Integer.TYPE, String.class);
         EnsembleController ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir);
-        ModelCheckingServerAbstract checker = createLeaderElectionModelCheckerFromConf(workingDir + "/mc.conf", workingDir, ensembleController);
+        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/mc.conf", workingDir, ensembleController);
         startExploreTesting(checker, numNode, workingDir, ensembleController, isPasuedEveryTest);
     }
     
-    protected static ModelCheckingServerAbstract createLeaderElectionModelCheckerFromConf(String confFile, 
-            String workingDir, EnsembleController leaderElectionController) throws ClassNotFoundException, 
+    protected static ModelCheckingServerAbstract createModelCheckerFromConf(String confFile, 
+            String workingDir, EnsembleController ensembleController) throws ClassNotFoundException, 
             NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, 
             IllegalArgumentException, InvocationTargetException {
         ModelCheckingServerAbstract modelCheckingServerAbstract = null;
@@ -94,7 +94,7 @@ public class TestRunner {
                 }
                 File program = new File(programFileName);
                 modelCheckingServerAbstract = new ProgrammableModelChecker(interceptorName, ackName, numNode, 
-                        testRecordDir, program, leaderElectionController, feeder);
+                        testRecordDir, program, ensembleController, feeder);
             } else {
                 @SuppressWarnings("unchecked")
                 Class<? extends ModelCheckingServerAbstract> modelCheckerClass = (Class<? extends ModelCheckingServerAbstract>) Class.forName(strategy);
@@ -103,7 +103,7 @@ public class TestRunner {
                         String.class, EnsembleController.class, WorkloadFeeder.class);
                 modelCheckingServerAbstract = modelCheckerConstructor.newInstance(interceptorName, ackName, 
                         numNode, numCrash, numReboot, testRecordDir, traversalRecordDir, workingDir, 
-                        leaderElectionController, feeder);
+                        ensembleController, feeder);
             }
             verifier.modelCheckingServer = modelCheckingServerAbstract;
             ModelCheckingServer interceptorStub = (ModelCheckingServer) 

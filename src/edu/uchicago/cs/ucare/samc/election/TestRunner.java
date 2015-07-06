@@ -23,9 +23,9 @@ import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
 import edu.uchicago.cs.ucare.samc.util.Workload;
 import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
 
-public class LeaderElectionTestRunner {
+public class TestRunner {
     
-    final static Logger LOG = LoggerFactory.getLogger(LeaderElectionTestRunner.class);
+    final static Logger LOG = LoggerFactory.getLogger(TestRunner.class);
     
     static WorkloadFeeder feeder;
     
@@ -56,14 +56,12 @@ public class LeaderElectionTestRunner {
         Class<? extends EnsembleController> ensembleControlloerClass = (Class<? extends EnsembleController>) Class.forName(workload);
         Constructor<? extends EnsembleController> ensembleControllerConstructor = ensembleControlloerClass.getConstructor(Integer.TYPE, String.class);
         EnsembleController ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir);
-        LeaderElectionEnsembleController leaderElectionontroller = 
-                new LeaderElectionEnsembleController(numNode, workingDir);
-        ModelCheckingServerAbstract checker = createLeaderElectionModelCheckerFromConf(workingDir + "/mc.conf", workingDir, ensembleController);
+        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/mc.conf", workingDir, ensembleController);
         startExploreTesting(checker, numNode, workingDir, ensembleController, isPasuedEveryTest);
     }
     
-    protected static ModelCheckingServerAbstract createLeaderElectionModelCheckerFromConf(String confFile, 
-            String workingDir, EnsembleController leaderElectionController) throws ClassNotFoundException, 
+    protected static ModelCheckingServerAbstract createModelCheckerFromConf(String confFile, 
+            String workingDir, EnsembleController ensembleController) throws ClassNotFoundException, 
             NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, 
             IllegalArgumentException, InvocationTargetException {
         ModelCheckingServerAbstract modelCheckingServerAbstract = null;
@@ -95,7 +93,7 @@ public class LeaderElectionTestRunner {
                     String.class, Integer.TYPE, Integer.TYPE, Integer.TYPE, String.class, String.class, 
                     String.class, EnsembleController.class, WorkloadFeeder.class);
             modelCheckingServerAbstract = modelCheckerConstructor.newInstance(interceptorName, ackName, numNode, numCrash, numReboot, testRecordDir, 
-                    traversalRecordDir, workingDir, leaderElectionController, feeder);
+                    traversalRecordDir, workingDir, ensembleController, feeder);
             verifier.modelCheckingServer = modelCheckingServerAbstract;
             ModelCheckingServer interceptorStub = (ModelCheckingServer) 
                     UnicastRemoteObject.exportObject(modelCheckingServerAbstract, 0);
