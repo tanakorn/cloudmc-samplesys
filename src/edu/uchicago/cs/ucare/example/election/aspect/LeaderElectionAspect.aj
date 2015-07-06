@@ -83,6 +83,7 @@ public aspect LeaderElectionAspect {
 	after(int role) : setRole(role) {
 		this.localState.setRole(role);
 		try {
+		    logger.info("node " + id + " sets its role to be " + role);
 			modelCheckingServer.setLocalState(id, localState);
 			modelCheckingServer.updateLocalState(id, getLocalState());
 		} catch (RemoteException e) {
@@ -132,7 +133,7 @@ public aspect LeaderElectionAspect {
 		isBound = true;
 		if (isReadingForAll() && !isThereSendingMessage() && isBound) {
 			try {
-				System.out.println("node " + id + " is in steady state "); 
+				logger.info("node " + id + " is in steady state "); 
 				modelCheckingServer.informSteadyState(id, getLocalState());
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
@@ -195,10 +196,10 @@ public aspect LeaderElectionAspect {
 	
 	before(Receiver receiver) : reading(receiver) {
 		isReading[receiver.otherId] = true;
-		System.out.println("Reading for " + receiver.otherId + " : " + isReadingForAll() + " " + !isThereSendingMessage());
+		logger.info("Reading for " + receiver.otherId + " : " + isReadingForAll() + " " + !isThereSendingMessage());
 		if (isReadingForAll() && !isThereSendingMessage() && isBound) {
 			try {
-				System.out.println("node " + id + " is in steady state "); 
+				logger.info("node " + id + " is in steady state "); 
 				modelCheckingServer.informSteadyState(id, getLocalState());
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
@@ -209,14 +210,14 @@ public aspect LeaderElectionAspect {
 	
 	after(Receiver receiver) : reading(receiver) {
 		isReading[receiver.otherId] = false;
-		System.out.println("Finished reading for " + receiver.otherId + " : " + isReadingForAll() + " " + !isThereSendingMessage());
+		logger.info("Finished reading for " + receiver.otherId + " : " + isReadingForAll() + " " + !isThereSendingMessage());
 	}
 
 	after(Sender sender, ElectionMessage msg) : write(sender, msg) {
-		System.out.println("Finished writing for " + sender.otherId + " " + isReadingForAll() + " " + !isThereSendingMessage());
+		logger.info("Finished writing for " + sender.otherId + " " + isReadingForAll() + " " + !isThereSendingMessage());
 		if (isReadingForAll() && !isThereSendingMessage() && isBound) {
 			try {
-				System.out.println("node " + id + " is in steady state "); 
+				logger.info("node " + id + " is in steady state "); 
 				modelCheckingServer.informSteadyState(id, getLocalState());
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
