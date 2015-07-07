@@ -7,17 +7,16 @@ import edu.uchicago.cs.ucare.samc.transition.NodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeStartTransition;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
-import edu.uchicago.cs.ucare.samc.util.EnsembleController;
-import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
+import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 
 public class DporTreeTravelModelChecker extends TreeTravelModelChecker {
 
     public DporTreeTravelModelChecker(String interceptorName, String ackName,
             int numNode, int numCrash, int numReboot,
             String globalStatePathDir, String packetRecordDir, String cacheDir,
-            EnsembleController zkController, WorkloadFeeder feeder) {
+            WorkloadDriver zkController) {
         super(interceptorName, ackName, numNode, numCrash, numReboot,
-                globalStatePathDir, packetRecordDir, zkController, feeder);
+                globalStatePathDir, packetRecordDir, zkController);
     }
 
     @SuppressWarnings("unchecked")

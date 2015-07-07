@@ -2,10 +2,9 @@ package edu.uchicago.cs.ucare.samc.election;
 
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.samc.event.Event;
-import edu.uchicago.cs.ucare.samc.util.EnsembleController;
+import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 import edu.uchicago.cs.ucare.samc.util.LocalState;
-import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
 
 public class LeaderElectionSemanticAwareModelChecker extends DporModelChecker {
 
@@ -25,19 +24,17 @@ public class LeaderElectionSemanticAwareModelChecker extends DporModelChecker {
     public LeaderElectionSemanticAwareModelChecker(String interceptorName,
             String ackName, int maxId, int numCrash, int numReboot,
             String globalStatePathDir, String packetRecordDir,
-            EnsembleController zkController, WorkloadFeeder feeder) {
+            WorkloadDriver zkController) {
         this(interceptorName, ackName, maxId, numCrash, numReboot,
-                globalStatePathDir, packetRecordDir, "/tmp", zkController,
-                feeder);
+                globalStatePathDir, packetRecordDir, "/tmp", zkController);
     }
 
     public LeaderElectionSemanticAwareModelChecker(String inceptorName,
             String ackName, int maxId, int numCrash, int numReboot,
             String globalStatePathDir, String packetRecordDir, String cacheDir,
-            EnsembleController zkController, WorkloadFeeder feeder) {
+            WorkloadDriver zkController) {
         super(inceptorName, ackName, maxId, numCrash, numReboot,
-                globalStatePathDir, packetRecordDir, cacheDir, zkController,
-                feeder);
+                globalStatePathDir, packetRecordDir, cacheDir, zkController);
     }
 
 }

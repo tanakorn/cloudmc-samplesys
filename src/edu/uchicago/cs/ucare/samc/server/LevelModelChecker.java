@@ -13,10 +13,9 @@ import edu.uchicago.cs.ucare.samc.transition.NodeOperationTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeStartTransition;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
-import edu.uchicago.cs.ucare.samc.util.EnsembleController;
+import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.ExploredBranchRecorder;
 import edu.uchicago.cs.ucare.samc.util.SqliteExploredBranchRecorder;
-import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
 
 public abstract class LevelModelChecker extends ProgrammableModelChecker {
     
@@ -37,8 +36,8 @@ public abstract class LevelModelChecker extends ProgrammableModelChecker {
     
     public LevelModelChecker(String interceptorName, String ackName, int numNode,
             int numCrash, int numReboot, String globalStatePathDir, String levelRecordDir, 
-            EnsembleController zkController, WorkloadFeeder feeder) throws FileNotFoundException {
-        super(interceptorName, ackName, numNode, globalStatePathDir, null, zkController, feeder);
+            WorkloadDriver zkController) throws FileNotFoundException {
+        super(interceptorName, ackName, numNode, globalStatePathDir, null, zkController);
         this.numCrash = numCrash;
         this.numReboot = numReboot;
         if (numCrash > numNode || numReboot > numCrash) {
@@ -64,8 +63,8 @@ public abstract class LevelModelChecker extends ProgrammableModelChecker {
 
     public LevelModelChecker(String inceptorName, String ackName, int numNode,
             int numCrash, int numReboot, String globalStatePathDir, String levelRecordDir, File program,
-            EnsembleController zkController, WorkloadFeeder feeder) throws FileNotFoundException {
-        super(inceptorName, ackName, numNode, globalStatePathDir, program, zkController, feeder);
+            WorkloadDriver zkController) throws FileNotFoundException {
+        super(inceptorName, ackName, numNode, globalStatePathDir, program, zkController);
         this.numCrash = numCrash;
         this.numReboot = numReboot;
         if (numCrash > numNode || numReboot > numCrash) {

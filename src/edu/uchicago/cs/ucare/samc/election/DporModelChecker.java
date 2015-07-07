@@ -9,23 +9,22 @@ import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.transition.TransitionTuple;
-import edu.uchicago.cs.ucare.samc.util.EnsembleController;
+import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 import edu.uchicago.cs.ucare.samc.util.LocalState;
-import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
 
 public abstract class DporModelChecker extends PrototypeSamc {
 
     public DporModelChecker(String interceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir,
-            EnsembleController zkController, WorkloadFeeder feeder) {
-        this(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, "/tmp", zkController, feeder);
+            WorkloadDriver zkController) {
+        this(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, "/tmp", zkController);
     }
     
     public DporModelChecker(String inceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String cacheDir,
-            EnsembleController zkController, WorkloadFeeder feeder) {
-        super(inceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, cacheDir, zkController, feeder);
+            WorkloadDriver zkController) {
+        super(inceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, cacheDir, zkController);
     }
     
     public abstract boolean isDependent(LocalState state, Event e1, Event e2);

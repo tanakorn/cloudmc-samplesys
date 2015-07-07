@@ -13,9 +13,8 @@ import edu.uchicago.cs.ucare.samc.transition.NodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeStartTransition;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
-import edu.uchicago.cs.ucare.samc.util.EnsembleController;
+import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.LocalState;
-import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
 
 public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
     
@@ -26,8 +25,8 @@ public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
     
     public ProgrammableModelChecker(String interceptorName, String ackName, 
             int numNode, String globalStatePathDir, File program, 
-            EnsembleController zkController, WorkloadFeeder feeder) throws FileNotFoundException {
-        super(interceptorName, ackName, numNode, globalStatePathDir, zkController, feeder);
+            WorkloadDriver zkController) throws FileNotFoundException {
+        super(interceptorName, ackName, numNode, globalStatePathDir, zkController);
         this.program = program;
         afterProgramModelChecker = null;
         resetTest();

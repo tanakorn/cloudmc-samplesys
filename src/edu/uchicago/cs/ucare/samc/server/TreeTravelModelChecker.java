@@ -13,10 +13,9 @@ import edu.uchicago.cs.ucare.samc.transition.NodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeStartTransition;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
-import edu.uchicago.cs.ucare.samc.util.EnsembleController;
+import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.ExploredBranchRecorder;
 import edu.uchicago.cs.ucare.samc.util.SqliteExploredBranchRecorder;
-import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
 
 public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract {
     
@@ -31,8 +30,8 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
     
     public TreeTravelModelChecker(String interceptorName, String ackName, int numNode,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, 
-            EnsembleController zkController, WorkloadFeeder feeder) {
-        super(interceptorName, ackName, numNode, globalStatePathDir, zkController, feeder);
+            WorkloadDriver zkController) {
+        super(interceptorName, ackName, numNode, globalStatePathDir, zkController);
         try {
             this.numCrash = numCrash;
             this.numReboot = numReboot;

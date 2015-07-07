@@ -13,11 +13,9 @@ import edu.uchicago.cs.ucare.samc.transition.NodeOperationTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeStartTransition;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
-import edu.uchicago.cs.ucare.samc.util.EnsembleController;
+import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.ExploredBranchRecorder;
-import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
 import edu.uchicago.cs.ucare.samc.util.SqliteExploredBranchRecorder;
-import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
 
 public class RandomModelChecker extends ModelCheckingServerAbstract {
     
@@ -31,8 +29,8 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
     
     public RandomModelChecker(String inceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String cacheDir,
-            EnsembleController zkController, WorkloadFeeder feeder) {
-        super(inceptorName, ackName, maxId, globalStatePathDir, zkController, feeder);
+            WorkloadDriver zkController) {
+        super(inceptorName, ackName, maxId, globalStatePathDir, zkController);
         this.numCrash = numCrash;
         this.numReboot = numReboot;
         stateDir = packetRecordDir;

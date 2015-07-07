@@ -12,23 +12,22 @@ import edu.uchicago.cs.ucare.samc.transition.NodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeOperationTransition;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
-import edu.uchicago.cs.ucare.samc.util.EnsembleController;
-import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
+import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 
 public class DfsLevelModelChecker extends LevelModelChecker {
     
     public DfsLevelModelChecker(String interceptorName, String ackName, int numNode, 
             int numCrash, int numReboot, String globalStatePathDir, String levelRecordDir, 
-            EnsembleController zkController, WorkloadFeeder feeder) throws FileNotFoundException {
+            WorkloadDriver zkController) throws FileNotFoundException {
         super(interceptorName, ackName, numNode, numCrash, numReboot, globalStatePathDir, 
-                levelRecordDir, zkController, feeder);
+                levelRecordDir, zkController);
     }
     
     public DfsLevelModelChecker(String inceptorName, String ackName, int numNode, 
             int numCrash, int numReboot, String globalStatePathDir, String levelRecordDir, File program,
-            EnsembleController zkController, WorkloadFeeder feeder) throws FileNotFoundException {
+            WorkloadDriver zkController) throws FileNotFoundException {
         super(inceptorName, ackName, numNode, numCrash, numReboot, globalStatePathDir, 
-                levelRecordDir, program, zkController, feeder);
+                levelRecordDir, program, zkController);
     }
 
     @Override
@@ -195,39 +194,30 @@ public class DfsLevelModelChecker extends LevelModelChecker {
           currentLevelPackets = PacketSendTransition.buildTransitions(checker, enabledPackets);
           while (true) {
               getOutstandingTcpPacketTransition(currentLevelTransitions);
-              if (feeder.areAllWorkDone()) {
-                  if (currentLevelPackets.size() == 0) {
-                      while (waitPacket.get() > 0) {
-                          try {
-                            Thread.sleep(10);
-                        } catch (InterruptedException e) {
-                            continue;
-                        }
-                      }
-                      boolean verifiedResult = feeder.verify();
-                      exploredTransitionRecorder.markBelowSubtreeFinished();
-                      recordTestId();
-                      exploredTransitionRecorder.noteThisNode(".result", verifiedResult ? "pass" : "failed");
-                      LinkedList<Transition> transitions = new LinkedList<Transition>();
-                      int depth = exploredTransitionRecorder.getCurrentDepth();
-                      for (int i = 0; i < depth; ++i) {
-                          loadPreviousLevelInfo();
-                          if (nextTransitionOrder(currentLevelPackets, transitions) == 0) {
-                              exploredTransitionRecorder.markBelowSubtreeFinished();
-                              transitions.clear();
-                          } else {
-                              break;
-                          }
-                      }
-                      break;
+              if (currentLevelPackets.size() == 0) {
+                  while (waitPacket.get() > 0) {
+                      try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        continue;
+                    }
                   }
-              } else if (currentLevelPackets.size() == 0) {
-                  try {
-                      Thread.sleep(100);
-                  } catch (InterruptedException e) {
-                      log.error(e.toString());
+                  boolean verifiedResult = zkController.verifier.verify();
+                  exploredTransitionRecorder.markBelowSubtreeFinished();
+                  recordTestId();
+                  exploredTransitionRecorder.noteThisNode(".result", verifiedResult ? "pass" : "failed");
+                  LinkedList<Transition> transitions = new LinkedList<Transition>();
+                  int depth = exploredTransitionRecorder.getCurrentDepth();
+                  for (int i = 0; i < depth; ++i) {
+                      loadPreviousLevelInfo();
+                      if (nextTransitionOrder(currentLevelPackets, transitions) == 0) {
+                          exploredTransitionRecorder.markBelowSubtreeFinished();
+                          transitions.clear();
+                      } else {
+                          break;
+                      }
                   }
-                  continue;
+                  break;
               }
               saveCurrentLevelInfo();
               LinkedList<Transition> transitions = new LinkedList<Transition>();

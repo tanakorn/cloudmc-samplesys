@@ -4,16 +4,15 @@ import java.util.LinkedList;
 import java.util.ListIterator;
 
 import edu.uchicago.cs.ucare.samc.transition.Transition;
-import edu.uchicago.cs.ucare.samc.util.EnsembleController;
-import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
+import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 
 public class DfsTreeTravelModelChecker extends TreeTravelModelChecker {
 
     public DfsTreeTravelModelChecker(String interceptorName, String ackName, int numNode,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, 
-            String cacheDir, EnsembleController zkController, WorkloadFeeder feeder) {
+            String cacheDir, WorkloadDriver zkController) {
         super(interceptorName, ackName, numNode, numCrash, numReboot, globalStatePathDir, 
-                packetRecordDir, zkController, feeder);
+                packetRecordDir, zkController);
     }
     
     @Override

@@ -10,9 +10,9 @@ import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.uchicago.cs.ucare.samc.util.EnsembleController;
+import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 
-public class LeaderElectionEnsembleController extends EnsembleController {
+public class LeaderElectionEnsembleController extends WorkloadDriver {
     
     private final static Logger LOG = LoggerFactory.getLogger(LeaderElectionEnsembleController.class);
     
@@ -153,6 +153,11 @@ public class LeaderElectionEnsembleController extends EnsembleController {
                 }
             }
         }
+        
+    }
+
+    @Override
+    public void runWorkload() {
         
     }
 

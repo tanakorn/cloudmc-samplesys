@@ -29,12 +29,10 @@ import edu.uchicago.cs.ucare.samc.transition.NodeStartTransition;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.transition.TransitionTuple;
-import edu.uchicago.cs.ucare.samc.util.EnsembleController;
+import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.ExploredBranchRecorder;
 import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
-import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
 import edu.uchicago.cs.ucare.samc.util.SqliteExploredBranchRecorder;
-import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
 
 public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     
@@ -62,15 +60,15 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     
     public PrototypeSamc(String interceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir,
-            EnsembleController zkController, WorkloadFeeder feeder) {
-        this(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, "/tmp", zkController, feeder);
+            WorkloadDriver zkController) {
+        this(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, "/tmp", zkController);
     }
     
     @SuppressWarnings("unchecked")
     public PrototypeSamc(String inceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String cacheDir,
-            EnsembleController zkController, WorkloadFeeder feeder) {
-        super(inceptorName, ackName, maxId, globalStatePathDir, zkController, feeder);
+            WorkloadDriver zkController) {
+        super(inceptorName, ackName, maxId, globalStatePathDir, zkController);
         
         dporInitialPaths = new LinkedList<LinkedList<TransitionTuple>>();
         finishedDporInitialPaths = new HashSet<LinkedList<TransitionTuple>>();

@@ -28,13 +28,12 @@ import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
 import edu.uchicago.cs.ucare.samc.transition.DiskWriteTransition;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
-import edu.uchicago.cs.ucare.samc.util.EnsembleController;
+import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 import edu.uchicago.cs.ucare.samc.util.LocalState;
 import edu.uchicago.cs.ucare.samc.util.PacketReceiveAck;
 import edu.uchicago.cs.ucare.samc.util.PacketReleaseCallback;
 import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
-import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
 
 public abstract class ModelCheckingServerAbstract implements ModelCheckingServer {
     
@@ -84,8 +83,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected FileOutputStream local2File;
     protected FileOutputStream resultFile;
 
-    protected EnsembleController zkController;
-    protected WorkloadFeeder feeder;
+    protected WorkloadDriver zkController;
     protected SpecVerifier verifier;
     
     protected LinkedList<Transition> currentEnabledTransitions = new LinkedList<Transition>();
@@ -97,8 +95,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     public LeaderElectionLocalState[] localStates;
 
     public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
-            String testRecordDirPath, EnsembleController zkController,
-            WorkloadFeeder feeder) {
+            String testRecordDirPath, WorkloadDriver zkController) {
         this.interceptorName = interceptorName;
         log = LoggerFactory.getLogger(this.getClass() + "." + interceptorName);
         packetQueue = new LinkedBlockingQueue<InterceptPacket>();
@@ -122,8 +119,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         this.numNode = numNode;
         this.testRecordDirPath = testRecordDirPath;
         this.zkController = zkController;
-        this.feeder = feeder;
-        this.verifier = (SpecVerifier) feeder.allVerifiers.peek();
+        this.verifier = zkController.verifier;
         pathRecordFile = null;
         localRecordFile = null;
         codeRecordFiles = new FileOutputStream[numNode];

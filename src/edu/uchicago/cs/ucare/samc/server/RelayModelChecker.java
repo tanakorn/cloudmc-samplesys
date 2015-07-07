@@ -7,8 +7,7 @@ import java.util.LinkedList;
 import edu.uchicago.cs.ucare.samc.event.DiskWrite;
 import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
-import edu.uchicago.cs.ucare.samc.util.EnsembleController;
-import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
+import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 
 public class RelayModelChecker extends ProgrammableModelChecker {
     
@@ -16,20 +15,20 @@ public class RelayModelChecker extends ProgrammableModelChecker {
     
     public RelayModelChecker(String interceptorName, String ackName,
             int numNode, String globalStatePathDir,
-            EnsembleController zkController, WorkloadFeeder feeder)
+            WorkloadDriver zkController)
             throws FileNotFoundException {
         super(interceptorName, ackName, numNode, globalStatePathDir, null,
-                zkController, feeder);
+                zkController);
         currentLevelPackets = new LinkedList<PacketSendTransition>();
         resetTest();
     }
 
     public RelayModelChecker(String interceptorName, String ackName,
             int numNode, String globalStatePathDir, File program,
-            EnsembleController zkController, WorkloadFeeder feeder)
+            WorkloadDriver zkController)
             throws FileNotFoundException {
         super(interceptorName, ackName, numNode, globalStatePathDir, program,
-                zkController, feeder);
+                zkController);
         currentLevelPackets = new LinkedList<PacketSendTransition>();
         resetTest();
     }

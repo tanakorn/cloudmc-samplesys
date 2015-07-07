@@ -10,7 +10,6 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.LinkedList;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -18,16 +17,14 @@ import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServer;
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
-import edu.uchicago.cs.ucare.samc.util.EnsembleController;
+import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
-import edu.uchicago.cs.ucare.samc.util.Workload;
-import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
 
 public class TestRunner {
     
     final static Logger LOG = LoggerFactory.getLogger(TestRunner.class);
     
-    static WorkloadFeeder feeder;
+    static WorkloadDriver ensembleController;
     
     public static void main(String[] argv) throws IOException, ClassNotFoundException, 
             NoSuchMethodException, SecurityException, InstantiationException, 
@@ -53,15 +50,15 @@ public class TestRunner {
         int numNode = Integer.parseInt(testRunnerProp.getProperty("num_node"));
         String workload = testRunnerProp.getProperty("workload_driver");
         @SuppressWarnings("unchecked")
-        Class<? extends EnsembleController> ensembleControlloerClass = (Class<? extends EnsembleController>) Class.forName(workload);
-        Constructor<? extends EnsembleController> ensembleControllerConstructor = ensembleControlloerClass.getConstructor(Integer.TYPE, String.class);
-        EnsembleController ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir);
+        Class<? extends WorkloadDriver> ensembleControlloerClass = (Class<? extends WorkloadDriver>) Class.forName(workload);
+        Constructor<? extends WorkloadDriver> ensembleControllerConstructor = ensembleControlloerClass.getConstructor(Integer.TYPE, String.class);
+        ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir);
         ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/mc.conf", workingDir, ensembleController);
         startExploreTesting(checker, numNode, workingDir, ensembleController, isPasuedEveryTest);
     }
     
     protected static ModelCheckingServerAbstract createModelCheckerFromConf(String confFile, 
-            String workingDir, EnsembleController ensembleController) throws ClassNotFoundException, 
+            String workingDir, WorkloadDriver ensembleController) throws ClassNotFoundException, 
             NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, 
             IllegalArgumentException, InvocationTargetException {
         ModelCheckingServerAbstract modelCheckingServerAbstract = null;
@@ -75,25 +72,23 @@ public class TestRunner {
             String testRecordDir = prop.getProperty("test_record_dir");
             String traversalRecordDir = prop.getProperty("traversal_record_dir");
             String strategy = prop.getProperty("exploring_strategy");
-            int numCrash = Integer.parseInt(prop.getProperty("num_crash"));
-            int numReboot = Integer.parseInt(prop.getProperty("num_reboot"));
+            int numCrash = Integer.parseInt(prop.getProperty("num_crash", "0"));
+            int numReboot = Integer.parseInt(prop.getProperty("num_reboot", "0"));
             String verifierName = prop.getProperty("verifier");
             String ackName = "Ack";
-            LinkedList<SpecVerifier> specVerifiers = new LinkedList<SpecVerifier>();
             @SuppressWarnings("unchecked")
             Class<? extends SpecVerifier> verifierClass = (Class<? extends SpecVerifier>) Class.forName(verifierName);
             Constructor<? extends SpecVerifier> verifierConstructor = verifierClass.getConstructor();
             SpecVerifier verifier = verifierConstructor.newInstance();
-            specVerifiers.add(verifier);
-            feeder = new WorkloadFeeder(new LinkedList<Workload>(), specVerifiers);
+            ensembleController.setVerifier(verifier);
             LOG.info("State exploration strategy is " + strategy);
             @SuppressWarnings("unchecked")
             Class<? extends ModelCheckingServerAbstract> modelCheckerClass = (Class<? extends ModelCheckingServerAbstract>) Class.forName(strategy);
             Constructor<? extends ModelCheckingServerAbstract> modelCheckerConstructor = modelCheckerClass.getConstructor(String.class, 
                     String.class, Integer.TYPE, Integer.TYPE, Integer.TYPE, String.class, String.class, 
-                    String.class, EnsembleController.class, WorkloadFeeder.class);
+                    String.class, WorkloadDriver.class);
             modelCheckingServerAbstract = modelCheckerConstructor.newInstance(interceptorName, ackName, numNode, numCrash, numReboot, testRecordDir, 
-                    traversalRecordDir, workingDir, ensembleController, feeder);
+                    traversalRecordDir, workingDir, ensembleController);
             verifier.modelCheckingServer = modelCheckingServerAbstract;
             ModelCheckingServer interceptorStub = (ModelCheckingServer) 
                     UnicastRemoteObject.exportObject(modelCheckingServerAbstract, 0);
@@ -110,7 +105,7 @@ public class TestRunner {
     }
     
     protected static void startExploreTesting(ModelCheckingServerAbstract checker, int numNode, String workingDir, 
-            EnsembleController zkController, boolean isPausedEveryTest) throws IOException {
+            WorkloadDriver zkController, boolean isPausedEveryTest) throws IOException {
         File gspathDir = new File(workingDir + "/record");
         int testNum = gspathDir.list().length + 1;
         File finishedFlag = new File(workingDir + "/state/.finished");
@@ -124,7 +119,7 @@ public class TestRunner {
                 reset.waitFor();
                 zkController.resetTest();
                 checker.runEnsemble();
-                feeder.runAll();
+                ensembleController.runWorkload();
                 while (!waitingFlag.exists()) {
                     Thread.sleep(30);
                 }
