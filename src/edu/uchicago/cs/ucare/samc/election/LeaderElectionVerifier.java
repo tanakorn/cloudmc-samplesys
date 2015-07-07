@@ -78,25 +78,6 @@ public class LeaderElectionVerifier extends SpecVerifier {
         return false;
     }
     
-    public int[] numRole(boolean[] isNodeOnline) {
-        int numLeader = 0;
-        int numFollower = 0;
-        int numLooking = 0;
-        for (int j = 0; j < modelCheckingServer.isNodeOnline.length; ++j) {
-            if (modelCheckingServer.isNodeOnline[j]) {
-                LeaderElectionLocalState localState = modelCheckingServer.localStates[j];
-                if (localState.getRole() == LeaderElectionMain.LEADING) {
-                    numLeader++;
-                } else if (localState.getRole() == LeaderElectionMain.FOLLOWING) {
-                    numFollower++;
-                } else if (localState.getRole() == LeaderElectionMain.LOOKING) {
-                   numLooking++; 
-                }
-            }
-        }
-        return new int[] { numLeader, numFollower, numLooking };
-    }
-
     @Override
     public String verificationDetail() {
         StringBuilder strBuilder = new StringBuilder();
