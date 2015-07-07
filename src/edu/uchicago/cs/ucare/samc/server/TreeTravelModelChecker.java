@@ -2,7 +2,6 @@ package edu.uchicago.cs.ucare.samc.server;
 
 import java.io.File;
 import java.io.IOException;
-import java.rmi.RemoteException;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -16,7 +15,6 @@ import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.util.EnsembleController;
 import edu.uchicago.cs.ucare.samc.util.ExploredBranchRecorder;
-import edu.uchicago.cs.ucare.samc.util.LocalState;
 import edu.uchicago.cs.ucare.samc.util.SqliteExploredBranchRecorder;
 import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
 
@@ -175,10 +173,4 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
         }
     }
     
-    @Override
-	public void setLocalState(int nodeId, LocalState localState) throws RemoteException {
-    	
-    }
-    
-
 }
