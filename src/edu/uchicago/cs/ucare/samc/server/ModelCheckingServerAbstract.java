@@ -33,6 +33,7 @@ import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 import edu.uchicago.cs.ucare.samc.util.LocalState;
 import edu.uchicago.cs.ucare.samc.util.PacketReceiveAck;
 import edu.uchicago.cs.ucare.samc.util.PacketReleaseCallback;
+import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
 import edu.uchicago.cs.ucare.samc.util.WorkloadFeeder;
 
 public abstract class ModelCheckingServerAbstract implements ModelCheckingServer {
@@ -85,6 +86,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
 
     protected EnsembleController zkController;
     protected WorkloadFeeder feeder;
+    protected SpecVerifier verifier;
     
     protected LinkedList<Transition> currentEnabledTransitions = new LinkedList<Transition>();
     protected boolean[] isNodeSteady;
@@ -121,6 +123,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         this.testRecordDirPath = testRecordDirPath;
         this.zkController = zkController;
         this.feeder = feeder;
+        this.verifier = (SpecVerifier) feeder.allVerifiers.peek();
         pathRecordFile = null;
         localRecordFile = null;
         codeRecordFiles = new FileOutputStream[numNode];

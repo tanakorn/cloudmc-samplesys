@@ -57,7 +57,6 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     
     int globalState2;
     LinkedList<boolean[]> prevOnlineStatus;
-    SpecVerifier verifier;
     
     LinkedList<LeaderElectionLocalState[]> prevLocalStates;
     
@@ -78,7 +77,6 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         initialPathSecondAttempt = new HashSet<LinkedList<TransitionTuple>>();
         this.numCrash = numCrash;
         this.numReboot = numReboot;
-        verifier = (SpecVerifier) feeder.allVerifiers.peek();
         dporInitialPaths = new LinkedList<LinkedList<TransitionTuple>>();
         finishedDporInitialPaths = new HashSet<LinkedList<TransitionTuple>>();
         try {

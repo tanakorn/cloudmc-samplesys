@@ -29,15 +29,12 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
     String stateDir;
     Random random;
     
-    SpecVerifier verifier;
-    
     public RandomModelChecker(String inceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String cacheDir,
             EnsembleController zkController, WorkloadFeeder feeder) {
         super(inceptorName, ackName, maxId, globalStatePathDir, zkController, feeder);
         this.numCrash = numCrash;
         this.numReboot = numReboot;
-        verifier = (SpecVerifier) feeder.allVerifiers.peek();
         stateDir = packetRecordDir;
         try {
             exploredBranchRecorder = new SqliteExploredBranchRecorder(packetRecordDir);
