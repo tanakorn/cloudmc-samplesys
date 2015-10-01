@@ -63,7 +63,8 @@ mcsystem.conf
 
 7. Run lermi script (i.e. `./lermi`), this is a shell script that run
 rmiregistry with class path specifying. You have to change the defined variable
-java.rmi.server.codebase to point to your SAMC location.
+java.rmi.server.codebase to point to SAMC location class directory (i.e.
+/path_to_samc/bin)
 
 8. Go to the working directory that you have specified in mcsystem.conf
 
