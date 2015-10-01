@@ -34,10 +34,20 @@ Running
 
 2. Open mcsystem.conf with a text editor. The mcsystem.conf is a config file for
 model checker.
-  - Change working_dir variable to a path you want model checker to work. The
-    model checker will store every file here (target system config file, log,
-    etc.)
+  - Change working_dir variable to a path model checker will work on. The
+    model checker will store every file here including the intermediate data,
+    environment setup script, log files, result, etc. It could be any path that
+    you have permission to write (e.g. ~/modelcheck)
   - Change num_node to be the number of node of LeaderElection we want to test
+  - Change exploring_strategy to be exploration strategy that we want to run
+    - edu.uchicago.cs.ucare.samc.server.DfsTreeTravelModelChecker for DFS
+      exploration
+    - edu.uchicago.cs.ucare.samc.server.DporTreeTravelModelChecker for black-box
+      DPOR
+    - edu.uchicago.cs.ucare.samc.server.RandomModelChecker for random
+      exploration
+    - edu.uchicago.cs.ucare.samc.election.LeaderElectionSemanticAwareModelChecker
+      for semantic-aware exploration
 
 3. Go to mcdeploy/resource
 
@@ -47,26 +57,20 @@ model checker.
 
 5. Go to mcdeploy again.
 
-6. Open mcsystem.conf and edit exploring_strategy
-  - edu.uchicago.cs.ucare.samc.server.DfsTreeTravelModelChecker for DFS exploration
-  - edu.uchicago.cs.ucare.samc.server.DporTreeTravelModelChecker for black-box DPOR
-  - edu.uchicago.cs.ucare.samc.server.RandomModelChecker for random exploration
-  - edu.uchicago.cs.ucare.samc.election.LeaderElectionSemanticAwareModelChecker for semantic-aware exploration
-
-7. Run setup script (i.e. `./setup`), this is a shell script that setup
+6. Run setup script (i.e. `./setup`), this is a shell script that setup
 environment for running model checker in the working directory you specified in
 mcsystem.conf
 
-8. Run lermi script (i.e. `./lermi`), this is a shell script that run
+7. Run lermi script (i.e. `./lermi`), this is a shell script that run
 rmiregistry with class path specifying. You have to change the defined variable
 java.rmi.server.codebase to point to your SAMC location.
 
-9. Go to the working directory that you have specified in mcsystem.conf
+8. Go to the working directory that you have specified in mcsystem.conf
 
-10. Run testrunner.sh (i.e. `./testrunner.sh`), now model checker will keep
+9. Run testrunner.sh (i.e. `./testrunner.sh`), now model checker will keep
 running until it explores all paths.
 
-11. In a log file, mc.log, there should not be ERROR line, and it should keep
+10. In a log file, mc.log, there should not be ERROR line, and it should keep
 informing the result this means that the setup is fine
 
 
