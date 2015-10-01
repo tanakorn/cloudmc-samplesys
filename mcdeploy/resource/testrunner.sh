@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 leader_election=/Users/tanakorn/Documents/UChicago/SAMC/simc
 classpath=.:$leader_election/bin

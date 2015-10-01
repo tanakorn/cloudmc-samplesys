@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 interval=60
 if [ ! -z "$1" ]; then

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 if [ $# -lt 5 ]; then
   echo "usage: init <mc_name> <num_node> <num_crash> <strategy> <working_dir> [other_vars]"
