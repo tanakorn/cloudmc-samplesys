@@ -47,7 +47,6 @@ public aspect LeaderElectionAspect {
     int numNode;
 	boolean[] isReading;
 
-
 	public LeaderElectionAspect() {
 		nodeSenderMap = new HashMap<Integer, LeaderElectionPacket>();
 		msgSenderMap = new HashMap<Integer, Sender>();

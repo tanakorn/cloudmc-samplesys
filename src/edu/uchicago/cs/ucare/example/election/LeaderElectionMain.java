@@ -12,6 +12,7 @@ import java.net.Socket;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -19,6 +20,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.uchicago.cs.ucare.example.election.interposition.LeaderElectionInterposition;
 import edu.uchicago.cs.ucare.samc.election.LeaderElectionAspectProperties;
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServer;
 import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
@@ -28,15 +30,9 @@ public class LeaderElectionMain {
 	
     private static final Logger LOG = LoggerFactory.getLogger(LeaderElectionMain.class);
     
-    private static boolean SAMC_ENABLED;
-    
 	public static final int LOOKING = 0;
 	public static final int FOLLOWING = 1;
 	public static final int LEADING = 2;
-	
-	private static LeaderElectionLocalState localState;
-	private static ModelCheckingServer modelCheckingServer;
-	private static PacketReceiveAck ack;
 	
 	public static String getRoleName(int role) {
 		String name;
@@ -216,22 +212,11 @@ public class LeaderElectionMain {
 			System.exit(1);
 		}
 		
-		SAMC_ENABLED = Boolean.parseBoolean(System.getProperty("samc_enabled", "false"));
-		if (SAMC_ENABLED) {
+		if (LeaderElectionInterposition.SAMC_ENABLED) {
             LOG.info("Enable SAMC");
 		}
-		localState = new LeaderElectionLocalState();
+		LeaderElectionInterposition.localState = new LeaderElectionLocalState();
 		
-		if (SAMC_ENABLED) {
-		    try {
-                modelCheckingServer = (ModelCheckingServer) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
-                ack = (PacketReceiveAck) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName() + "Ack");
-            } catch (NotBoundException e) {
-                System.err.println("Cannot find model checking server, switch to no-SAMC mode");
-                SAMC_ENABLED = false;
-            }
-		}
-
 		id = Integer.parseInt(args[0]);
 		role = LOOKING;
 		leader = id;
@@ -241,12 +226,13 @@ public class LeaderElectionMain {
         electionTable = new HashMap<Integer, Integer>();
         electionTable.put(id, leader);
 
-		if (SAMC_ENABLED) {
-            localState.setRole(role);
-            localState.setLeader(leader);
-            localState.setElectionTable(electionTable);
-			modelCheckingServer.setLocalState(id, localState);
-			modelCheckingServer.updateLocalState(id, localState.hashCode());
+		if (LeaderElectionInterposition.SAMC_ENABLED) {
+		    LeaderElectionInterposition.id = id;
+            LeaderElectionInterposition.localState.setRole(role);
+            LeaderElectionInterposition.localState.setLeader(leader);
+            LeaderElectionInterposition.localState.setElectionTable(electionTable);
+			LeaderElectionInterposition.modelCheckingServer.setLocalState(id, LeaderElectionInterposition.localState);
+			LeaderElectionInterposition.modelCheckingServer.updateLocalState(id, LeaderElectionInterposition.localState.hashCode());
 		}
 
 		readConfig(args[1]);
@@ -406,12 +392,12 @@ public class LeaderElectionMain {
 										role = FOLLOWING;
 									}
 								}
-								if (SAMC_ENABLED) {
-						            localState.setRole(role);
-						            localState.setLeader(leader);
+								if (LeaderElectionInterposition.SAMC_ENABLED) {
+						            LeaderElectionInterposition.localState.setRole(role);
+						            LeaderElectionInterposition.localState.setLeader(leader);
 						            try {
-                                        modelCheckingServer.setLocalState(id, localState);
-                                        modelCheckingServer.updateLocalState(id, localState.hashCode());
+                                        LeaderElectionInterposition.modelCheckingServer.setLocalState(id, LeaderElectionInterposition.localState);
+                                        LeaderElectionInterposition.modelCheckingServer.updateLocalState(id, LeaderElectionInterposition.localState.hashCode());
                                     } catch (RemoteException e) {
                                         e.printStackTrace();
                                     }
@@ -432,12 +418,12 @@ public class LeaderElectionMain {
 									role = FOLLOWING;
 								}
 							}
-							if (SAMC_ENABLED) {
-                                localState.setRole(role);
-                                localState.setLeader(leader);
+							if (LeaderElectionInterposition.SAMC_ENABLED) {
+                                LeaderElectionInterposition.localState.setRole(role);
+                                LeaderElectionInterposition.localState.setLeader(leader);
                                 try {
-                                    modelCheckingServer.setLocalState(id, localState);
-                                    modelCheckingServer.updateLocalState(id, localState.hashCode());
+                                    LeaderElectionInterposition.modelCheckingServer.setLocalState(id, LeaderElectionInterposition.localState);
+                                    LeaderElectionInterposition.modelCheckingServer.updateLocalState(id, LeaderElectionInterposition.localState.hashCode());
                                 } catch (RemoteException e) {
                                     e.printStackTrace();
                                 }
