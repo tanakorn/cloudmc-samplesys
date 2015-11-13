@@ -137,9 +137,11 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
                         try {
                             while((r = stdout.read(buff)) != -1) {
                                 consoleLog[i].write(buff, 0, r);
+                                consoleLog[i].flush();
                             }
                             while((r = stderr.read(buff)) != -1) {
                                 consoleLog[i].write(buff, 0, r);
+                                consoleLog[i].flush();
                             }
                         } catch (IOException e) {
 //                            LOG.debug("", e);
