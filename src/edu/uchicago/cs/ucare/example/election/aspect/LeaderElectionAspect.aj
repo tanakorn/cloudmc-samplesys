@@ -23,7 +23,6 @@ import edu.uchicago.cs.ucare.samc.election.LeaderElectionCallback;
 import edu.uchicago.cs.ucare.samc.election.LeaderElectionPacket;
 import edu.uchicago.cs.ucare.samc.election.LeaderElectionPacketGenerator;
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServer;
-import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 import edu.uchicago.cs.ucare.samc.util.PacketReceiveAck;
 
 public aspect LeaderElectionAspect {
@@ -31,7 +30,6 @@ public aspect LeaderElectionAspect {
 	Logger logger = LoggerFactory.getLogger(LeaderElectionAspect.class);
 	
 	int id;
-	LeaderElectionLocalState localState;
 	
 	boolean isBound;
 	
@@ -55,7 +53,6 @@ public aspect LeaderElectionAspect {
 		msgSenderMap = new HashMap<Integer, Sender>();
 		packetGenerator = new LeaderElectionPacketGenerator();
 		packetGenerator2 = new LeaderElectionPacketGenerator();
-		localState = new LeaderElectionLocalState();
 		isBound = false;
 		try {
 			modelCheckingServer = (ModelCheckingServer) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
@@ -78,48 +75,6 @@ public aspect LeaderElectionAspect {
 		this.id = id;
 	}
 	
-	pointcut setRole(int role) : set(static int LeaderElectionMain.role) && args(role);
-	
-	after(int role) : setRole(role) {
-		this.localState.setRole(role);
-		try {
-		    logger.info("node " + id + " sets its role to be " + role);
-			modelCheckingServer.setLocalState(id, localState);
-			modelCheckingServer.updateLocalState(id, getLocalState());
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	pointcut setLeader(int leader) : set(static int LeaderElectionMain.leader) && args(leader);
-	
-	after(int leader) : setLeader(leader) {
-		this.localState.setLeader(leader);
-		try {
-			modelCheckingServer.setLocalState(id, localState);
-			modelCheckingServer.updateLocalState(id, getLocalState());
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	pointcut setElectionTable(Map<Integer, Integer> electionTable) : 
-		set(static Map<Integer, Integer> LeaderElectionMain.electionTable) && 
-        args(electionTable);
-	
-	after(Map<Integer, Integer> electionTable) : setElectionTable(electionTable) {
-		this.localState.setElectionTable(electionTable);
-		try {
-			modelCheckingServer.setLocalState(id, localState);
-			modelCheckingServer.updateLocalState(id, getLocalState());
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
 	pointcut startWorking() : execution(public static void LeaderElectionMain.work());
 
 	before() : startWorking() {
@@ -134,7 +89,7 @@ public aspect LeaderElectionAspect {
 		if (isReadingForAll() && !isThereSendingMessage() && isBound) {
 			try {
 				logger.info("node " + id + " is in steady state "); 
-				modelCheckingServer.informSteadyState(id, getLocalState());
+				modelCheckingServer.informSteadyState(id, 0);
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -186,10 +141,6 @@ public aspect LeaderElectionAspect {
 		}
 	}
 	
-	public int getLocalState() {
-		return localState.hashCode();
-	}
-	
 	/* --- compute steady state --- */
 
 	pointcut reading(Receiver receiver) : call(void Receiver.read(DataInputStream, byte[]) throws IOException) && this(receiver);
@@ -200,7 +151,7 @@ public aspect LeaderElectionAspect {
 		if (isReadingForAll() && !isThereSendingMessage() && isBound) {
 			try {
 				logger.info("node " + id + " is in steady state "); 
-				modelCheckingServer.informSteadyState(id, getLocalState());
+				modelCheckingServer.informSteadyState(id, 0);
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -218,7 +169,7 @@ public aspect LeaderElectionAspect {
 		if (isReadingForAll() && !isThereSendingMessage() && isBound) {
 			try {
 				logger.info("node " + id + " is in steady state "); 
-				modelCheckingServer.informSteadyState(id, getLocalState());
+				modelCheckingServer.informSteadyState(id, 0);
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

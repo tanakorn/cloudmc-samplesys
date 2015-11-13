@@ -9,6 +9,9 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -16,13 +19,24 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.uchicago.cs.ucare.samc.election.LeaderElectionAspectProperties;
+import edu.uchicago.cs.ucare.samc.server.ModelCheckingServer;
+import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
+import edu.uchicago.cs.ucare.samc.util.PacketReceiveAck;
+
 public class LeaderElectionMain {
 	
     private static final Logger LOG = LoggerFactory.getLogger(LeaderElectionMain.class);
     
+    private static boolean SAMC_ENABLED;
+    
 	public static final int LOOKING = 0;
 	public static final int FOLLOWING = 1;
 	public static final int LEADING = 2;
+	
+	private static LeaderElectionLocalState localState;
+	private static ModelCheckingServer modelCheckingServer;
+	private static PacketReceiveAck ack;
 	
 	public static String getRoleName(int role) {
 		String name;
@@ -170,12 +184,6 @@ public class LeaderElectionMain {
         processor.sendAll(getCurrentMessage());
 	}
 	
-	static void updateState(int role,int leader) {
-		LeaderElectionMain.role = role;
-		LeaderElectionMain.leader = leader;
-		electionTable.put(id, leader);
-	}
-	
 	static boolean isBetterThanCurrentLeader(ElectionMessage msg) {
 		return msg.leader > leader;
 	}
@@ -207,6 +215,22 @@ public class LeaderElectionMain {
 			System.err.println("usage: LeaderElectionMain <id> <config>");
 			System.exit(1);
 		}
+		
+		SAMC_ENABLED = Boolean.parseBoolean(System.getProperty("samc_enabled", "false"));
+		if (SAMC_ENABLED) {
+            LOG.info("Enable SAMC");
+		}
+		localState = new LeaderElectionLocalState();
+		
+		if (SAMC_ENABLED) {
+		    try {
+                modelCheckingServer = (ModelCheckingServer) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
+                ack = (PacketReceiveAck) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName() + "Ack");
+            } catch (NotBoundException e) {
+                System.err.println("Cannot find model checking server, switch to no-SAMC mode");
+                SAMC_ENABLED = false;
+            }
+		}
 
 		id = Integer.parseInt(args[0]);
 		role = LOOKING;
@@ -216,6 +240,14 @@ public class LeaderElectionMain {
 		
         electionTable = new HashMap<Integer, Integer>();
         electionTable.put(id, leader);
+
+		if (SAMC_ENABLED) {
+            localState.setRole(role);
+            localState.setLeader(leader);
+            localState.setElectionTable(electionTable);
+			modelCheckingServer.setLocalState(id, localState);
+			modelCheckingServer.updateLocalState(id, localState.hashCode());
+		}
 
 		readConfig(args[1]);
 		work();
@@ -374,6 +406,16 @@ public class LeaderElectionMain {
 										role = FOLLOWING;
 									}
 								}
+								if (SAMC_ENABLED) {
+						            localState.setRole(role);
+						            localState.setLeader(leader);
+						            try {
+                                        modelCheckingServer.setLocalState(id, localState);
+                                        modelCheckingServer.updateLocalState(id, localState.hashCode());
+                                    } catch (RemoteException e) {
+                                        e.printStackTrace();
+                                    }
+						        }
                                 sendAll(getCurrentMessage());
 							}
 							break;
@@ -390,6 +432,16 @@ public class LeaderElectionMain {
 									role = FOLLOWING;
 								}
 							}
+							if (SAMC_ENABLED) {
+                                localState.setRole(role);
+                                localState.setLeader(leader);
+                                try {
+                                    modelCheckingServer.setLocalState(id, localState);
+                                    modelCheckingServer.updateLocalState(id, localState.hashCode());
+                                } catch (RemoteException e) {
+                                    e.printStackTrace();
+                                }
+                            }
                             sendAll(getCurrentMessage());
 							break;
 						}
