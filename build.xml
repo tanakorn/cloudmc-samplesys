@@ -23,24 +23,14 @@
     <property name="build.dir" value="${basedir}/bin" />
     <property name="build.classes" value="${build.dir}"/>
 
-	  <property name="ajlib" value="${env.ASPECTJ_LIB}"/>
-
-	  <path id="aspectj.java.classpath">
-	      <fileset dir="${lib.dir}">
-	        <include name="${lib.dir.includes}" />
-	        <exclude name="${lib.dir.excludes}" />
-	      </fileset>
-	      <fileset dir="${ant.home}/lib">
-	        <include name="ant.jar" />
-	      </fileset>
-	      <pathelement path="${ajlib}/aspectjrt.jar" />
-	  </path>
-
 	  <path id="java.classpath">
 	      <fileset dir="${lib.dir}">
 	        <include name="${lib.dir.includes}" />
 	        <exclude name="${lib.dir.excludes}" />
 	      </fileset>
+        <fileset dir="${ant.home}/lib">
+          <include name="ant.jar" />
+        </fileset>
 	  </path>
 
     <target name="clean">
@@ -48,15 +38,15 @@
       <delete file="${basedir}/${final.name}.jar"/>
     </target>
 
-    <target name="compile-aspectj" >
-        <taskdef classpath="${ajlib}/aspectjtools.jar"
-        	resource="org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties"/>
-        <iajc srcdir="${java.src.dir}" destdir="${build.classes}" 
-               target="${javac.target}" source="${javac.source}" 
-               classpathref="aspectj.java.classpath" />
+    <target name="compile" >
+        <mkdir dir="${build.classes}" />
+        <javac srcdir="${java.src.dir}" destdir="${build.classes}" 
+               target="${javac.target}" source="${javac.source}" >
+            <classpath refid="java.classpath"/>
+        </javac>
     </target>
 
-    <target name="jar" depends="compile-aspectj">
+    <target name="jar" depends="compile">
         <exec executable="hostname" outputproperty="host.name"/>
         <jar jarfile="${basedir}/${final.name}.jar">
             <fileset dir="${build.classes}" excludes="**/.generated"/>
