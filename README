@@ -10,35 +10,11 @@ of LeaderElection program and model check it.
 
 Compiling
 
-1. Download and install AspectJ, more detail can find here,
-https://eclipse.org/aspectj/
-
-2. Set environment variable ASPECTJ_LIB to point to the AspectJ library path, 
-e.g., If you use bash, add the following line to your bashrc
-export ASPECTJ_LIB="/path/aspectj/lib"
-
-3. Set Java classpath to include the AspectJ library (all AspectJ jar files).
-e.g., If you use bash, add the following lines to your bashrc
-CLASSPATH="$CLASSPATH:$ASPECTJ_LIB/aspectjrt.jar"
-CLASSPATH="$CLASSPATH:$ASPECTJ_LIB/aspectjtools.jar"
-CLASSPATH="$CLASSPATH:$ASPECTJ_LIB/aspectjweaver.jar"
-CLASSPATH="$CLASSPATH:$ASPECTJ_LIB/org.aspectj.matcher.jar"
-export CLASSPATH
-
-4. Make sure that environment variables you set has an effect on your current
-shell
-e.g., If you use bash, you can run 
-`source /path/to/your/bashrc`
-
-5. Run ant to compile the LeaderElection program integrating with SAMC.
-i.e.,
-`ant`
+1. Run ant to compile the LeaderElection program integrating with SAMC. 
+i.e., `ant`
 
 
 Running
-
-0. To run the model checker, you need to setup environment as same as when you
-are compiling it (step 2 - 4).
 
 1. Go to mcdeploy.
 
