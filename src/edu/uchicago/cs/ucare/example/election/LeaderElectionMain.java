@@ -9,12 +9,23 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import edu.uchicago.cs.ucare.example.election.interposition.LeaderElectionInterposition;
+import edu.uchicago.cs.ucare.samc.election.LeaderElectionAspectProperties;
+import edu.uchicago.cs.ucare.samc.election.LeaderElectionPacket;
+import edu.uchicago.cs.ucare.samc.server.ModelCheckingServer;
+import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
+import edu.uchicago.cs.ucare.samc.util.PacketReceiveAck;
 
 public class LeaderElectionMain {
 	
@@ -72,6 +83,11 @@ public class LeaderElectionMain {
 	}
 	
 	public static void work() throws IOException {
+	    if (LeaderElectionInterposition.SAMC_ENABLED) {
+            LeaderElectionInterposition.numNode = nodeMap.size();
+            LeaderElectionInterposition.isReading = new boolean[LeaderElectionInterposition.numNode];
+            Arrays.fill(LeaderElectionInterposition.isReading, false);
+	    }
 		senderMap = new HashMap<Integer, Sender>();
 		InetSocketAddress myAddress = nodeMap.get(id);
 		processor = new Processor();
@@ -168,12 +184,22 @@ public class LeaderElectionMain {
         }
         LOG.info("First send all " + senderMap);
         processor.sendAll(getCurrentMessage());
-	}
-	
-	static void updateState(int role,int leader) {
-		LeaderElectionMain.role = role;
-		LeaderElectionMain.leader = leader;
-		electionTable.put(id, leader);
+        if (LeaderElectionInterposition.SAMC_ENABLED) {
+            LeaderElectionInterposition.firstSent = true;
+        }
+
+        if (LeaderElectionInterposition.SAMC_ENABLED) {
+            LeaderElectionInterposition.bindCallback();
+            LeaderElectionInterposition.isBound = true;
+            if (LeaderElectionInterposition.isReadingForAll() && !LeaderElectionInterposition.isThereSendingMessage() && LeaderElectionInterposition.isBound) {
+                try {
+                    LeaderElectionInterposition.modelCheckingServer.informSteadyState(id, 0);
+                } catch (RemoteException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        }
 	}
 	
 	static boolean isBetterThanCurrentLeader(ElectionMessage msg) {
@@ -209,7 +235,12 @@ public class LeaderElectionMain {
 			System.err.println("usage: LeaderElectionMain <id> <config>");
 			System.exit(1);
 		}
-
+		
+		if (LeaderElectionInterposition.SAMC_ENABLED) {
+            LOG.info("Enable SAMC");
+		}
+		LeaderElectionInterposition.localState = new LeaderElectionLocalState();
+		
 		id = Integer.parseInt(args[0]);
 		role = LOOKING;
 		leader = id;
@@ -221,6 +252,15 @@ public class LeaderElectionMain {
 		
         electionTable = new HashMap<Integer, Integer>();
         electionTable.put(id, leader);
+
+		if (LeaderElectionInterposition.SAMC_ENABLED) {
+		    LeaderElectionInterposition.id = id;
+            LeaderElectionInterposition.localState.setRole(role);
+            LeaderElectionInterposition.localState.setLeader(leader);
+            LeaderElectionInterposition.localState.setElectionTable(electionTable);
+			LeaderElectionInterposition.modelCheckingServer.setLocalState(id, LeaderElectionInterposition.localState);
+			LeaderElectionInterposition.modelCheckingServer.updateLocalState(id, LeaderElectionInterposition.localState.hashCode());
+		}
 
 		readConfig(args[1]);
 		work();
@@ -252,9 +292,40 @@ public class LeaderElectionMain {
                 byte[] buffer = new byte[ElectionMessage.SIZE];
                 while (!connection.isClosed()) {
                 	LOG.info("Reading message for " + otherId);
+
+                	if (LeaderElectionInterposition.SAMC_ENABLED) {
+                	    LeaderElectionInterposition.isReading[this.otherId] = true;
+                        if (LeaderElectionInterposition.isReadingForAll() 
+                                && !LeaderElectionInterposition.isThereSendingMessage() 
+                                && LeaderElectionInterposition.isBound) {
+                            try {
+                                LeaderElectionInterposition.modelCheckingServer.informSteadyState(id, 0);
+                            } catch (RemoteException e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                            }
+                        }
+                	}
+                	
                 	read(dis, buffer);
+
+                	if (LeaderElectionInterposition.SAMC_ENABLED) {
+                        LeaderElectionInterposition.isReading[this.otherId] = false;
+                	}
+                	
                     ElectionMessage msg = new ElectionMessage(otherId, buffer);
                     LOG.info("Get message : " + msg.toString());
+                    if (LeaderElectionInterposition.SAMC_ENABLED) {
+                        LeaderElectionPacket packet = LeaderElectionInterposition.packetGenerator2
+                                .createNewLeaderElectionPacket("LeaderElectionCallback" + id, 
+                                msg.getSender(), id, msg.getRole(), msg.getLeader());
+                        try {
+                            LeaderElectionInterposition.ack.ack(packet.getId(), id);
+                        } catch (RemoteException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        } 
+                    }
                     processor.process(msg);
                 }
 			} catch (IOException e) {
@@ -310,7 +381,39 @@ public class LeaderElectionMain {
                 try {
                     ElectionMessage msg = queue.take();
                     LOG.info("Send message : " + msg.toString() + " to " + otherId);
-                    write(msg);
+                    if (LeaderElectionInterposition.SAMC_ENABLED) {
+                        try {
+                            LeaderElectionPacket packet = new LeaderElectionPacket("LeaderElectionCallback" + id);
+                            packet.addKeyValue(LeaderElectionPacket.EVENT_ID_KEY, LeaderElectionInterposition.hash(msg, this.otherId));
+                            packet.addKeyValue(LeaderElectionPacket.SOURCE_KEY, id);
+                            packet.addKeyValue(LeaderElectionPacket.DESTINATION_KEY, this.otherId);
+                            packet.addKeyValue(LeaderElectionPacket.LEADER_KEY, msg.getLeader());
+                            packet.addKeyValue(LeaderElectionPacket.ROLE_KEY, msg.getRole());
+                            LeaderElectionInterposition.nodeSenderMap.put(packet.getId(), packet);
+                            LeaderElectionInterposition.msgSenderMap.put(packet.getId(), this);
+                            try {
+                                LeaderElectionInterposition.modelCheckingServer.offerPacket(packet);
+                            } catch (RemoteException e) {
+                                e.printStackTrace();
+                            }
+                        } catch (Exception e) {
+                            LOG.error("", e);
+                        }
+                    } else {
+                        write(msg);
+                    }
+                    if (LeaderElectionInterposition.SAMC_ENABLED) {
+                        if (LeaderElectionInterposition.isReadingForAll() 
+                                && !LeaderElectionInterposition.isThereSendingMessage() 
+                                && LeaderElectionInterposition.isBound) {
+                            try {
+                                LeaderElectionInterposition.modelCheckingServer.informSteadyState(id, 0);
+                            } catch (RemoteException e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                            }
+                        }
+                    }
                 } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
                     LOG.error("", e);
@@ -379,6 +482,16 @@ public class LeaderElectionMain {
 										role = FOLLOWING;
 									}
 								}
+								if (LeaderElectionInterposition.SAMC_ENABLED) {
+						            LeaderElectionInterposition.localState.setRole(role);
+						            LeaderElectionInterposition.localState.setLeader(leader);
+						            try {
+                                        LeaderElectionInterposition.modelCheckingServer.setLocalState(id, LeaderElectionInterposition.localState);
+                                        LeaderElectionInterposition.modelCheckingServer.updateLocalState(id, LeaderElectionInterposition.localState.hashCode());
+                                    } catch (RemoteException e) {
+                                        e.printStackTrace();
+                                    }
+						        }
                                 sendAll(getCurrentMessage());
 							}
 							break;
@@ -395,6 +508,16 @@ public class LeaderElectionMain {
 									role = FOLLOWING;
 								}
 							}
+							if (LeaderElectionInterposition.SAMC_ENABLED) {
+                                LeaderElectionInterposition.localState.setRole(role);
+                                LeaderElectionInterposition.localState.setLeader(leader);
+                                try {
+                                    LeaderElectionInterposition.modelCheckingServer.setLocalState(id, LeaderElectionInterposition.localState);
+                                    LeaderElectionInterposition.modelCheckingServer.updateLocalState(id, LeaderElectionInterposition.localState.hashCode());
+                                } catch (RemoteException e) {
+                                    e.printStackTrace();
+                                }
+                            }
                             sendAll(getCurrentMessage());
 							break;
 						}

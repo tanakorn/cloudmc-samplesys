@@ -17,7 +17,7 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
     private final static Logger LOG = LoggerFactory.getLogger(LeaderElectionEnsembleController.class);
     
     static final String[] CMD = { "java", "-cp", System.getenv("CLASSPATH"), 
-    	"-Delection.log.dir=%s/log/%d", "-Dlog4j.configuration=%s",
+    	"-Delection.log.dir=%s/log/%d", "-Dlog4j.configuration=%s", "-Dsamc_enabled=true",
     	"edu.uchicago.cs.ucare.example.election.LeaderElectionMain", "%d", "%s/conf/config" };
     
     Process[] leaderElection;
@@ -60,8 +60,8 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
             String[] cmd = Arrays.copyOf(CMD, CMD.length);
             cmd[3] = String.format(cmd[3], workingDir, i);
             cmd[4] = String.format(cmd[4], "le_log.properties");
-            cmd[6] = String.format(cmd[6], i);
-            cmd[7] = String.format(cmd[7], workingDir);
+            cmd[7] = String.format(cmd[7], i);
+            cmd[8] = String.format(cmd[8], workingDir);
             try {
                 LOG.debug("Starting node " + i);
                 System.out.println("Starting node " + i);
