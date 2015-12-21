@@ -64,6 +64,7 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
             cmd[7] = String.format(cmd[7], workingDir);
             try {
                 LOG.debug("Starting node " + i);
+                System.out.println("Starting node " + i);
                 leaderElection[i] = builder.command(cmd).start();
 //                Thread.sleep(300);
 //            } catch (InterruptedException e) {

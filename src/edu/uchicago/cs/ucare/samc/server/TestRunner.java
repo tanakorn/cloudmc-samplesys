@@ -15,6 +15,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.uchicago.cs.ucare.samc.server.FileWatcher;
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServer;
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
@@ -29,36 +30,56 @@ public class TestRunner {
     public static void main(String[] argv) throws IOException, ClassNotFoundException, 
             NoSuchMethodException, SecurityException, InstantiationException, 
             IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        String testRunnerConf = null;
+    	String testRunnerConf = null;
         if (argv.length == 0) {
             System.err.println("Please specify test config file");
             System.exit(1);
         }
-        boolean isPasuedEveryTest = false;
+        boolean isPausedEveryTest = false;
         for (String param : argv) {
             if (param.equals("-p")) {
-                isPasuedEveryTest = true;
+                isPausedEveryTest = true;
             } else {
                 testRunnerConf = param;
             }
         }
-        Properties testRunnerProp = new Properties();
-        FileInputStream configInputStream = new FileInputStream(testRunnerConf);
-        testRunnerProp.load(configInputStream);
-        configInputStream.close();
-        String workingDir = testRunnerProp.getProperty("working_dir");
-        int numNode = Integer.parseInt(testRunnerProp.getProperty("num_node"));
-        String workload = testRunnerProp.getProperty("workload_driver");
-        @SuppressWarnings("unchecked")
-        Class<? extends WorkloadDriver> ensembleControlloerClass = (Class<? extends WorkloadDriver>) Class.forName(workload);
-        Constructor<? extends WorkloadDriver> ensembleControllerConstructor = ensembleControlloerClass.getConstructor(Integer.TYPE, String.class);
-        ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir);
-        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/mc.conf", workingDir, ensembleController);
-        startExploreTesting(checker, numNode, workingDir, ensembleController, isPasuedEveryTest);
+        
+        prepareModelChecker(testRunnerConf, isPausedEveryTest);
+        
+    }
+    
+    public static void prepareModelChecker(String testRunnerConf, boolean isPausedEveryTest){
+    	try{
+	    	Properties testRunnerProp = new Properties();
+	        FileInputStream configInputStream = new FileInputStream(testRunnerConf);
+	        
+	        testRunnerProp.load(configInputStream);
+	        configInputStream.close();
+	        String workingDir = testRunnerProp.getProperty("working_dir");
+	        int numNode = Integer.parseInt(testRunnerProp.getProperty("num_node"));
+	        String workload = testRunnerProp.getProperty("workload_driver");
+	        boolean useIPC = Integer.parseInt(testRunnerProp.getProperty("use_ipc")) == 1;
+	        if(useIPC){
+	        	// activate Directory Watcher
+	        	String rootDir = testRunnerProp.getProperty("ipc_dir");
+	            Thread dirWatcher;
+	            
+	        	dirWatcher = new Thread(new FileWatcher(rootDir));
+	        	dirWatcher.start();	
+	        }
+	        @SuppressWarnings("unchecked")
+	        Class<? extends WorkloadDriver> ensembleControllerClass = (Class<? extends WorkloadDriver>) Class.forName(workload);
+	        Constructor<? extends WorkloadDriver> ensembleControllerConstructor = ensembleControllerClass.getConstructor(Integer.TYPE, String.class);
+	        ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir);
+	        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/mc.conf", workingDir, ensembleController, useIPC);
+	        startExploreTesting(checker, numNode, workingDir, ensembleController, isPausedEveryTest);
+    	} catch (Exception e){
+    		e.printStackTrace();
+    	}
     }
     
     protected static ModelCheckingServerAbstract createModelCheckerFromConf(String confFile, 
-            String workingDir, WorkloadDriver ensembleController) throws ClassNotFoundException, 
+            String workingDir, WorkloadDriver ensembleController, boolean useIPC) throws ClassNotFoundException, 
             NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, 
             IllegalArgumentException, InvocationTargetException {
         ModelCheckingServerAbstract modelCheckingServerAbstract = null;
@@ -95,16 +116,18 @@ public class TestRunner {
                 Class<? extends ModelCheckingServerAbstract> modelCheckerClass = (Class<? extends ModelCheckingServerAbstract>) Class.forName(strategy);
                 Constructor<? extends ModelCheckingServerAbstract> modelCheckerConstructor = modelCheckerClass.getConstructor(String.class, 
                         String.class, Integer.TYPE, Integer.TYPE, Integer.TYPE, String.class, String.class, 
-                        String.class, WorkloadDriver.class);
+                        String.class, WorkloadDriver.class, Boolean.TYPE);
                 modelCheckingServerAbstract = modelCheckerConstructor.newInstance(interceptorName, ackName, 
                         numNode, numCrash, numReboot, testRecordDir, traversalRecordDir, workingDir, 
-                        ensembleController);
+                        ensembleController, useIPC);
             }
             verifier.modelCheckingServer = modelCheckingServerAbstract;
-            ModelCheckingServer interceptorStub = (ModelCheckingServer) 
-                    UnicastRemoteObject.exportObject(modelCheckingServerAbstract, 0);
-            Registry r = LocateRegistry.getRegistry();
-            r.rebind(interceptorName, interceptorStub);
+            if(!useIPC){
+	            ModelCheckingServer interceptorStub = (ModelCheckingServer) 
+	                    UnicastRemoteObject.exportObject(modelCheckingServerAbstract, 0);
+	            Registry r = LocateRegistry.getRegistry();
+	            r.rebind(interceptorName, interceptorStub);
+            }
         } catch (RemoteException e) {
             e.printStackTrace();
         } catch (FileNotFoundException e) {

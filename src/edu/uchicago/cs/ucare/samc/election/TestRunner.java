@@ -34,10 +34,10 @@ public class TestRunner {
             System.err.println("Please specify test config file");
             System.exit(1);
         }
-        boolean isPasuedEveryTest = false;
+        boolean isPausedEveryTest = false;
         for (String param : argv) {
             if (param.equals("-p")) {
-                isPasuedEveryTest = true;
+                isPausedEveryTest = true;
             } else {
                 testRunnerConf = param;
             }
@@ -54,7 +54,7 @@ public class TestRunner {
         Constructor<? extends WorkloadDriver> ensembleControllerConstructor = ensembleControlloerClass.getConstructor(Integer.TYPE, String.class);
         ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir);
         ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/mc.conf", workingDir, ensembleController);
-        startExploreTesting(checker, numNode, workingDir, ensembleController, isPasuedEveryTest);
+        startExploreTesting(checker, numNode, workingDir, ensembleController, isPausedEveryTest);
     }
     
     protected static ModelCheckingServerAbstract createModelCheckerFromConf(String confFile, 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-if [ $# -lt 5 ]; then
-  echo "usage: init <mc_name> <num_node> <num_crash> <strategy> <working_dir> [other_vars]"
+if [ $# -lt 7 ]; then
+  echo "usage: init <mc_name> <num_node> <num_crash> <strategy> <working_dir> <use_ipc> <ipc_dir> [other_vars]"
   exit 1
 fi
 
@@ -10,7 +10,9 @@ num_node=$2
 num_crash=$3
 strategy=$4
 working_dir=$5
-other_vars=$6
+use_ipc=$6
+ipc_dir=$7
+other_vars=$8
 
 rm -r $working_dir/* 2> /dev/null
 
@@ -21,7 +23,7 @@ $scriptdir/genle $num_node $working_dir
 
 $scriptdir/draftlemc $mc_name $working_dir
 
-$scriptdir/genmc $mc_name $num_node $num_crash $strategy $working_dir "$other_vars"
+$scriptdir/genmc $mc_name $num_node $num_crash $strategy $working_dir $use_ipc $ipc_dir "$other_vars"
 
 mkdir $working_dir/record
 mkdir $working_dir/state
@@ -40,3 +42,15 @@ sed "s:WORKING_DIR:$working_dir:" $scriptdir/resource/testrunner.sh > $working_d
 chmod 755 $working_dir/testrunner.sh
 cp $scriptdir/resource/monitorcheck.sh $working_dir/
 
+# ipc
+if [ "$use_ipc" = "1" ]; then
+	echo "Prepare IPC-File dirs.."
+	rm -r $ipc_dir/* 2> /dev/null
+	mkdir -p $ipc_dir
+	mkdir $ipc_dir/new
+	mkdir $ipc_dir/send
+	mkdir $ipc_dir/ack
+	echo "IPC-File dirs are ready in $ipc_dir.."
+else
+	echo "Ignore IPC-File.."
+fi

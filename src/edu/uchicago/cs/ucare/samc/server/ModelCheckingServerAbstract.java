@@ -131,6 +131,45 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         this.resetTest();
     }
     
+    public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
+            String testRecordDirPath, WorkloadDriver zkController, boolean useIPC) {
+        this.interceptorName = interceptorName;
+        log = LoggerFactory.getLogger(this.getClass() + "." + interceptorName);
+        packetQueue = new LinkedBlockingQueue<InterceptPacket>();
+        writeQueue = new LinkedBlockingQueue<DiskWrite>();
+        writeFinished = new HashMap<DiskWrite, Boolean>();
+        callbackMap = new HashMap<String, PacketReleaseCallback>();
+        ack = new PacketReceiveAckImpl();
+        writeAck = new DiskWriteAckImpl();
+        ackedIds = new LinkedBlockingQueue<Integer>();
+        writeAckedIds = new LinkedBlockingQueue<Integer>();
+        if(!useIPC){
+	        try {
+	            PacketReceiveAck ackStub = (PacketReceiveAck) 
+	                    UnicastRemoteObject.exportObject(ack, 0);
+	            Registry r = LocateRegistry.getRegistry();
+	            r.rebind(interceptorName + ackName, ackStub);
+	            DiskWriteAck writeAckStub = (DiskWriteAck) UnicastRemoteObject.exportObject(writeAck, 0);
+	            r.rebind(interceptorName + ackName + "DiskWrite", writeAckStub);
+	        } catch (RemoteException e) {
+	            e.printStackTrace();
+	        }
+        }
+        this.numNode = numNode;
+        this.testRecordDirPath = testRecordDirPath;
+        this.zkController = zkController;
+        this.verifier = zkController.verifier;
+        pathRecordFile = null;
+        localRecordFile = null;
+        codeRecordFiles = new FileOutputStream[numNode];
+        protocolRecordFile = null;
+        resultFile = null;
+        isNodeOnline = new boolean[numNode];
+        senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
+        localStates = new LeaderElectionLocalState[numNode];
+        this.resetTest();
+    }
+    
     @Override
     public void requestWrite(DiskWrite write) {
         log.info("Intercept disk write " + write.toString());

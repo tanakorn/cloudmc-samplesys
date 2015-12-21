@@ -203,6 +203,8 @@ public class LeaderElectionMain {
 	
 	public static void main(String[] args) throws IOException {
 
+		System.out.println("Start Leader Election Main" + args[0]);
+		/*
 		if (args.length != 2) {
 			System.err.println("usage: LeaderElectionMain <id> <config>");
 			System.exit(1);
@@ -211,6 +213,9 @@ public class LeaderElectionMain {
 		id = Integer.parseInt(args[0]);
 		role = LOOKING;
 		leader = id;
+
+		// jef : messages sending?
+		System.out.println("[DEBUG] starts LE in id:" + id);
 		
 		LOG.info("Started:my id = " + id + " role = " + getRoleName(role) + " " + " leader = " + leader);
 		
@@ -219,7 +224,7 @@ public class LeaderElectionMain {
 
 		readConfig(args[1]);
 		work();
-		
+		*/
 	}
 	
 	public static class Receiver extends Thread {
