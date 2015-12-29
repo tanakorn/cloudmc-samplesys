@@ -18,14 +18,17 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
     
     static final String[] CMD = { "java", "-cp", System.getenv("CLASSPATH"), 
     	"-Delection.log.dir=%s/log/%d", "-Dlog4j.configuration=%s", "-Dsamc_enabled=true",
-    	"edu.uchicago.cs.ucare.example.election.LeaderElectionMain", "%d", "%s/conf/config" };
+    	"edu.uchicago.cs.ucare.example.election.LeaderElectionMain", "%d", "%s/conf/config", "%s" };
+    
+    String ipcDir;
     
     Process[] leaderElection;
     Thread consoleWriter;
     FileOutputStream[] consoleLog;
     
-    public LeaderElectionEnsembleController(int numNode, String workingDir) {
+    public LeaderElectionEnsembleController(int numNode, String workingDir, String sIpcDir) {
         super(numNode, workingDir);
+        ipcDir = sIpcDir;
         leaderElection = new Process[numNode];
         consoleLog = new FileOutputStream[numNode];
         consoleWriter = new Thread(new LogWriter());
@@ -62,14 +65,15 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
             cmd[4] = String.format(cmd[4], "le_log.properties");
             cmd[7] = String.format(cmd[7], i);
             cmd[8] = String.format(cmd[8], workingDir);
+            cmd[9] = String.format(cmd[9], ipcDir);
             try {
                 LOG.debug("Starting node " + i);
                 System.out.println("Starting node " + i);
                 leaderElection[i] = builder.command(cmd).start();
-//                Thread.sleep(300);
-//            } catch (InterruptedException e) {
-//                LOG.error("", e);
-//                throw new RuntimeException(e);
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                LOG.error("", e);
+                throw new RuntimeException(e);
             } catch (IOException e) {
                 LOG.error("", e);
                 throw new RuntimeException(e);
@@ -82,7 +86,7 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
             LOG.debug("Stopping ensemble");
         }
         for (Process node : leaderElection) {
-            node.destroy();
+            node.destroyForcibly();
         }
         for (Process node : leaderElection) {
             try {
@@ -117,6 +121,7 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
         cmd[4] = String.format(cmd[4], "le_log.properties");
         cmd[6] = String.format(cmd[6], id);
         cmd[7] = String.format(cmd[7], workingDir);
+        cmd[8] = String.format(cmd[8], ipcDir);
         try {
             leaderElection[id] = builder.command(cmd).start();
         } catch (IOException e) {

@@ -26,7 +26,9 @@ public class TestRunner {
     final static Logger LOG = LoggerFactory.getLogger(TestRunner.class);
     
     static WorkloadDriver ensembleController;
-
+    
+    public static String ipcDir;
+    
     public static void main(String[] argv) throws IOException, ClassNotFoundException, 
             NoSuchMethodException, SecurityException, InstantiationException, 
             IllegalAccessException, IllegalArgumentException, InvocationTargetException {
@@ -59,19 +61,24 @@ public class TestRunner {
 	        int numNode = Integer.parseInt(testRunnerProp.getProperty("num_node"));
 	        String workload = testRunnerProp.getProperty("workload_driver");
 	        boolean useIPC = Integer.parseInt(testRunnerProp.getProperty("use_ipc")) == 1;
+	        ipcDir = "";
 	        if(useIPC){
-	        	// activate Directory Watcher
-	        	String rootDir = testRunnerProp.getProperty("ipc_dir");
-	            Thread dirWatcher;
-	            
-	        	dirWatcher = new Thread(new FileWatcher(rootDir));
-	        	dirWatcher.start();	
+	        	ipcDir = testRunnerProp.getProperty("ipc_dir");
 	        }
 	        @SuppressWarnings("unchecked")
 	        Class<? extends WorkloadDriver> ensembleControllerClass = (Class<? extends WorkloadDriver>) Class.forName(workload);
-	        Constructor<? extends WorkloadDriver> ensembleControllerConstructor = ensembleControllerClass.getConstructor(Integer.TYPE, String.class);
-	        ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir);
+	        Constructor<? extends WorkloadDriver> ensembleControllerConstructor = ensembleControllerClass.getConstructor(Integer.TYPE, String.class, String.class);
+	        ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir, ipcDir);
 	        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/mc.conf", workingDir, ensembleController, useIPC);
+	        if(useIPC){
+	        	// activate Directory Watcher
+	            Thread dirWatcher;
+	            
+	        	dirWatcher = new Thread(new FileWatcher(ipcDir, checker));
+	        	dirWatcher.start();
+	        	
+	        	Thread.sleep(500);
+	        }
 	        startExploreTesting(checker, numNode, workingDir, ensembleController, isPausedEveryTest);
     	} catch (Exception e){
     		e.printStackTrace();
@@ -138,7 +145,7 @@ public class TestRunner {
         return (ModelCheckingServerAbstract) modelCheckingServerAbstract;
     }
     
-    protected static void startExploreTesting(ModelCheckingServerAbstract checker, int numNode, String workingDir, 
+    protected static void startExploreTesting(ModelCheckingServerAbstract checker, int numNode, String workingDir,
             WorkloadDriver zkController, boolean isPausedEveryTest) throws IOException {
         File gspathDir = new File(workingDir + "/record");
         int testNum = gspathDir.list().length + 1;

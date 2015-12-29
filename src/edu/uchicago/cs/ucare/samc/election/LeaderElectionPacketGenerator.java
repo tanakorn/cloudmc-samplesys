@@ -31,7 +31,7 @@ public class LeaderElectionPacketGenerator {
         result = prime * result + toId;
         result = prime * result + role;
         result = prime * result + leader;
-        return -result;
+        return result;
     }
     
     public int getHash(ElectionMessage msg, int toId) {

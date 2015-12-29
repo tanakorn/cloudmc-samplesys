@@ -17,14 +17,14 @@ public abstract class DporModelChecker extends PrototypeSamc {
 
     public DporModelChecker(String interceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir,
-            WorkloadDriver zkController) {
-        this(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, "/tmp", zkController);
+            WorkloadDriver zkController, boolean useIPC) {
+        this(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, "/tmp", zkController, useIPC);
     }
     
     public DporModelChecker(String inceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String cacheDir,
-            WorkloadDriver zkController) {
-        super(inceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, cacheDir, zkController);
+            WorkloadDriver zkController, boolean useIPC) {
+        super(inceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, cacheDir, zkController, useIPC);
     }
     
     public abstract boolean isDependent(LocalState state, Event e1, Event e2);

@@ -60,15 +60,15 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     
     public PrototypeSamc(String interceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir,
-            WorkloadDriver zkController) {
-        this(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, "/tmp", zkController);
+            WorkloadDriver zkController, boolean useIPC) {
+        this(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, "/tmp", zkController, useIPC);
     }
     
     @SuppressWarnings("unchecked")
     public PrototypeSamc(String inceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String cacheDir,
-            WorkloadDriver zkController) {
-        super(inceptorName, ackName, maxId, globalStatePathDir, zkController);
+            WorkloadDriver zkController, boolean useIPC) {
+        super(inceptorName, ackName, maxId, globalStatePathDir, zkController, useIPC);
         
         dporInitialPaths = new LinkedList<LinkedList<TransitionTuple>>();
         finishedDporInitialPaths = new HashSet<LinkedList<TransitionTuple>>();
@@ -454,6 +454,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                     } else {
                         currentDporPath = dporInitialPaths.remove();
                     }
+                	System.out.println("---- End of Path Execution ----");
                     resetTest();
                     break;
                 } else if (currentEnabledTransitions.isEmpty()) {

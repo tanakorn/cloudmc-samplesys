@@ -105,13 +105,14 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
         @Override
         @SuppressWarnings("unchecked")
         public void run() {
+        	int numWaitTime = 0;
             LinkedList<LinkedList<Transition>> pastEnabledTransitionList = 
                     new LinkedList<LinkedList<Transition>>();
-            getOutstandingTcpPacketTransition(enabledTransitionList);
             while (true) {
-                adjustCrashAndReboot(enabledTransitionList);
-                if (enabledTransitionList.isEmpty()) {
-                    boolean verifiedResult = verifier.verify();
+            	getOutstandingTcpPacketTransition(enabledTransitionList);
+            	adjustCrashAndReboot(enabledTransitionList);
+                if (enabledTransitionList.isEmpty() && numWaitTime >= 2) {
+                	boolean verifiedResult = verifier.verify();
                     String detail = verifier.verificationDetail();
                     saveResult(verifiedResult + " ; " + detail + "\n");
                     recordTestId();
@@ -125,8 +126,17 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                             break;
                         }
                     }
+                	System.out.println("---- End of Path Execution ----");
                     resetTest();
                     break;
+                } else if(enabledTransitionList.isEmpty()){
+                	try {
+                        numWaitTime++;
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                    	e.printStackTrace();
+                    }
+                    continue;
                 }
                 pastEnabledTransitionList.addFirst((LinkedList<Transition>) enabledTransitionList.clone());
                 Transition nextTransition = nextTransition(enabledTransitionList);
@@ -154,7 +164,7 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                                     queue.clear();
                                 }
                             }
-                            getOutstandingTcpPacketTransition(enabledTransitionList);
+//                            getOutstandingTcpPacketTransition(enabledTransitionList);
                         }
                     } catch (Exception e) {
                         log.error("", e);

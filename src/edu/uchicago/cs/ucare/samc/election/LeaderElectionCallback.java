@@ -1,5 +1,6 @@
 package edu.uchicago.cs.ucare.samc.election;
 
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -39,7 +40,7 @@ public class LeaderElectionCallback implements PacketReleaseCallback {
 	@Override
 	public boolean callback(int packetId) throws RemoteException {
 		LeaderElectionPacket packet = nodeSenderMap.get(packetId);
-		Sender sender = msgSenderMap.get(packetId);
+		Sender sender = msgSenderMap.get(packetId);	
 		ElectionMessage message = new ElectionMessage(id, packet.getRole(), packet.getLeader());
 		sender.write(message);
 		return true;

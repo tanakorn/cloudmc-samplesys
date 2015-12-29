@@ -29,8 +29,8 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
     
     public RandomModelChecker(String inceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String cacheDir,
-            WorkloadDriver zkController) {
-        super(inceptorName, ackName, maxId, globalStatePathDir, zkController);
+            WorkloadDriver zkController, boolean useIPC) {
+        super(inceptorName, ackName, maxId, globalStatePathDir, zkController, useIPC);
         this.numCrash = numCrash;
         this.numReboot = numReboot;
         stateDir = packetRecordDir;
@@ -119,6 +119,7 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
                     saveResult(verifiedResult + " ; " + detail + "\n");
                     recordTestId();
                     exploredBranchRecorder.markBelowSubtreeFinished();
+                	System.out.println("---- End of Path Execution ----");
                     resetTest();
                     break;
                 } else if (currentEnabledTransitions.isEmpty()) {

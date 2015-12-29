@@ -3,6 +3,7 @@ package edu.uchicago.cs.ucare.samc.server;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.io.IOException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
@@ -34,6 +35,7 @@ import edu.uchicago.cs.ucare.samc.util.LocalState;
 import edu.uchicago.cs.ucare.samc.util.PacketReceiveAck;
 import edu.uchicago.cs.ucare.samc.util.PacketReleaseCallback;
 import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
+import edu.uchicago.cs.ucare.samc.server.TestRunner;
 
 public abstract class ModelCheckingServerAbstract implements ModelCheckingServer {
     
@@ -93,6 +95,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected int[] numPacketSentToId;
     
     public LeaderElectionLocalState[] localStates;
+    
+    public boolean useIPC;
 
     public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
             String testRecordDirPath, WorkloadDriver zkController) {
@@ -128,6 +132,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         isNodeOnline = new boolean[numNode];
         senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
         localStates = new LeaderElectionLocalState[numNode];
+        useIPC = false;
         this.resetTest();
     }
     
@@ -167,6 +172,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         isNodeOnline = new boolean[numNode];
         senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
         localStates = new LeaderElectionLocalState[numNode];
+        this.useIPC = useIPC;
         this.resetTest();
     }
     
@@ -285,6 +291,9 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
             }
         });
         transitionList.addAll(buffer);
+        // jeff
+        System.out.println("[DEBUG] Events in Queue : " + transitionList.size());
+//        System.out.println("[DEBUG] Events in Queue - " + transitionList.size() + "\n" + transitionList.toString());
     }
     
     public void getOutstandingTcpPacket(LinkedList<InterceptPacket> packetList) {
@@ -552,9 +561,26 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     public boolean commit(InterceptPacket packet) {
     	boolean result;
     	try {
-            PacketReleaseCallback callback = callbackMap.get(packet.getCallbackId());
-            log.info("Commiting " + packet.toString());
-            result = callback.callback(packet.getId());
+    		if(useIPC){
+    			try{
+    	        	PrintWriter writer = new PrintWriter(TestRunner.ipcDir + "/new/" + packet.getId(), "UTF-8");
+    	        	writer.println("eventId=" + packet.getId());
+    		        writer.close();
+    		        
+    		    	System.out.println("Enable event with ID : " + packet.getId());
+    		        
+    		        Runtime.getRuntime().exec("mv " + TestRunner.ipcDir + "/new/" + packet.getId() + " " + 
+    		        		TestRunner.ipcDir + "/ack/" + packet.getId());
+            	} catch (Exception e) {
+            		System.out.println("[DEBUG] error in creating new file : " + packet.getId());
+            	}
+            	
+    			result = true;
+    		} else {
+    			PacketReleaseCallback callback = callbackMap.get(packet.getCallbackId());
+                log.info("Commiting " + packet.toString());
+                result = callback.callback(packet.getId());
+    		}
         } catch (Exception e) {
             log.warn("There is an error when committing this packet, " + packet.toString());
             result = false;
@@ -626,6 +652,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         while (!isNodeSteady(id) && i++ < waitTick) {
 //        while (!isNodeSteady(id)) {
             Thread.sleep(50);
+//        	Thread.sleep(500);
         }
         if (i >= waitTick) {
             log.warn("Steady state for node " + id + " triggered by timeout");
@@ -744,6 +771,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
             while (!isNodeSteady(id) && i++ < waitTick) {
 //              while (!isNodeSteady(id)) {
                 Thread.sleep(50);
+//            	Thread.sleep(500);
             }
             if (i >= waitTick) {
                 log.warn("Steady state for node " + id + " triggered by timeout");

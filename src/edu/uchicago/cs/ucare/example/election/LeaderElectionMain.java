@@ -3,9 +3,12 @@ package edu.uchicago.cs.ucare.example.election;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -16,6 +19,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Random;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +38,9 @@ public class LeaderElectionMain {
 	public static final int LOOKING = 0;
 	public static final int FOLLOWING = 1;
 	public static final int LEADING = 2;
+	
+	public static String ipcDir;
+	public static int msgIntercepted;
 	
 	public static String getRoleName(int role) {
 		String name;
@@ -64,9 +71,11 @@ public class LeaderElectionMain {
 	
 	public static Map<Integer, Integer> electionTable;
 	
-	public static void readConfig(String config) throws IOException {
+	public static void readConfig(String config, String sIpcDir) throws IOException {
 		nodeMap = new HashMap<Integer, InetSocketAddress>();
 		BufferedReader br = new BufferedReader(new FileReader(config));
+		ipcDir = sIpcDir;
+		msgIntercepted = 0;
 		String line;
 		while ((line = br.readLine()) != null) {
 			String[] tokens = line.trim().split("=");
@@ -207,6 +216,7 @@ public class LeaderElectionMain {
 	}
 	
 	static int isFinished() {
+		LOG.info("Execute isFinished() function");
 		int totalNode = nodeMap.size();
 		Map<Integer, Integer> count = new HashMap<Integer, Integer>();
 		for (Integer electedLeader : electionTable.values()){
@@ -227,12 +237,36 @@ public class LeaderElectionMain {
 		return new ElectionMessage(id, role, leader);
 	}
 	
+	// update my current state to DMCK
+	static void updateStatetoDMCK(){
+		// create new file
+    	try{
+        	PrintWriter writer = new PrintWriter(ipcDir + "/new/u" + id, "UTF-8");
+	        writer.println("sendNode=" + id);
+	        writer.println("sendRole=" + role);
+	        writer.println("leader=" + leader);
+	        writer.print("electionTable=");
+	        for (int node : electionTable.keySet()){
+//	        	LOG.info("[DEBUG] id-" + id + "=node-" + node + " vote-" + electionTable.get(node));
+		        writer.print(node + ":" + electionTable.get(node) + ",");
+	        }
+	        writer.close();
+    	} catch (Exception e) {
+        	LOG.error("[DEBUG] error in creating new file : u" + id);
+    	}
+    	
+    	// move new file to send folder - commit message
+    	try{
+    		Runtime.getRuntime().exec("mv " + ipcDir + "/new/u" + id + " " + 
+    				ipcDir + "/send/u" + id);
+    	} catch (Exception e){
+        	LOG.error("[DEBUG] error in moving file to send folder : u" + id);
+    	}
+	}
+	
 	public static void main(String[] args) throws IOException {
-
-		System.out.println("Start Leader Election Main" + args[0]);
-		/*
-		if (args.length != 2) {
-			System.err.println("usage: LeaderElectionMain <id> <config>");
+		if (args.length != 3) {
+			System.err.println("usage: LeaderElectionMain <id> <config> <ipcdir>");
 			System.exit(1);
 		}
 		
@@ -244,9 +278,6 @@ public class LeaderElectionMain {
 		id = Integer.parseInt(args[0]);
 		role = LOOKING;
 		leader = id;
-
-		// jef : messages sending?
-		System.out.println("[DEBUG] starts LE in id:" + id);
 		
 		LOG.info("Started:my id = " + id + " role = " + getRoleName(role) + " " + " leader = " + leader);
 		
@@ -260,11 +291,12 @@ public class LeaderElectionMain {
             LeaderElectionInterposition.localState.setElectionTable(electionTable);
 			LeaderElectionInterposition.modelCheckingServer.setLocalState(id, LeaderElectionInterposition.localState);
 			LeaderElectionInterposition.modelCheckingServer.updateLocalState(id, LeaderElectionInterposition.localState.hashCode());
-		}
+		} else if(ipcDir != "") {
+        	updateStatetoDMCK();
+        }
 
-		readConfig(args[1]);
+		readConfig(args[1], args[2]);
 		work();
-		*/
 	}
 	
 	public static class Receiver extends Thread {
@@ -353,6 +385,7 @@ public class LeaderElectionMain {
 				LOG.error("", e);
 			}
 			queue = new LinkedBlockingQueue<ElectionMessage>();
+			msgIntercepted = 0;
 		}
 		
 		public void send(ElectionMessage msg) {
@@ -399,8 +432,12 @@ public class LeaderElectionMain {
                         } catch (Exception e) {
                             LOG.error("", e);
                         }
-                    } else {
+                    } else if(ipcDir != "") {
+                    	interceptMessage(msg, "LeaderElectionCallback" + id, id, msg.getRole(), this.otherId, 
+                    			msg.getLeader());
                         write(msg);
+                    } else {
+                    	write(msg);
                     }
                     if (LeaderElectionInterposition.SAMC_ENABLED) {
                         if (LeaderElectionInterposition.isReadingForAll() 
@@ -427,6 +464,72 @@ public class LeaderElectionMain {
 
 		public void setOtherId(int otherId) {
 			this.otherId = otherId;
+		}
+		
+		// ipc interceptor
+		public void interceptMessage(ElectionMessage msg, String callbackName, int sender, int senderRole, 
+				int receiver, int leader){
+			
+        	int eventId = LeaderElectionInterposition.hash(msg, receiver);
+//        	LOG.info("[DEBUG] eventId : " + eventId);
+        	
+        	// create new file
+        	try{
+	        	PrintWriter writer = new PrintWriter(ipcDir + "/new/" + eventId, "UTF-8");
+	        	writer.println("callbackName=" + callbackName);
+		        writer.println("sendNode=" + sender);
+		        writer.println("recvNode=" + receiver);
+		        writer.println("sendRole=" + senderRole);
+		        writer.println("leader=" + leader);
+		        writer.close();
+        	} catch (Exception e) {
+            	LOG.error("[DEBUG] error in creating new file : " + eventId);
+        	}
+        	
+        	// move new file to send folder - commit message
+        	try{
+        		Runtime.getRuntime().exec("mv " + ipcDir + "/new/" + eventId + " " + 
+        				ipcDir + "/send/" + eventId);
+        	} catch (Exception e){
+            	LOG.error("[ERROR] error in moving file to send folder : " + eventId);
+        	}
+        	
+        	msgIntercepted++;
+        	// inform steady state
+        	if(msgIntercepted == nodeMap.size() - 1){
+        		LOG.info("[DEBUG] Inform steady state from node " + eventId);
+        		try{
+        			PrintWriter writer = new PrintWriter(ipcDir + "/new/s" + sender, "UTF-8");
+    	        	writer.println("sendNode=" + sender);
+    		        writer.close();
+        		} catch (Exception e){
+        			e.printStackTrace();
+        		}
+        		
+        		// move new file to send folder - commit message
+            	try{
+            		Runtime.getRuntime().exec("mv " + ipcDir + "/new/s" + sender + " " + 
+            				ipcDir + "/send/s" + sender);
+            	} catch (Exception e){
+                	LOG.error("[ERROR] error in moving file to send folder : s" + sender);
+            	}
+        	}
+        	
+        	// wait for dmck signal
+        	File ackFile = new File(ipcDir + "/ack/", Integer.toString(eventId));
+//        	LOG.info("[DEBUG] start waiting for file : " + eventId);
+        	while(!ackFile.exists()){
+        		// wait
+        	}
+        	
+        	// receive dmck signal
+        	//msgIntercepted--;
+//        	LOG.info("[DEBUG] ack file : " + eventId);
+        	try{
+            	Runtime.getRuntime().exec("rm " + ipcDir + "/ack/" + eventId);
+        	} catch (Exception e){
+        		e.printStackTrace();
+        	}
 		}
 		
 	}
@@ -464,9 +567,10 @@ public class LeaderElectionMain {
 					msg = queue.take();
 					LOG.info("Process message : " + msg.toString());
                     electionTable.put(msg.getSender(), msg.getLeader());
+                    LOG.info("[DEBUG] Election Table : " + electionTable);
 					switch (role) {
 					case LOOKING:
-						switch (msg.getRole()) {
+	                    switch (msg.getRole()) {
 						case LOOKING:
 							if (isBetterThanCurrentLeader(msg)) {
 								LOG.info("Message " + msg + " is better");
@@ -491,6 +595,8 @@ public class LeaderElectionMain {
                                     } catch (RemoteException e) {
                                         e.printStackTrace();
                                     }
+						        } else if(ipcDir != "") {
+						        	updateStatetoDMCK();
 						        }
                                 sendAll(getCurrentMessage());
 							}
@@ -517,7 +623,9 @@ public class LeaderElectionMain {
                                 } catch (RemoteException e) {
                                     e.printStackTrace();
                                 }
-                            }
+                            } else if(ipcDir != "") {
+					        	updateStatetoDMCK();
+					        }
                             sendAll(getCurrentMessage());
 							break;
 						}

@@ -10,5 +10,6 @@ export CLASSPATH=$CLASSPATH:$classpath
 export PATH=$PATH:bin/
 
 #java -Dsun.rmi.dgc.cleanInterval=10000 -Dsun.rmi.dgc.server.gcInterval=10000 -Dlog4j.configuration=mc_log.properties -Delectiontest.dir=WORKING_DIR edu.uchicago.cs.ucare.samc.server.TestRunner -p ./mc.conf
-java -Dlog4j.configuration=mc_log.properties -Delectiontest.dir=WORKING_DIR edu.uchicago.cs.ucare.samc.server.TestRunner -p ./mc.conf
+#java -Dlog4j.configuration=mc_log.properties -Delectiontest.dir=WORKING_DIR edu.uchicago.cs.ucare.samc.server.TestRunner -p ./mc.conf
+java -Dlog4j.configuration=mc_log.properties -Delectiontest.dir=WORKING_DIR edu.uchicago.cs.ucare.samc.server.TestRunner ./mc.conf
 
