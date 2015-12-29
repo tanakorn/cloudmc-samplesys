@@ -17,7 +17,7 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
     private final static Logger LOG = LoggerFactory.getLogger(LeaderElectionEnsembleController.class);
     
     static final String[] CMD = { "java", "-cp", System.getenv("CLASSPATH"), 
-    	"-Delection.log.dir=%s/log/%d", "-Dlog4j.configuration=%s", "-Dsamc_enabled=true",
+    	"-Delection.log.dir=%s/log/%d", "-Dlog4j.configuration=%s",
     	"edu.uchicago.cs.ucare.example.election.LeaderElectionMain", "%d", "%s/conf/config", "%s" };
     
     String ipcDir;
@@ -56,25 +56,11 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Starting ensemble");
         }
-        ProcessBuilder builder = new ProcessBuilder();
-        builder.environment().put("MC_CONFIG", workingDir + "/lemc.conf");
-        builder.directory(new File(workingDir));
         for (int i = 0; i < numNode; ++i) {
-            String[] cmd = Arrays.copyOf(CMD, CMD.length);
-            cmd[3] = String.format(cmd[3], workingDir, i);
-            cmd[4] = String.format(cmd[4], "le_log.properties");
-            cmd[7] = String.format(cmd[7], i);
-            cmd[8] = String.format(cmd[8], workingDir);
-            cmd[9] = String.format(cmd[9], ipcDir);
             try {
-                LOG.debug("Starting node " + i);
-                System.out.println("Starting node " + i);
-                leaderElection[i] = builder.command(cmd).start();
+            	startNode(i);
                 Thread.sleep(300);
             } catch (InterruptedException e) {
-                LOG.error("", e);
-                throw new RuntimeException(e);
-            } catch (IOException e) {
                 LOG.error("", e);
                 throw new RuntimeException(e);
             }
@@ -85,15 +71,8 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Stopping ensemble");
         }
-        for (Process node : leaderElection) {
-            node.destroyForcibly();
-        }
-        for (Process node : leaderElection) {
-            try {
-                int wait = node.waitFor();
-            } catch (InterruptedException e) {
-                LOG.error("", e);
-            }
+        for (int i=0; i<numNode; i++) {
+            stopNode(i);
         }
     }
     
@@ -101,7 +80,7 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Stopping node " + id);
         }
-        leaderElection[id].destroy();
+        leaderElection[id].destroyForcibly();
         try {
             leaderElection[id].waitFor();
         } catch (InterruptedException e) {
@@ -111,8 +90,9 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
     
     public void startNode(int id) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Starting node" + id);
+            LOG.debug("Starting node " + id);
         }
+        System.out.println("Starting node " + id);
         ProcessBuilder builder = new ProcessBuilder();
         builder.environment().put("MC_CONFIG", workingDir + "/lemc.conf");
         builder.directory(new File(workingDir));

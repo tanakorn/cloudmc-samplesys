@@ -96,6 +96,8 @@ public class LeaderElectionMain {
             LeaderElectionInterposition.numNode = nodeMap.size();
             LeaderElectionInterposition.isReading = new boolean[LeaderElectionInterposition.numNode];
             Arrays.fill(LeaderElectionInterposition.isReading, false);
+	    } else if (ipcDir != ""){
+            LeaderElectionInterposition.numNode = nodeMap.size();
 	    }
 		senderMap = new HashMap<Integer, Sender>();
 		InetSocketAddress myAddress = nodeMap.get(id);
@@ -271,7 +273,7 @@ public class LeaderElectionMain {
 		}
 		
 		if (LeaderElectionInterposition.SAMC_ENABLED) {
-            LOG.info("Enable SAMC");
+            LOG.info("Enable SAMC without IPC");
 		}
 		LeaderElectionInterposition.localState = new LeaderElectionLocalState();
 		
@@ -433,6 +435,7 @@ public class LeaderElectionMain {
                             LOG.error("", e);
                         }
                     } else if(ipcDir != "") {
+                    	LOG.info("--- Intercept message in node " + id);
                     	interceptMessage(msg, "LeaderElectionCallback" + id, id, msg.getRole(), this.otherId, 
                     			msg.getLeader());
                         write(msg);
@@ -469,9 +472,10 @@ public class LeaderElectionMain {
 		// ipc interceptor
 		public void interceptMessage(ElectionMessage msg, String callbackName, int sender, int senderRole, 
 				int receiver, int leader){
-			
+
+        	LOG.info("[DEBUG] before hash in node " + id);
         	int eventId = LeaderElectionInterposition.hash(msg, receiver);
-//        	LOG.info("[DEBUG] eventId : " + eventId);
+        	LOG.info("[DEBUG] eventId : " + eventId);
         	
         	// create new file
         	try{
@@ -517,7 +521,7 @@ public class LeaderElectionMain {
         	
         	// wait for dmck signal
         	File ackFile = new File(ipcDir + "/ack/", Integer.toString(eventId));
-//        	LOG.info("[DEBUG] start waiting for file : " + eventId);
+        	LOG.info("[DEBUG] start waiting for file : " + eventId);
         	while(!ackFile.exists()){
         		// wait
         	}

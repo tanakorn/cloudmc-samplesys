@@ -4,7 +4,11 @@ import java.rmi.Naming;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.uchicago.cs.ucare.example.election.ElectionMessage;
+import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Sender;
 import edu.uchicago.cs.ucare.samc.election.LeaderElectionAspectProperties;
 import edu.uchicago.cs.ucare.samc.election.LeaderElectionCallback;
@@ -15,7 +19,7 @@ import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 import edu.uchicago.cs.ucare.samc.util.PacketReceiveAck;
 
 public class LeaderElectionInterposition {
-
+	
     public static boolean SAMC_ENABLED;
 
 	public static int id;
@@ -42,10 +46,10 @@ public class LeaderElectionInterposition {
 
     static {
 		SAMC_ENABLED = Boolean.parseBoolean(System.getProperty("samc_enabled", "false"));
+        packetGenerator = new LeaderElectionPacketGenerator();
 		if (SAMC_ENABLED) {
             nodeSenderMap = new HashMap<Integer, LeaderElectionPacket>();
             msgSenderMap = new HashMap<Integer, Sender>();
-            packetGenerator = new LeaderElectionPacketGenerator();
             packetGenerator2 = new LeaderElectionPacketGenerator();
             isBound = false;
             localState = new LeaderElectionLocalState();
