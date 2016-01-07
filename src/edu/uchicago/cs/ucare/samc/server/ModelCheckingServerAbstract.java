@@ -95,8 +95,9 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected int[] numPacketSentToId;
     
     public LeaderElectionLocalState[] localStates;
+    public String scmStates;
     
-    public boolean useIPC;
+    protected String ipcDir;
 
     public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
             String testRecordDirPath, WorkloadDriver zkController) {
@@ -132,12 +133,13 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         isNodeOnline = new boolean[numNode];
         senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
         localStates = new LeaderElectionLocalState[numNode];
-        useIPC = false;
+        scmStates = "";
+        ipcDir = "";
         this.resetTest();
     }
     
     public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
-            String testRecordDirPath, WorkloadDriver zkController, boolean useIPC) {
+            String testRecordDirPath, WorkloadDriver zkController, String ipcDir) {
         this.interceptorName = interceptorName;
         log = LoggerFactory.getLogger(this.getClass() + "." + interceptorName);
         packetQueue = new LinkedBlockingQueue<InterceptPacket>();
@@ -148,7 +150,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         writeAck = new DiskWriteAckImpl();
         ackedIds = new LinkedBlockingQueue<Integer>();
         writeAckedIds = new LinkedBlockingQueue<Integer>();
-        if(!useIPC){
+        if(ipcDir == ""){
 	        try {
 	            PacketReceiveAck ackStub = (PacketReceiveAck) 
 	                    UnicastRemoteObject.exportObject(ack, 0);
@@ -172,7 +174,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         isNodeOnline = new boolean[numNode];
         senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
         localStates = new LeaderElectionLocalState[numNode];
-        this.useIPC = useIPC;
+        scmStates = "";
+        this.ipcDir = ipcDir;
         this.resetTest();
     }
     
@@ -234,6 +237,10 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     	localStates[nodeId] = (LeaderElectionLocalState) localState;
     }
     
+    public void setSCMState(String msg){
+    	scmStates += msg;
+    }
+    
     public void waitForWrite(DiskWrite write) throws InterruptedException {
         waitForWrite(write.getWriteId());
     }
@@ -291,9 +298,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
             }
         });
         transitionList.addAll(buffer);
-        // jeff
+        
         System.out.println("[DEBUG] Events in Queue : " + transitionList.size());
-//        System.out.println("[DEBUG] Events in Queue - " + transitionList.size() + "\n" + transitionList.toString());
     }
     
     public void getOutstandingTcpPacket(LinkedList<InterceptPacket> packetList) {
@@ -471,10 +477,10 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     }
 
     public boolean runEnsemble() {
-        zkController.startEnsemble();
         for (int i = 0; i < numNode; ++i) {
             setNodeOnline(i, true);
         }
+        zkController.startEnsemble();
         return true;
     }
 
@@ -561,16 +567,16 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     public boolean commit(InterceptPacket packet) {
     	boolean result;
     	try {
-    		if(useIPC){
+    		if(ipcDir != ""){
     			try{
-    	        	PrintWriter writer = new PrintWriter(TestRunner.ipcDir + "/new/" + packet.getId(), "UTF-8");
+    	        	PrintWriter writer = new PrintWriter(ipcDir + "/new/" + packet.getId(), "UTF-8");
     	        	writer.println("eventId=" + packet.getId());
     		        writer.close();
     		        
     		    	System.out.println("Enable event with ID : " + packet.getId());
     		        
-    		        Runtime.getRuntime().exec("mv " + TestRunner.ipcDir + "/new/" + packet.getId() + " " + 
-    		        		TestRunner.ipcDir + "/ack/" + packet.getId());
+    		        Runtime.getRuntime().exec("mv " + ipcDir + "/new/" + packet.getId() + " " + 
+    		        		ipcDir + "/ack/" + packet.getId());
             	} catch (Exception e) {
             		System.out.println("[DEBUG] error in creating new file : " + packet.getId());
             	}
@@ -684,6 +690,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         numCurrentCrash = 0;
         numCurrentReboot = 0;
         localState = new int[numNode];
+        scmStates = "";
         globalState = 0;
         isInitGlobalState = false;
         if (pathRecordFile != null) {

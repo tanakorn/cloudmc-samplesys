@@ -16,6 +16,7 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
     
     private final static Logger LOG = LoggerFactory.getLogger(LeaderElectionEnsembleController.class);
     
+    // command to run LeaderElectionMain node
     static final String[] CMD = { "java", "-cp", System.getenv("CLASSPATH"), 
     	"-Delection.log.dir=%s/log/%d", "-Dlog4j.configuration=%s",
     	"edu.uchicago.cs.ucare.example.election.LeaderElectionMain", "%d", "%s/conf/config", "%s" };

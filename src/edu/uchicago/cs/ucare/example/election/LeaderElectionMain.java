@@ -242,8 +242,9 @@ public class LeaderElectionMain {
 	// update my current state to DMCK
 	static void updateStatetoDMCK(){
 		// create new file
+		LOG.info("[ERROR?] id-" + id + " role-" + role + " leader-" + leader);
     	try{
-        	PrintWriter writer = new PrintWriter(ipcDir + "/new/u" + id, "UTF-8");
+        	PrintWriter writer = new PrintWriter(ipcDir + "/new/u-" + id, "UTF-8");
 	        writer.println("sendNode=" + id);
 	        writer.println("sendRole=" + role);
 	        writer.println("leader=" + leader);
@@ -254,15 +255,15 @@ public class LeaderElectionMain {
 	        }
 	        writer.close();
     	} catch (Exception e) {
-        	LOG.error("[DEBUG] error in creating new file : u" + id);
+        	LOG.error("[DEBUG] error in creating new file : u-" + id);
     	}
     	
     	// move new file to send folder - commit message
     	try{
-    		Runtime.getRuntime().exec("mv " + ipcDir + "/new/u" + id + " " + 
-    				ipcDir + "/send/u" + id);
+    		Runtime.getRuntime().exec("mv " + ipcDir + "/new/u-" + id + " " + 
+    				ipcDir + "/send/u-" + id);
     	} catch (Exception e){
-        	LOG.error("[DEBUG] error in moving file to send folder : u" + id);
+        	LOG.error("[DEBUG] error in moving file to send folder : u-" + id);
     	}
 	}
 	
@@ -479,7 +480,7 @@ public class LeaderElectionMain {
         	
         	// create new file
         	try{
-	        	PrintWriter writer = new PrintWriter(ipcDir + "/new/" + eventId, "UTF-8");
+	        	PrintWriter writer = new PrintWriter(ipcDir + "/new/le-" + eventId, "UTF-8");
 	        	writer.println("callbackName=" + callbackName);
 		        writer.println("sendNode=" + sender);
 		        writer.println("recvNode=" + receiver);
@@ -492,18 +493,18 @@ public class LeaderElectionMain {
         	
         	// move new file to send folder - commit message
         	try{
-        		Runtime.getRuntime().exec("mv " + ipcDir + "/new/" + eventId + " " + 
-        				ipcDir + "/send/" + eventId);
+        		Runtime.getRuntime().exec("mv " + ipcDir + "/new/le-" + eventId + " " + 
+        				ipcDir + "/send/le-" + eventId);
         	} catch (Exception e){
-            	LOG.error("[ERROR] error in moving file to send folder : " + eventId);
+            	LOG.error("[ERROR] error in moving file to send folder : le-" + eventId);
         	}
         	
         	msgIntercepted++;
         	// inform steady state
         	if(msgIntercepted == nodeMap.size() - 1){
-        		LOG.info("[DEBUG] Inform steady state from node " + eventId);
+        		LOG.info("[DEBUG] Inform steady state from node " + sender);
         		try{
-        			PrintWriter writer = new PrintWriter(ipcDir + "/new/s" + sender, "UTF-8");
+        			PrintWriter writer = new PrintWriter(ipcDir + "/new/s-" + sender, "UTF-8");
     	        	writer.println("sendNode=" + sender);
     		        writer.close();
         		} catch (Exception e){
@@ -512,10 +513,10 @@ public class LeaderElectionMain {
         		
         		// move new file to send folder - commit message
             	try{
-            		Runtime.getRuntime().exec("mv " + ipcDir + "/new/s" + sender + " " + 
-            				ipcDir + "/send/s" + sender);
+            		Runtime.getRuntime().exec("mv " + ipcDir + "/new/s-" + sender + " " + 
+            				ipcDir + "/send/s-" + sender);
             	} catch (Exception e){
-                	LOG.error("[ERROR] error in moving file to send folder : s" + sender);
+                	LOG.error("[ERROR] error in moving file to send folder : s-" + sender);
             	}
         	}
         	

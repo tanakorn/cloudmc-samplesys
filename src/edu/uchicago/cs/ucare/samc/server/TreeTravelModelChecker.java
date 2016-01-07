@@ -30,8 +30,8 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
     
     public TreeTravelModelChecker(String interceptorName, String ackName, int numNode,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, 
-            WorkloadDriver zkController, boolean useIPC) {
-        super(interceptorName, ackName, numNode, globalStatePathDir, zkController, useIPC);
+            WorkloadDriver zkController, String ipcDir) {
+        super(interceptorName, ackName, numNode, globalStatePathDir, zkController, ipcDir);
         try {
             this.numCrash = numCrash;
             this.numReboot = numReboot;
@@ -105,6 +105,7 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
         @Override
         @SuppressWarnings("unchecked")
         public void run() {
+        	boolean hasExploredAll = false;
         	int numWaitTime = 0;
             LinkedList<LinkedList<Transition>> pastEnabledTransitionList = 
                     new LinkedList<LinkedList<Transition>>();
@@ -122,17 +123,22 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                         Transition nextTransition = nextTransition(pastTransitions);
                         if (nextTransition == null) {
                             exploredBranchRecorder.markBelowSubtreeFinished();
+                        	hasExploredAll = true;
                         } else {
+                        	hasExploredAll = false;
                             break;
                         }
                     }
                 	System.out.println("---- End of Path Execution ----");
-                    resetTest();
-                    break;
+                	if(!hasExploredAll){
+                		resetTest();
+                        break;
+                	}
                 } else if(enabledTransitionList.isEmpty()){
                 	try {
+                    	System.out.println("[DEBUG] wait for any long process");
                         numWaitTime++;
-                        Thread.sleep(100);
+                        Thread.sleep(500 * numNode);
                     } catch (InterruptedException e) {
                     	e.printStackTrace();
                     }
@@ -164,16 +170,17 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                                     queue.clear();
                                 }
                             }
-//                            getOutstandingTcpPacketTransition(enabledTransitionList);
                         }
                     } catch (Exception e) {
                         log.error("", e);
                     }
                 } else if (exploredBranchRecorder.getCurrentDepth() == 0) {
+                	System.out.println("Finished exploring all states");
                     log.warn("Finished exploring all states");
                     zkController.stopEnsemble();
                     System.exit(0);
                 } else {
+                	System.out.println("There might be some errors");
                     log.error("There might be some errors");
                     zkController.stopEnsemble();
                     System.exit(1);
