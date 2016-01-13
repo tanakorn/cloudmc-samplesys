@@ -9,19 +9,6 @@ other_vars=`echo $other_vars | sed 's/working_dir=[a-zA-Z0-9\/\-]*//'`
 other_vars=`echo $other_vars | sed 's/ipc_dir=[a-zA-Z0-9\/\-]*//'`
 other_vars=`echo $other_vars | sed 's/num_node=[0-9]*//'`
 
-# prepare ipc folders
-echo "Prepare IPC-File dirs.."
-rm -r $ipc_dir/* 2> /dev/null
-mkdir -p $ipc_dir
-mkdir $ipc_dir/new
-mkdir $ipc_dir/send
-mkdir $ipc_dir/ack
-rm -r $ipc_dir-scm/* 2> /dev/null
-mkdir -p $ipc_dir-scm
-mkdir $ipc_dir-scm/new
-mkdir $ipc_dir-scm/send
-echo "IPC-File dirs are ready in $ipc_dir.."
-
 # prepare scm files
 rm -r $working_dir/* 2> /dev/null
 mkdir -p $working_dir
@@ -50,3 +37,18 @@ while [ $i -lt $num_node ]; do
 	mkdir -p $working_dir/log/$i
 	i=`expr $i + 1`
 done
+
+echo "DMCK is ready in $working_dir.."
+
+# prepare ipc folders
+rm -r $ipc_dir/* 2> /dev/null
+mkdir -p $ipc_dir
+mkdir $ipc_dir/new
+mkdir $ipc_dir/send
+mkdir $ipc_dir/ack
+echo "IPC-File dirs for DMCK are ready in $ipc_dir.."
+rm -r $ipc_dir-scm/* 2> /dev/null
+mkdir -p $ipc_dir-scm
+mkdir $ipc_dir-scm/new
+mkdir $ipc_dir-scm/send
+echo "IPC-File dirs for SCM are ready in $ipc_dir-scm.."
