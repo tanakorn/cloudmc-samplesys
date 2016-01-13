@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+if [ $# -eq 4 ]; then
+  echo "usage: startSampleLENode <num_node> <working_dir> <ipc_dir>"
+  exit 1
+fi
+
+node=$1
+workingDir=$2
+ipcDir=$3
+
+leader_election=/home/jeff/Huawei/SAMC-IPC
+classpath=$leader_election/bin
+lib=$leader_election/lib
+for j in `ls $lib/*.jar`; do
+  classpath=$classpath:$j
+done
+export CLASSPATH=$CLASSPATH:$classpath
+export PATH=$PATH:bin/
+
+
+# execute sample LE node
+java -cp $CLASSPATH -Delection.log.dir=$workingDir/log/$node -Dlog4j.configuration=le_log.properties edu.uchicago.cs.ucare.example.election.LeaderElectionMain $node $workingDir/conf/config $ipcDir & 
+
+# get sample LE node pid
+echo $! >> pid.txt
+
+# read pids in pid.txt and put it into an array
+readarray -t pids < pid.txt
+printf "${pids[*]}"
+
+# kill pids #number
+let i=0
+while (( ${#pids[@]} > i )); do
+    kill -9 ${pids[i++]}
+done

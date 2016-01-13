@@ -40,11 +40,15 @@ cp $scriptdir/resource/runnode $working_dir/
 cp $scriptdir/resource/mc_log.properties $working_dir/
 sed "s:WORKING_DIR:$working_dir:" $scriptdir/resource/testrunner.sh > $working_dir/testrunner.sh
 chmod 755 $working_dir/testrunner.sh
+sed "s:WORKING_DIR:$working_dir:" $scriptdir/resource/startNode.sh > $working_dir/startNode.sh
+chmod 755 $working_dir/startNode.sh
+cp $scriptdir/resource/killNode.sh $working_dir/killNode.sh
+chmod 755 $working_dir/killNode.sh
 cp $scriptdir/resource/monitorcheck.sh $working_dir/
+echo "DMCK is ready in $working_dir."
 
 # ipc
 if [ "$use_ipc" = "1" ]; then
-	echo "Prepare IPC-File dirs.."
 	rm -r $ipc_dir/* 2> /dev/null
 	mkdir -p $ipc_dir
 	mkdir $ipc_dir/new

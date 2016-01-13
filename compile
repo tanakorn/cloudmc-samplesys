@@ -1,12 +1,12 @@
 #!/bin/bash 
 
 if [ $# == 0 ]; then
-	ant clean && ant && ./mcdeploy/setup && ./scm/setup
+	ant clean && ant && ./sample-le/setup && ./scm/setup
 elif [ $# -eq 1 ] && [ $1 == 'scm' ]; then
 	ant clean && ant && ./scm/setup
-elif [ $# -eq 1 ] && [ $1 == 'mcdeploy' ]; then
-	ant clean && ant && ./mcdeploy/setup
+elif [ $# -eq 1 ] && [ $1 == 'sample-le' ]; then
+	ant clean && ant && ./sample-le/setup
 else
-	echo "usage: ./compile [optional : scm / mcdeploy]"
+	echo "usage: ./compile [optional : scm / sample-le]"
   exit 1
 fi
