@@ -78,16 +78,6 @@ public class SCMSender {
         	Process p = Runtime.getRuntime().exec("mv " + ipcDmckDir + "/new/" + msgName + " " + 
         			ipcDmckDir + "/send/" + msgName);
         	p.waitFor();
-        	Thread.sleep(200);
-        	
-        	// inform steady state
-    		PrintWriter steadyStateWriter = new PrintWriter(ipcDmckDir + "/new/s-" + nodeId, "UTF-8");
-    		steadyStateWriter.println("sendNode=" + nodeId);
-    		steadyStateWriter.close();
-    		
-    		// commit steady state
-    		Runtime.getRuntime().exec("mv " + ipcDmckDir + "/new/s-" + nodeId + " " + 
-    				ipcDmckDir + "/send/s-" + nodeId);
         	
         	// wait for dmck signal
         	File ackFile = new File(ipcDmckDir + "/ack/" + msgId);

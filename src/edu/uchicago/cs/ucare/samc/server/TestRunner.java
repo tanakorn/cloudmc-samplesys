@@ -52,9 +52,9 @@ public class TestRunner {
     	try{
 	    	Properties testRunnerProp = new Properties();
 	        FileInputStream configInputStream = new FileInputStream(testRunnerConf);
-	        
 	        testRunnerProp.load(configInputStream);
 	        configInputStream.close();
+	        
 	        String workingDir = testRunnerProp.getProperty("working_dir");
 	        int numNode = Integer.parseInt(testRunnerProp.getProperty("num_node"));
 	        String workload = testRunnerProp.getProperty("workload_driver");
@@ -67,7 +67,7 @@ public class TestRunner {
 	        Class<? extends WorkloadDriver> ensembleControllerClass = (Class<? extends WorkloadDriver>) Class.forName(workload);
 	        Constructor<? extends WorkloadDriver> ensembleControllerConstructor = ensembleControllerClass.getConstructor(Integer.TYPE, String.class, String.class);
 	        ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir, ipcDir);
-	        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/mc.conf", workingDir, ensembleController, ipcDir);
+	        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/target-sys.conf", workingDir, ensembleController, ipcDir);
 	        if(useIPC){
 	        	// activate Directory Watcher
 	            Thread dirWatcher;
@@ -159,6 +159,7 @@ public class TestRunner {
                 zkController.resetTest();
                 checker.runEnsemble();
                 ensembleController.runWorkload();
+                checker.waitOnSteadyStatesByTimeout(); // wait on first steady state timeout
                 while (!waitingFlag.exists()) {
                     Thread.sleep(30);
                 }

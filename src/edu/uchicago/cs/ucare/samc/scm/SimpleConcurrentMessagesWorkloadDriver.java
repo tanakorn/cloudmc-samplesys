@@ -58,11 +58,7 @@ public class SimpleConcurrentMessagesWorkloadDriver extends WorkloadDriver{
 	public void stopNode(int id) {
 		LOG.info("Kill node " + id);
 		try {
-//			node[id].destroyForcibly();
-//			node[id].waitFor();
 			node[id] = Runtime.getRuntime().exec(workingDir + "/killNode.sh " + id);
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
         } catch (IOException e) {
 			e.printStackTrace();
 		}

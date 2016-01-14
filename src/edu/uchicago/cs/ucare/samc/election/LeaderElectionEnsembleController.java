@@ -57,8 +57,7 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
             	startNode(i);
                 Thread.sleep(300);
             } catch (InterruptedException e) {
-                LOG.error("", e);
-                throw new RuntimeException(e);
+                LOG.error("Error in starting node " + i);
             }
         }
     }
@@ -68,7 +67,12 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
             LOG.debug("Stopping ensemble");
         }
         for (int i=0; i<numNode; i++) {
-            stopNode(i);
+        	try {
+            	stopNode(i);
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                LOG.error("Error in stopping node " + i);
+            }
         }
     }
     
@@ -77,7 +81,7 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
             LOG.debug("Stopping node " + id);
         }
         try {
-            node[id] = Runtime.getRuntime().exec(workingDir + "/killNode.sh " + id);
+            Runtime.getRuntime().exec(workingDir + "/killNode.sh " + id);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -53,7 +53,7 @@ public class TestRunner {
         Class<? extends WorkloadDriver> ensembleControlloerClass = (Class<? extends WorkloadDriver>) Class.forName(workload);
         Constructor<? extends WorkloadDriver> ensembleControllerConstructor = ensembleControlloerClass.getConstructor(Integer.TYPE, String.class);
         ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir);
-        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/mc.conf", workingDir, ensembleController);
+        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/target-sys.conf", workingDir, ensembleController);
         startExploreTesting(checker, numNode, workingDir, ensembleController, isPausedEveryTest);
     }
     

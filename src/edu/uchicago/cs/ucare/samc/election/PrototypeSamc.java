@@ -65,10 +65,10 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     }
     
     @SuppressWarnings("unchecked")
-    public PrototypeSamc(String inceptorName, String ackName, int maxId,
-            int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String cacheDir,
+    public PrototypeSamc(String interceptorName, String ackName, int maxId,
+            int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String workingDir,
             WorkloadDriver zkController, String ipcDir) {
-        super(inceptorName, ackName, maxId, globalStatePathDir, zkController, ipcDir);
+        super(interceptorName, ackName, maxId, globalStatePathDir, workingDir, zkController, ipcDir);
         
         dporInitialPaths = new LinkedList<LinkedList<TransitionTuple>>();
         finishedDporInitialPaths = new HashSet<LinkedList<TransitionTuple>>();
@@ -425,14 +425,14 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                 }
             }
             log.info("Try to find new path/Continue from DPOR initial path");
-            int numWaitTime = 0;
+            boolean hasWaited = false;
             while (true) {
                 getOutstandingTcpPacketTransition(currentEnabledTransitions);
                 getOutstandingDiskWrite(currentEnabledTransitions);
                 adjustCrashReboot(currentEnabledTransitions);
                 updateGlobalState2();
                 recordEnabledTransitions(globalState2, currentEnabledTransitions);
-                if (currentEnabledTransitions.isEmpty() && numWaitTime >= 2) {
+                if (currentEnabledTransitions.isEmpty() && hasWaited) {
                     boolean verifiedResult = verifier.verify();
                     String detail = verifier.verificationDetail();
                     saveResult(verifiedResult + " ; " + detail + "\n");
@@ -459,13 +459,14 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                     break;
                 } else if (currentEnabledTransitions.isEmpty()) {
                     try {
-                        numWaitTime++;
-                        Thread.sleep(100);
+                    	System.out.println("[DEBUG] wait for any long process");
+                        hasWaited = true;
+                        Thread.sleep(waitEndExploration);
                     } catch (InterruptedException e) {
                     }
                     continue;
                 }
-                numWaitTime = 0;
+                hasWaited = false;
                 Transition transition = nextTransition(currentEnabledTransitions);
                 if (transition != null) {
                     exploredBranchRecorder.createChild(transition.getTransitionId());
@@ -500,6 +501,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                         log.error("", e);
                     }
                 } else if (exploredBranchRecorder.getCurrentDepth() == 0) {
+                	System.out.println("Finished exploring all states");
                     log.warn("Finished exploring all states");
                 } else {
                     if (dporInitialPaths.size() == 0) {

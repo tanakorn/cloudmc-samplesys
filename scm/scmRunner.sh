@@ -8,4 +8,4 @@ for j in `ls $lib/*.jar`; do
 done
 export CLASSPATH=$CLASSPATH:$classpath
 
-java -cp $CLASSPATH -Dlog4j.configuration=mc_log.properties -Ddmck.dir=WORKING_DIR edu.uchicago.cs.ucare.samc.scm.SCMRunner ./scm.conf
+java -cp $CLASSPATH -Dlog4j.configuration=mc_log.properties -Ddmck.dir=WORKING_DIR edu.uchicago.cs.ucare.samc.scm.SCMRunner ./target-sys.conf

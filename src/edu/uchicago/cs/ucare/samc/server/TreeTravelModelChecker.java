@@ -30,8 +30,9 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
     
     public TreeTravelModelChecker(String interceptorName, String ackName, int numNode,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, 
-            WorkloadDriver zkController, String ipcDir) {
-        super(interceptorName, ackName, numNode, globalStatePathDir, zkController, ipcDir);
+            String workingDir, WorkloadDriver zkController, String ipcDir) {
+        super(interceptorName, ackName, numNode, globalStatePathDir, workingDir, zkController, 
+        		ipcDir);
         try {
             this.numCrash = numCrash;
             this.numReboot = numReboot;
@@ -106,13 +107,13 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
         @SuppressWarnings("unchecked")
         public void run() {
         	boolean hasExploredAll = false;
-        	int numWaitTime = 0;
+        	boolean hasWaited = false;
             LinkedList<LinkedList<Transition>> pastEnabledTransitionList = 
                     new LinkedList<LinkedList<Transition>>();
             while (true) {
             	getOutstandingTcpPacketTransition(enabledTransitionList);
             	adjustCrashAndReboot(enabledTransitionList);
-                if (enabledTransitionList.isEmpty() && numWaitTime >= 2) {
+                if (enabledTransitionList.isEmpty() && hasWaited) {
                 	boolean verifiedResult = verifier.verify();
                     String detail = verifier.verificationDetail();
                     saveResult(verifiedResult + " ; " + detail + "\n");
@@ -137,13 +138,14 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                 } else if(enabledTransitionList.isEmpty()){
                 	try {
                     	System.out.println("[DEBUG] wait for any long process");
-                        numWaitTime++;
-                        Thread.sleep(500 * numNode);
+                        hasWaited = true;
+                        Thread.sleep(waitEndExploration);
                     } catch (InterruptedException e) {
                     	e.printStackTrace();
                     }
                     continue;
                 }
+                hasWaited = false;
                 pastEnabledTransitionList.addFirst((LinkedList<Transition>) enabledTransitionList.clone());
                 Transition nextTransition = nextTransition(enabledTransitionList);
                 if (nextTransition != null) {

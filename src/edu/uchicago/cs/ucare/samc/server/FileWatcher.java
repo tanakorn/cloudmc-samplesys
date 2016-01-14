@@ -86,11 +86,19 @@ public class FileWatcher implements Runnable{
 	    	
 	    	int sendNode = Integer.parseInt(ev.getProperty("sendNode"));
 	    	
-	    	// SAMPLE-LE
+	    	// we can inform the steady state manually to dmck to make the
+	    	// dmck response's quicker, but it's more complicated because
+	    	// it means we need to know when our target system node gets into
+	    	// steady state. - for now we have made it get into steady state
+	    	// after some time, specified by initSteadyStateTimeout
+	    	/*
 	    	if(filename.startsWith("s-")){
 	    		System.out.println("[DEBUG] Receive steady state " + filename);
 	    		checker.informSteadyState(sendNode, 0);
-	    	} else if(filename.startsWith("u-")){
+	    	} else
+	    	*/ 
+	    	// SAMPLE-LE
+	    	if(filename.startsWith("u-")){
 	    		int sendRole = Integer.parseInt(ev.getProperty("sendRole"));
 	    		int leader = Integer.parseInt(ev.getProperty("leader"));
 	    		String sElectionTable = ev.getProperty("electionTable").substring(0, ev.getProperty("electionTable").length()-1);

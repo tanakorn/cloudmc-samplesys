@@ -56,7 +56,7 @@ public class SCMRunner{
 	        Constructor<? extends WorkloadDriver> ensembleControllerConstructor = ensembleControllerClass.getConstructor(Integer.TYPE, 
 	        		String.class, String.class);
 	        ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir, ipcDir);
-	        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/scm.conf", workingDir, 
+	        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/target-sys.conf", workingDir, 
 	        		ensembleController, ipcDir);
 	        
 	        // activate Directory Watcher
@@ -127,6 +127,7 @@ public class SCMRunner{
                 scmWorkloadDriver.resetTest();
                 checker.runEnsemble();
                 ensembleController.runWorkload();
+                checker.waitOnSteadyStatesByTimeout(); // wait on first steady state timeout
                 while (!waitingFlag.exists()) {
                     Thread.sleep(30);
                 }

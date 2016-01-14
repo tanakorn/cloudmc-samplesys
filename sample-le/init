@@ -44,6 +44,7 @@ sed "s:WORKING_DIR:$working_dir:" $scriptdir/resource/startNode.sh > $working_di
 chmod 755 $working_dir/startNode.sh
 cp $scriptdir/resource/killNode.sh $working_dir/killNode.sh
 chmod 755 $working_dir/killNode.sh
+cp $scriptdir/dmck.conf $working_dir/dmck.conf
 cp $scriptdir/resource/monitorcheck.sh $working_dir/
 echo "DMCK is ready in $working_dir."
 

@@ -34,19 +34,7 @@ public class SCMReceiver {
 			Receiver receiverThread = new Receiver(i);
 			receiverThread.start();
 		}
-		
-		// inform steady state
-		try{
-			PrintWriter steadyStateWriter = new PrintWriter(ipcDmckDir + "/new/s-" + nodeId, "UTF-8");
-    		steadyStateWriter.println("sendNode=" + nodeId);
-    		steadyStateWriter.close();
-    		
-    		// commit steady state
-    		Runtime.getRuntime().exec("mv " + ipcDmckDir + "/new/s-" + nodeId + " " + 
-    				ipcDmckDir + "/send/s-" + nodeId);
-		} catch (Exception e){
-			LOG.error("receiver failed to send steady state to dmck");
-		}
+
 	}
 	
 	public static int getHash(int fromId){

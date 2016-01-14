@@ -2,7 +2,7 @@
 
 scriptdir=`dirname $0`
 
-conf_file=$scriptdir/scm.conf
+conf_file=$scriptdir/target-sys.conf
 
 vars="`set -o posix ; set`"; source $conf_file; other_vars="`grep -vFe "$vars" <<<"$(set -o posix ; set)" | grep -v ^vars=`"; unset vars;
 other_vars=`echo $other_vars | sed 's/working_dir=[a-zA-Z0-9\/\-]*//'`
@@ -20,9 +20,10 @@ sed "s:WORKING_DIR:$working_dir:" $scriptdir/scmRunner.sh > $working_dir/scmRunn
 chmod 755 $working_dir/scmRunner.sh
 cp $scriptdir/killNode.sh $working_dir/killNode.sh
 chmod 755 $working_dir/killNode.sh
-cp $scriptdir/scm.conf $working_dir/scm.conf
-echo traversal_record_dir=$working_dir/state >> $working_dir/scm.conf
-echo test_record_dir=$working_dir/record >> $working_dir/scm.conf
+cp $scriptdir/dmck.conf $working_dir/dmck.conf
+cp $scriptdir/target-sys.conf $working_dir/target-sys.conf
+echo traversal_record_dir=$working_dir/state >> $working_dir/target-sys.conf
+echo test_record_dir=$working_dir/record >> $working_dir/target-sys.conf
 
 # prepare log directories & config file
 mkdir $working_dir/record

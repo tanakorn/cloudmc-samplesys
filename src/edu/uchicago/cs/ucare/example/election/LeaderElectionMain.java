@@ -40,7 +40,7 @@ public class LeaderElectionMain {
 	public static final int LEADING = 2;
 	
 	public static String ipcDir;
-	public static int msgIntercepted;
+//	public static int msgIntercepted;
 	
 	public static String getRoleName(int role) {
 		String name;
@@ -75,7 +75,6 @@ public class LeaderElectionMain {
 		nodeMap = new HashMap<Integer, InetSocketAddress>();
 		BufferedReader br = new BufferedReader(new FileReader(config));
 		ipcDir = sIpcDir;
-		msgIntercepted = 0;
 		String line;
 		while ((line = br.readLine()) != null) {
 			String[] tokens = line.trim().split("=");
@@ -388,7 +387,7 @@ public class LeaderElectionMain {
 				LOG.error("", e);
 			}
 			queue = new LinkedBlockingQueue<ElectionMessage>();
-			msgIntercepted = 0;
+//			msgIntercepted = 0;
 		}
 		
 		public void send(ElectionMessage msg) {
@@ -499,8 +498,9 @@ public class LeaderElectionMain {
             	LOG.error("[ERROR] error in moving file to send folder : le-" + eventId);
         	}
         	
-        	msgIntercepted++;
+//        	msgIntercepted++;
         	// inform steady state
+        	/*
         	if(msgIntercepted == nodeMap.size() - 1){
         		LOG.info("[DEBUG] Inform steady state from node " + sender);
         		try{
@@ -519,6 +519,7 @@ public class LeaderElectionMain {
                 	LOG.error("[ERROR] error in moving file to send folder : s-" + sender);
             	}
         	}
+        	*/
         	
         	// wait for dmck signal
         	File ackFile = new File(ipcDir + "/ack/", Integer.toString(eventId));
