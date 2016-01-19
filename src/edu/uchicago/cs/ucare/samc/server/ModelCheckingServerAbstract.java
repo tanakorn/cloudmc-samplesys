@@ -2,6 +2,7 @@ package edu.uchicago.cs.ucare.samc.server;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.util.LinkedList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +73,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected int initialGlobalState;
     protected int globalState;
 
+    protected String workingDirPath;
     protected String testRecordDirPath;
     protected String idRecordDirPath;
     protected String codeRecordDirPath;
@@ -94,9 +97,14 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected Thread modelChecking;
     protected int[] numPacketSentToId;
     
-    public LeaderElectionLocalState[] localStates;
+    protected int steadyStateTimeout;
+    protected int initSteadyStateTimeout;
+    protected int waitEndExploration;
     
-    public boolean useIPC;
+    public LeaderElectionLocalState[] localStates;
+    public String scmStates;
+    
+    protected String ipcDir;
 
     public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
             String testRecordDirPath, WorkloadDriver zkController) {
@@ -132,12 +140,14 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         isNodeOnline = new boolean[numNode];
         senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
         localStates = new LeaderElectionLocalState[numNode];
-        useIPC = false;
+        scmStates = "";
+        ipcDir = "";
         this.resetTest();
     }
     
     public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
-            String testRecordDirPath, WorkloadDriver zkController, boolean useIPC) {
+            String testRecordDirPath, String workingDirPath, WorkloadDriver zkController, 
+            String ipcDir) {
         this.interceptorName = interceptorName;
         log = LoggerFactory.getLogger(this.getClass() + "." + interceptorName);
         packetQueue = new LinkedBlockingQueue<InterceptPacket>();
@@ -148,7 +158,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         writeAck = new DiskWriteAckImpl();
         ackedIds = new LinkedBlockingQueue<Integer>();
         writeAckedIds = new LinkedBlockingQueue<Integer>();
-        if(!useIPC){
+        if(ipcDir == ""){
 	        try {
 	            PacketReceiveAck ackStub = (PacketReceiveAck) 
 	                    UnicastRemoteObject.exportObject(ack, 0);
@@ -162,6 +172,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         }
         this.numNode = numNode;
         this.testRecordDirPath = testRecordDirPath;
+        this.workingDirPath = workingDirPath;
         this.zkController = zkController;
         this.verifier = zkController.verifier;
         pathRecordFile = null;
@@ -172,8 +183,26 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         isNodeOnline = new boolean[numNode];
         senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
         localStates = new LeaderElectionLocalState[numNode];
-        this.useIPC = useIPC;
+        scmStates = "";
+        this.ipcDir = ipcDir;
+        getDMCKConfig();
         this.resetTest();
+    }
+    
+    public void getDMCKConfig(){
+    	try{
+	    	String dmckConfigFile = workingDirPath + "/dmck.conf";
+	    	Properties dmckConf = new Properties();
+	        FileInputStream configInputStream = new FileInputStream(dmckConfigFile);
+	        dmckConf.load(configInputStream);
+	        configInputStream.close();
+
+	        initSteadyStateTimeout = Integer.parseInt(dmckConf.getProperty("initSteadyStateTimeout"));
+	        steadyStateTimeout = Integer.parseInt(dmckConf.getProperty("steadyStateTimeout"));
+	        waitEndExploration = Integer.parseInt(dmckConf.getProperty("waitEndExploration"));
+        } catch (Exception e){
+    		log.error("Error in reading dmck config file");
+    	}
     }
     
     @Override
@@ -234,6 +263,10 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     	localStates[nodeId] = (LeaderElectionLocalState) localState;
     }
     
+    public void setSCMState(String msg){
+    	scmStates += msg;
+    }
+    
     public void waitForWrite(DiskWrite write) throws InterruptedException {
         waitForWrite(write.getWriteId());
     }
@@ -277,6 +310,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         LinkedList<PacketSendTransition> buffer = new LinkedList<PacketSendTransition>();
         for (int i = 0; i < numNode; ++i) {
             for (int j = 0; j < numNode; ++j) {
+            	// reorder
                 if (filter[i][j] && !senderReceiverQueues[i][j].isEmpty()) {
                     buffer.add(new PacketSendTransition(this, senderReceiverQueues[i][j].remove()));
                 }
@@ -291,9 +325,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
             }
         });
         transitionList.addAll(buffer);
-        // jeff
+        
         System.out.println("[DEBUG] Events in Queue : " + transitionList.size());
-//        System.out.println("[DEBUG] Events in Queue - " + transitionList.size() + "\n" + transitionList.toString());
     }
     
     public void getOutstandingTcpPacket(LinkedList<InterceptPacket> packetList) {
@@ -307,6 +340,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         LinkedList<InterceptPacket> buffer = new LinkedList<InterceptPacket>();
         for (int i = 0; i < numNode; ++i) {
             for (int j = 0; j < numNode; ++j) {
+            	// reorder
                 if (filter[i][j] && !senderReceiverQueues[i][j].isEmpty()) {
                     buffer.add(senderReceiverQueues[i][j].remove());
                 }
@@ -345,6 +379,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected boolean isThereEnabledPacket() {
         for (int i = 0; i < numNode; ++i) {
             for (int j = 0; j < numNode; ++j) {
+            	// reorder
                 if (!senderReceiverQueues[i][j].isEmpty()) {
                     return true;
                 }
@@ -471,10 +506,10 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     }
 
     public boolean runEnsemble() {
-        zkController.startEnsemble();
         for (int i = 0; i < numNode; ++i) {
             setNodeOnline(i, true);
         }
+        zkController.startEnsemble();
         return true;
     }
 
@@ -561,16 +596,16 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     public boolean commit(InterceptPacket packet) {
     	boolean result;
     	try {
-    		if(useIPC){
+    		if(ipcDir != ""){
     			try{
-    	        	PrintWriter writer = new PrintWriter(TestRunner.ipcDir + "/new/" + packet.getId(), "UTF-8");
+    	        	PrintWriter writer = new PrintWriter(ipcDir + "/new/" + packet.getId(), "UTF-8");
     	        	writer.println("eventId=" + packet.getId());
     		        writer.close();
     		        
     		    	System.out.println("Enable event with ID : " + packet.getId());
     		        
-    		        Runtime.getRuntime().exec("mv " + TestRunner.ipcDir + "/new/" + packet.getId() + " " + 
-    		        		TestRunner.ipcDir + "/ack/" + packet.getId());
+    		        Runtime.getRuntime().exec("mv " + ipcDir + "/new/" + packet.getId() + " " + 
+    		        		ipcDir + "/ack/" + packet.getId());
             	} catch (Exception e) {
             		System.out.println("[DEBUG] error in creating new file : " + packet.getId());
             	}
@@ -614,9 +649,22 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
                 isStarted = true;
                 initGlobalState();
                 log.info("First system steady state, start model checker thread");
-                modelChecking.start();
+            	System.out.println("Start Reordering");
+        		modelChecking.start();
             }
         }
+    }
+    
+    public void waitOnSteadyStatesByTimeout(){
+    	System.out.println("Starts wait on first steady states");
+    	try{
+    		Thread.sleep(initSteadyStateTimeout);
+    		for(int i=0; i<numNode; i++){
+    			informSteadyState(i, 0);
+    		}
+    	} catch (Exception e){
+    		log.error("Error while waiting on the first steady states timeout");
+    	}
     }
     
     @Override
@@ -647,16 +695,17 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         if (log.isDebugEnabled()) {
             log.debug("Waiting node " + id + " to be in steady state");
         }
-        int waitTick = 10;
-        int i = 0;
-        while (!isNodeSteady(id) && i++ < waitTick) {
-//        while (!isNodeSteady(id)) {
-            Thread.sleep(50);
-//        	Thread.sleep(500);
+        
+        boolean isTimeout = false;
+        while (!isNodeSteady(id) && !isTimeout) {
+            Thread.sleep(steadyStateTimeout);
+            isTimeout = true;
         }
-        if (i >= waitTick) {
+        
+        if(isTimeout){
             log.warn("Steady state for node " + id + " triggered by timeout");
         }
+        
         setNodeSteady(id, true);
     }
     
@@ -684,6 +733,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         numCurrentCrash = 0;
         numCurrentReboot = 0;
         localState = new int[numNode];
+        scmStates = "";
         globalState = 0;
         isInitGlobalState = false;
         if (pathRecordFile != null) {
@@ -761,20 +811,18 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         setNodeOnline(id, true);
         setNodeSteady(id, false);
         try {
-//          waitNodeSteady(id);
-            // I'm sorry for this, waitNodeSteady now means wait for timeout 200 ms
             if (log.isDebugEnabled()) {
-                log.debug("Waiting node " + id + " to be in real steady state");
+                log.debug("Waiting new started node " + id + " to be in real steady state");
             }
-            int waitTick = 60;
-            int i = 0;
-            while (!isNodeSteady(id) && i++ < waitTick) {
-//              while (!isNodeSteady(id)) {
-                Thread.sleep(50);
-//            	Thread.sleep(500);
+            
+            boolean isTimeout = false;
+            while (!isNodeSteady(id) && !isTimeout) {
+                Thread.sleep(initSteadyStateTimeout);
+                isTimeout = true;
             }
-            if (i >= waitTick) {
-                log.warn("Steady state for node " + id + " triggered by timeout");
+            
+            if(isTimeout){
+                log.warn("Steady state for new started node " + id + " triggered by timeout");
             }
             setNodeSteady(id, true);
         } catch (InterruptedException e) {

@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Properties;
 
 import edu.uchicago.cs.ucare.samc.election.LeaderElectionPacket;
+import edu.uchicago.cs.ucare.samc.scm.SCMPacket;
 import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 
 public class FileWatcher implements Runnable{
@@ -37,46 +38,32 @@ public class FileWatcher implements Runnable{
 				throw new IllegalArgumentException("Path: " + path + " is not a folder");
 			}
 		} catch (IOException ioe) {
-			// Folder does not exists
 			ioe.printStackTrace();
 		}
 	}
 	
 	public void run(){
 		System.out.println("[DEBUG] Watching path: " + path);
-		
-		// We obtain the file system of the Path
 		FileSystem fs = path.getFileSystem();
 		
 		try{
-			// We create the new WatchService using the new try() block
 			WatchService service = fs.newWatchService();
-			
-			// We register the path to the service
-			// We watch for creation events
 			path.register(service, StandardWatchEventKinds.ENTRY_CREATE);
 			
-			// Start the infinite polling loop
 			WatchKey key = null;
 			while(running) {
 				key = service.take();
-				
-				// Dequeueing events
 				Kind<?> kind = null;
 				for(WatchEvent<?> watchEvent : key.pollEvents()) {
-					// Get the type of the event
 					kind = watchEvent.kind();
-					
 					if (StandardWatchEventKinds.ENTRY_CREATE == kind) {
 						// A new Path was created 
 						Path newFile = ((WatchEvent<Path>) watchEvent).context();
-						// Output
-//						System.out.println("[DEBUG] New file received: " + newFile);
 						processNewFile(newFile.toString());
 					}
 					
 					if(!key.reset()) {
-						break; //loop
+						break;
 					}
 				}
 			}
@@ -98,14 +85,23 @@ public class FileWatcher implements Runnable{
 	    	ev.load(evInputStream);
 	    	
 	    	int sendNode = Integer.parseInt(ev.getProperty("sendNode"));
-	    	if(filename.startsWith("s")){
+	    	
+	    	// we can inform the steady state manually to dmck to make the
+	    	// dmck response's quicker, but it's more complicated because
+	    	// it means we need to know when our target system node gets into
+	    	// steady state. - for now we have made it get into steady state
+	    	// after some time, specified by initSteadyStateTimeout
+	    	/*
+	    	if(filename.startsWith("s-")){
 	    		System.out.println("[DEBUG] Receive steady state " + filename);
 	    		checker.informSteadyState(sendNode, 0);
-	    	} else if(filename.startsWith("u")){
+	    	} else
+	    	*/ 
+	    	// SAMPLE-LE
+	    	if(filename.startsWith("u-")){
 	    		int sendRole = Integer.parseInt(ev.getProperty("sendRole"));
 	    		int leader = Integer.parseInt(ev.getProperty("leader"));
 	    		String sElectionTable = ev.getProperty("electionTable").substring(0, ev.getProperty("electionTable").length()-1);
-//	    		System.out.println("[DEBUG] Vote's Map : " + sElectionTable);
 	    		String[] electionTableValues = sElectionTable.split(",");
 	    		Map<Integer, Integer> electionTable = new HashMap<Integer, Integer>();
 	    		for (String value : electionTableValues){
@@ -117,20 +113,40 @@ public class FileWatcher implements Runnable{
 	    		
 	    		LeaderElectionLocalState state = new LeaderElectionLocalState(leader, sendRole, electionTable);
 	    		checker.setLocalState(sendNode, state);
-	    	} else {
+	    	} else if(filename.startsWith("le-")) {
 		    	String callbackName = ev.getProperty("callbackName");
 		    	int recvNode = Integer.parseInt(ev.getProperty("recvNode"));
 		    	int sendRole = Integer.parseInt(ev.getProperty("sendRole"));
 		    	int leader = Integer.parseInt(ev.getProperty("leader"));
+		    	int eventId = Integer.parseInt(filename.substring(3));
 		    	
-		    	System.out.println("[DEBUG] Process new File : eventId-"+ filename + " callbackName-" + callbackName +
+		    	System.out.println("[DEBUG] Process new File : eventId-"+ eventId + " callbackName-" + callbackName +
 		    			" sendNode-" + sendNode + " sendRole-" + sendRole + " recvNode-" + recvNode + 
 		    			" leader-" + leader);
 		    	
 		    	// create eventPacket and store it to DMCK queue
-		    	LeaderElectionPacket packet = new LeaderElectionPacket(Integer.parseInt(filename), callbackName, 
+		    	LeaderElectionPacket packet = new LeaderElectionPacket(eventId, callbackName, 
 		    			sendNode, recvNode, sendRole, leader);
 		    	checker.offerPacket(packet);
+	    	} else
+	    	// SCM
+	    	if(filename.startsWith("scm-")){
+		    	String callbackName = ev.getProperty("callbackName");
+	    		int eventId = Integer.parseInt(filename.substring(4));
+		    	int recvNode = Integer.parseInt(ev.getProperty("recvNode"));
+		    	String msgContent = ev.getProperty("msgContent");
+	    		
+		    	System.out.println("[DEBUG] Receive msg no " + eventId + " from node-" + sendNode +
+		    			" to node-" + recvNode + " callbackName-" + callbackName + " msgContent-" + msgContent);
+		    	
+		    	SCMPacket packet = new SCMPacket(eventId, callbackName, sendNode, recvNode, msgContent);
+		    	checker.offerPacket(packet);
+	    	} else if (filename.startsWith("updatescm-")){
+		    	String msgContent = filename.substring(10);
+		    	
+		    	System.out.println("[DEBUG] Receive state update from node-" + sendNode + " msgContent-" + msgContent);
+		    	
+		    	checker.setSCMState(msgContent);
 	    	}
 	    	
 	    	// remove the received msg

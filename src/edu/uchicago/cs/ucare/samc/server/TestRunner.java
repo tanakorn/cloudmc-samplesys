@@ -27,8 +27,6 @@ public class TestRunner {
     
     static WorkloadDriver ensembleController;
     
-    public static String ipcDir;
-    
     public static void main(String[] argv) throws IOException, ClassNotFoundException, 
             NoSuchMethodException, SecurityException, InstantiationException, 
             IllegalAccessException, IllegalArgumentException, InvocationTargetException {
@@ -54,14 +52,14 @@ public class TestRunner {
     	try{
 	    	Properties testRunnerProp = new Properties();
 	        FileInputStream configInputStream = new FileInputStream(testRunnerConf);
-	        
 	        testRunnerProp.load(configInputStream);
 	        configInputStream.close();
+	        
 	        String workingDir = testRunnerProp.getProperty("working_dir");
 	        int numNode = Integer.parseInt(testRunnerProp.getProperty("num_node"));
 	        String workload = testRunnerProp.getProperty("workload_driver");
 	        boolean useIPC = Integer.parseInt(testRunnerProp.getProperty("use_ipc")) == 1;
-	        ipcDir = "";
+	        String ipcDir = "";
 	        if(useIPC){
 	        	ipcDir = testRunnerProp.getProperty("ipc_dir");
 	        }
@@ -69,7 +67,7 @@ public class TestRunner {
 	        Class<? extends WorkloadDriver> ensembleControllerClass = (Class<? extends WorkloadDriver>) Class.forName(workload);
 	        Constructor<? extends WorkloadDriver> ensembleControllerConstructor = ensembleControllerClass.getConstructor(Integer.TYPE, String.class, String.class);
 	        ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir, ipcDir);
-	        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/mc.conf", workingDir, ensembleController, useIPC);
+	        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/target-sys.conf", workingDir, ensembleController, ipcDir);
 	        if(useIPC){
 	        	// activate Directory Watcher
 	            Thread dirWatcher;
@@ -86,7 +84,7 @@ public class TestRunner {
     }
     
     protected static ModelCheckingServerAbstract createModelCheckerFromConf(String confFile, 
-            String workingDir, WorkloadDriver ensembleController, boolean useIPC) throws ClassNotFoundException, 
+            String workingDir, WorkloadDriver ensembleController, String ipcDir) throws ClassNotFoundException, 
             NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, 
             IllegalArgumentException, InvocationTargetException {
         ModelCheckingServerAbstract modelCheckingServerAbstract = null;
@@ -123,13 +121,13 @@ public class TestRunner {
                 Class<? extends ModelCheckingServerAbstract> modelCheckerClass = (Class<? extends ModelCheckingServerAbstract>) Class.forName(strategy);
                 Constructor<? extends ModelCheckingServerAbstract> modelCheckerConstructor = modelCheckerClass.getConstructor(String.class, 
                         String.class, Integer.TYPE, Integer.TYPE, Integer.TYPE, String.class, String.class, 
-                        String.class, WorkloadDriver.class, Boolean.TYPE);
+                        String.class, WorkloadDriver.class, String.class);
                 modelCheckingServerAbstract = modelCheckerConstructor.newInstance(interceptorName, ackName, 
                         numNode, numCrash, numReboot, testRecordDir, traversalRecordDir, workingDir, 
-                        ensembleController, useIPC);
+                        ensembleController, ipcDir);
             }
             verifier.modelCheckingServer = modelCheckingServerAbstract;
-            if(!useIPC){
+            if(ipcDir == ""){
 	            ModelCheckingServer interceptorStub = (ModelCheckingServer) 
 	                    UnicastRemoteObject.exportObject(modelCheckingServerAbstract, 0);
 	            Registry r = LocateRegistry.getRegistry();
@@ -161,6 +159,7 @@ public class TestRunner {
                 zkController.resetTest();
                 checker.runEnsemble();
                 ensembleController.runWorkload();
+                checker.waitOnSteadyStatesByTimeout(); // wait on first steady state timeout
                 while (!waitingFlag.exists()) {
                     Thread.sleep(30);
                 }

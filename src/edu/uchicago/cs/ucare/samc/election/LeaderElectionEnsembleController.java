@@ -16,20 +16,16 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
     
     private final static Logger LOG = LoggerFactory.getLogger(LeaderElectionEnsembleController.class);
     
-    static final String[] CMD = { "java", "-cp", System.getenv("CLASSPATH"), 
-    	"-Delection.log.dir=%s/log/%d", "-Dlog4j.configuration=%s",
-    	"edu.uchicago.cs.ucare.example.election.LeaderElectionMain", "%d", "%s/conf/config", "%s" };
-    
     String ipcDir;
     
-    Process[] leaderElection;
+    Process[] node;
     Thread consoleWriter;
     FileOutputStream[] consoleLog;
     
     public LeaderElectionEnsembleController(int numNode, String workingDir, String sIpcDir) {
         super(numNode, workingDir);
         ipcDir = sIpcDir;
-        leaderElection = new Process[numNode];
+        node = new Process[numNode];
         consoleLog = new FileOutputStream[numNode];
         consoleWriter = new Thread(new LogWriter());
         consoleWriter.start();
@@ -61,8 +57,7 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
             	startNode(i);
                 Thread.sleep(300);
             } catch (InterruptedException e) {
-                LOG.error("", e);
-                throw new RuntimeException(e);
+                LOG.error("Error in starting node " + i);
             }
         }
     }
@@ -72,7 +67,12 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
             LOG.debug("Stopping ensemble");
         }
         for (int i=0; i<numNode; i++) {
-            stopNode(i);
+        	try {
+            	stopNode(i);
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                LOG.error("Error in stopping node " + i);
+            }
         }
     }
     
@@ -80,10 +80,9 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Stopping node " + id);
         }
-        leaderElection[id].destroyForcibly();
         try {
-            leaderElection[id].waitFor();
-        } catch (InterruptedException e) {
+            Runtime.getRuntime().exec(workingDir + "/killNode.sh " + id);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -93,17 +92,8 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
             LOG.debug("Starting node " + id);
         }
         System.out.println("Starting node " + id);
-        ProcessBuilder builder = new ProcessBuilder();
-        builder.environment().put("MC_CONFIG", workingDir + "/lemc.conf");
-        builder.directory(new File(workingDir));
-        String[] cmd = Arrays.copyOf(CMD, CMD.length);
-        cmd[3] = String.format(cmd[3], workingDir, id);
-        cmd[4] = String.format(cmd[4], "le_log.properties");
-        cmd[6] = String.format(cmd[6], id);
-        cmd[7] = String.format(cmd[7], workingDir);
-        cmd[8] = String.format(cmd[8], ipcDir);
         try {
-            leaderElection[id] = builder.command(cmd).start();
+        	node[id] = Runtime.getRuntime().exec(workingDir + "/startNode.sh " + id + " " + ipcDir);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -116,10 +106,10 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
             byte[] buff = new byte[256];
             while (true) {
                 for (int i = 0; i < numNode; ++i) {
-                    if (leaderElection[i] != null) {
+                    if (node[i] != null) {
                         int r = 0;
-                        InputStream stdout = leaderElection[i].getInputStream();
-                        InputStream stderr = leaderElection[i].getErrorStream();
+                        InputStream stdout = node[i].getInputStream();
+                        InputStream stderr = node[i].getErrorStream();
                         try {
                             while((r = stdout.read(buff)) != -1) {
                                 consoleLog[i].write(buff, 0, r);

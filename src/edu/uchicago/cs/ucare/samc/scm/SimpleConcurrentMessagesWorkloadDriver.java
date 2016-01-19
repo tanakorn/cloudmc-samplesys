@@ -1,0 +1,142 @@
+package edu.uchicago.cs.ucare.samc.scm;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
+
+public class SimpleConcurrentMessagesWorkloadDriver extends WorkloadDriver{
+	
+
+    private final static Logger LOG = LoggerFactory.getLogger(SimpleConcurrentMessagesWorkloadDriver.class);
+	
+	String ipcDmckDir;
+	String ipcScmDir;
+	
+	Process[] node;
+    Thread consoleWriter;
+    FileOutputStream[] consoleLog;
+	
+	public SimpleConcurrentMessagesWorkloadDriver(int numNode, String workingDir, String ipcDir) {
+		super(numNode, workingDir);
+		ipcDmckDir = ipcDir;
+        ipcScmDir = ipcDir + "-scm";
+        node = new Process[numNode];
+        consoleLog = new FileOutputStream[numNode];
+        consoleWriter = new Thread(new LogWriter());
+        consoleWriter.start();
+    }
+
+	public void startNode(int id) {
+		// start receiver first
+		if(id == 0){
+			try {
+				node[id] = Runtime.getRuntime().exec(workingDir + "/startSCMReceiver.sh " + ipcScmDir + 
+						" " + ipcDmckDir + " " + (numNode-1));
+				System.out.println("Start Receiver");
+				LOG.info("Start Receiver");	
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			try {
+				node[id] = Runtime.getRuntime().exec(workingDir + "/startSCMSender.sh " + ipcScmDir + 
+						" " + ipcDmckDir + " " + id);
+				System.out.println("Start Sender " + id);
+				LOG.info("Start Sender " + id);	
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public void stopNode(int id) {
+		LOG.info("Kill node " + id);
+		try {
+			node[id] = Runtime.getRuntime().exec(workingDir + "/killNode.sh " + id);
+        } catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void startEnsemble() {
+		LOG.info("Start Ensemble");
+		for (int i = 0; i < numNode; ++i) {
+            try {
+            	startNode(i);
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+            	e.printStackTrace();
+            }
+        }
+		
+	}
+
+	public void stopEnsemble() {
+		LOG.info("Stop Ensemble");
+		for (int i=0; i<numNode; i++) {
+            stopNode(i);
+        }
+	}
+
+	public void resetTest() {
+		for (int i = 0; i < numNode; ++i) {
+            if (consoleLog[i] != null) {
+                try {
+                    consoleLog[i].close();
+                } catch (IOException e) {
+                    LOG.error("", e);
+                }
+            }
+            try {
+                consoleLog[i] = new FileOutputStream(workingDir + "/console/" + i);
+            } catch (FileNotFoundException e) {
+                LOG.error("", e);
+            }
+        }
+	}
+	
+	class LogWriter implements Runnable {
+
+        @Override
+        public void run() {
+            byte[] buff = new byte[256];
+            while (true) {
+                for (int i = 0; i < numNode; ++i) {
+                    if (node[i] != null) {
+                        int r = 0;
+                        InputStream stdout = node[i].getInputStream();
+                        InputStream stderr = node[i].getErrorStream();
+                        try {
+                            while((r = stdout.read(buff)) != -1) {
+                                consoleLog[i].write(buff, 0, r);
+                                consoleLog[i].flush();
+                            }
+                            while((r = stderr.read(buff)) != -1) {
+                                consoleLog[i].write(buff, 0, r);
+                                consoleLog[i].flush();
+                            }
+                        } catch (IOException e) {
+//                            LOG.debug("", e);
+                        }
+                    }
+                }
+                try {
+                    Thread.sleep(300);
+                } catch (InterruptedException e) {
+                    LOG.warn("", e);
+                }
+            }
+        }
+        
+    }
+
+	public void runWorkload() {
+		// none
+	}
+}
