@@ -84,7 +84,8 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
         if (numCurrentReboot < numReboot) {
             for (int i = 0; i < isNodeOnline.length; ++i) {
                 if (!isNodeOnline(i)) {
-                    transitions.add(new NodeCrashTransition(this, i));
+//                    transitions.add(new NodeCrashTransition(this, i));
+                    transitions.add(new NodeStartTransition(this, i));
                 }
             }
         } else {

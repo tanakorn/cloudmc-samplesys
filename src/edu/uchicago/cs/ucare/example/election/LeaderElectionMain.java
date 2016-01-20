@@ -241,15 +241,14 @@ public class LeaderElectionMain {
 	// update my current state to DMCK
 	static void updateStatetoDMCK(){
 		// create new file
-		LOG.info("[ERROR?] id-" + id + " role-" + role + " leader-" + leader);
+		LOG.info("[DEBUG] update state id-" + id + " role-" + role + " leader-" + leader);
     	try{
-        	PrintWriter writer = new PrintWriter(ipcDir + "/new/u-" + id, "UTF-8");
+        	PrintWriter writer = new PrintWriter(ipcDir + "/new/u-" + id);
 	        writer.println("sendNode=" + id);
 	        writer.println("sendRole=" + role);
 	        writer.println("leader=" + leader);
 	        writer.print("electionTable=");
 	        for (int node : electionTable.keySet()){
-//	        	LOG.info("[DEBUG] id-" + id + "=node-" + node + " vote-" + electionTable.get(node));
 		        writer.print(node + ":" + electionTable.get(node) + ",");
 	        }
 	        writer.close();
@@ -281,7 +280,7 @@ public class LeaderElectionMain {
 		role = LOOKING;
 		leader = id;
 		
-		LOG.info("Started:my id = " + id + " role = " + getRoleName(role) + " " + " leader = " + leader);
+		LOG.info("Just started a node with id = " + id + " role = " + getRoleName(role) + " leader = " + leader);
 		
         electionTable = new HashMap<Integer, Integer>();
         electionTable.put(id, leader);
@@ -293,11 +292,14 @@ public class LeaderElectionMain {
             LeaderElectionInterposition.localState.setElectionTable(electionTable);
 			LeaderElectionInterposition.modelCheckingServer.setLocalState(id, LeaderElectionInterposition.localState);
 			LeaderElectionInterposition.modelCheckingServer.updateLocalState(id, LeaderElectionInterposition.localState.hashCode());
-		} else if(ipcDir != "") {
-        	updateStatetoDMCK();
-        }
+		}
 
 		readConfig(args[1], args[2]);
+		
+		if(ipcDir != "") {
+        	updateStatetoDMCK();
+        }
+		
 		work();
 	}
 	
@@ -435,7 +437,6 @@ public class LeaderElectionMain {
                             LOG.error("", e);
                         }
                     } else if(ipcDir != "") {
-                    	LOG.info("--- Intercept message in node " + id);
                     	interceptMessage(msg, "LeaderElectionCallback" + id, id, msg.getRole(), this.otherId, 
                     			msg.getLeader());
                         write(msg);

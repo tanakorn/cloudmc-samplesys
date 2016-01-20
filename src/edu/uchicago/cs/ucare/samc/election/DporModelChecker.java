@@ -66,10 +66,16 @@ public abstract class DporModelChecker extends PrototypeSamc {
                                 }
                             } else if (tuplePacket.getPacket().getToId() == lastPacket.getToId() && tuplePacket.getPacket().getFromId() == lastPacket.getFromId()) {
                                 break;
-                            }
+                            } 
+                        } else {
+                        	// reorder crash and reboot
+                            addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
+                            break;
                         }
                     }
                 } else {
+                	// reorder crash and reboot
+                	addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
                     break;
                 }
             }

@@ -45,7 +45,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     LinkedList<TransitionTuple> currentDporPath;
     LinkedList<TransitionTuple> currentExploringPath = new LinkedList<TransitionTuple>();
 
-    String cacheDir;
+    String workingDir;
     String stateDir;
 
     int numCrash;
@@ -78,7 +78,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         dporInitialPaths = new LinkedList<LinkedList<TransitionTuple>>();
         finishedDporInitialPaths = new HashSet<LinkedList<TransitionTuple>>();
         try {
-            File initialPathFile = new File(cacheDir + "/initialPaths");
+            File initialPathFile = new File(workingDir + "/initialPaths");
             if (initialPathFile.exists()) {
                 ObjectInputStream ois = new ObjectInputStream(new FileInputStream(initialPathFile));
                 LinkedList<LinkedList<TransitionTuple>> dumbDporInitialPaths = (LinkedList<LinkedList<TransitionTuple>>) ois.readObject();
@@ -92,7 +92,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                 ois.close();
                 currentDporPath = dporInitialPaths.poll();
             }
-            File finishedInitialPathFile = new File(cacheDir + "/finishedInitialPaths");
+            File finishedInitialPathFile = new File(workingDir + "/finishedInitialPaths");
             if (finishedInitialPathFile.exists()) {
                 ObjectInputStream ois = new ObjectInputStream(new FileInputStream(finishedInitialPathFile));
                 HashSet<LinkedList<TransitionTuple>> dumbFinishedDporInitialPaths = (HashSet<LinkedList<TransitionTuple>>) ois.readObject();
@@ -120,7 +120,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         } catch (SQLiteException e) {
             log.error("", e);
         }
-        this.cacheDir = cacheDir;
+        this.workingDir = workingDir;
         resetTest();
     }
     
@@ -279,7 +279,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     
     protected void saveDPORInitialPaths() {
         try {
-            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(cacheDir + "/initialPaths"));
+            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(workingDir + "/initialPaths"));
             LinkedList<LinkedList<TransitionTuple>> dumbDporInitialPaths = new LinkedList<LinkedList<TransitionTuple>>();
             for (LinkedList<TransitionTuple> initPath : dporInitialPaths) {
                 LinkedList<TransitionTuple> dumbPath = new LinkedList<TransitionTuple>();
@@ -298,7 +298,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                 }
                 dumbFinishedDporInitialPaths.add(dumbPath);
             }
-            oos = new ObjectOutputStream(new FileOutputStream(cacheDir + "/finishedInitialPaths"));
+            oos = new ObjectOutputStream(new FileOutputStream(workingDir + "/finishedInitialPaths"));
             oos.writeObject(dumbFinishedDporInitialPaths);
             oos.close();
         } catch (FileNotFoundException e) {
@@ -388,6 +388,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                         } else {
                             currentDporPath = dporInitialPaths.remove();
                         }
+                    	System.out.println("---- Quit of Path Execution because an error ----");
                         resetTest();
                         return;
                     }

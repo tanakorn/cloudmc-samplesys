@@ -80,6 +80,7 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Stopping node " + id);
         }
+        System.out.println("Stopping node " + id);
         try {
             Runtime.getRuntime().exec(workingDir + "/killNode.sh " + id);
         } catch (IOException e) {

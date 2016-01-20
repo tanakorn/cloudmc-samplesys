@@ -327,6 +327,10 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         transitionList.addAll(buffer);
         
         System.out.println("[DEBUG] Events in Queue : " + transitionList.size());
+        for (Transition t : transitionList) {
+        	System.out.println(t.toString());
+        }
+        System.out.println("-----------------------------");
     }
     
     public void getOutstandingTcpPacket(LinkedList<InterceptPacket> packetList) {
