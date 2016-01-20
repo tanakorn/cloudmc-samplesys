@@ -74,6 +74,10 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
                 LOG.error("Error in stopping node " + i);
             }
         }
+        
+        if(ipcDir != ""){
+        	cleanUpIPCDir();
+        }
     }
     
     public void stopNode(int id) {
@@ -140,4 +144,16 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
         
     }
 
+    private void cleanUpIPCDir(){
+    	System.out.println("Going to clean up");
+    	try {
+        	Runtime.getRuntime().exec(new String[]{"sh","-c", "rm " + ipcDir + "/new/*"});
+        	Runtime.getRuntime().exec(new String[]{"sh","-c", "rm " + ipcDir + "/send/*"});
+        	Runtime.getRuntime().exec(new String[]{"sh","-c", "rm " + ipcDir + "/ack/*"});
+        	
+        	System.out.println("Finished cleaning up");
+        } catch (IOException e) {
+        	LOG.error("Error in cleaning up ipcDir");
+        }
+    }
 }
