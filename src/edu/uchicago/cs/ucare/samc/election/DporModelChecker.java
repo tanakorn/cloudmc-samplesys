@@ -6,6 +6,9 @@ import java.util.Set;
 
 import edu.uchicago.cs.ucare.samc.event.Event;
 import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
+import edu.uchicago.cs.ucare.samc.transition.AbstractNodeCrashTransition;
+import edu.uchicago.cs.ucare.samc.transition.AbstractNodeStartTransition;
+import edu.uchicago.cs.ucare.samc.transition.NodeOperationTransition;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.transition.TransitionTuple;
@@ -36,6 +39,24 @@ public abstract class DporModelChecker extends PrototypeSamc {
             boolean[] oldOnlineStatus = prevOnlineStatus.removeLast();
             LeaderElectionLocalState[] oldLocalStates = prevLocalStates.removeLast();
             LinkedList<TransitionTuple> tmpPath = (LinkedList<TransitionTuple>) currentExploringPath.clone();
+            if (lastTransition.transition instanceof AbstractNodeCrashTransition) {
+                AbstractNodeCrashTransition abstractNodeCrashTransition = (AbstractNodeCrashTransition) lastTransition.transition;
+                LinkedList<NodeOperationTransition> transitions = abstractNodeCrashTransition.getAllRealNodeOperationTransitions(oldOnlineStatus);
+                for (NodeOperationTransition t : transitions) {
+                    if (abstractNodeCrashTransition.id != t.id) {
+                        LinkedList<TransitionTuple> interestingPath = (LinkedList<TransitionTuple>) tmpPath.clone();
+                        interestingPath.add(new TransitionTuple(0, t));
+                        addToDporInitialPathList(interestingPath);
+                    }
+                }
+            } else if (lastTransition.transition instanceof AbstractNodeStartTransition) {
+                LinkedList<NodeOperationTransition> transitions = ((AbstractNodeStartTransition) lastTransition.transition).getAllRealNodeOperationTransitions(oldOnlineStatus);
+                for (NodeOperationTransition t : transitions) {
+                    LinkedList<TransitionTuple> interestingPath = (LinkedList<TransitionTuple>) tmpPath.clone();
+                    interestingPath.add(new TransitionTuple(0, t));
+                    addToDporInitialPathList(interestingPath);
+                }
+            }
             Iterator<TransitionTuple> reverseIter = currentExploringPath.descendingIterator();
             Iterator<LeaderElectionLocalState[]> reverseLocalStateIter = prevLocalStates.descendingIterator();
             Iterator<boolean[]> reverseOnlineStatusIter = prevOnlineStatus.descendingIterator();
@@ -67,9 +88,13 @@ public abstract class DporModelChecker extends PrototypeSamc {
                             } else if (tuplePacket.getPacket().getToId() == lastPacket.getToId() && tuplePacket.getPacket().getFromId() == lastPacket.getFromId()) {
                                 break;
                             }
+                        } else {
+                            addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
+                            break;
                         }
                     }
                 } else {
+                    addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
                     break;
                 }
             }
