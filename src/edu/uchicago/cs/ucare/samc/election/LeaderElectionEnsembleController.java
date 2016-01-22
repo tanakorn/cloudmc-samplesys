@@ -106,7 +106,7 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
     
     public void startNode(int id) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Starting node" + id);
+            LOG.debug("Starting node " + id);
         }
         ProcessBuilder builder = new ProcessBuilder();
         builder.environment().put("MC_CONFIG", workingDir + "/lemc.conf");
@@ -114,8 +114,8 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
         String[] cmd = Arrays.copyOf(CMD, CMD.length);
         cmd[3] = String.format(cmd[3], workingDir, id);
         cmd[4] = String.format(cmd[4], "le_log.properties");
-        cmd[6] = String.format(cmd[6], id);
-        cmd[7] = String.format(cmd[7], workingDir);
+        cmd[7] = String.format(cmd[7], id);
+        cmd[8] = String.format(cmd[8], workingDir);
         try {
             leaderElection[id] = builder.command(cmd).start();
         } catch (IOException e) {
