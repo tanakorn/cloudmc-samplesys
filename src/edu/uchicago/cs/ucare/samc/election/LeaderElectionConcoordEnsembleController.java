@@ -21,6 +21,7 @@ public class LeaderElectionConcoordEnsembleController extends WorkloadDriver {
     Process[] node;
     Thread consoleWriter;
     FileOutputStream[] consoleLog;
+    int parentPort;
     
     public LeaderElectionConcoordEnsembleController(int numNode, String workingDir, String sIpcDir) {
         super(numNode, workingDir);
@@ -93,7 +94,13 @@ public class LeaderElectionConcoordEnsembleController extends WorkloadDriver {
         }
         System.out.println("Starting node " + id);
         try {
-        	node[id] = Runtime.getRuntime().exec(workingDir + "/startNode.sh " + id + " " + ipcDir);
+            if (id == 0){
+                node[id] = Runtime.getRuntime().exec(workingDir + "/startNode.sh " + id + " " + ipcDir);
+                parentPort = id;
+            } else {
+                node[id] = Runtime.getRuntime().exec(workingDir + "/joinNode.sh " + parentPort + " " + id);
+            }
+        	
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
