@@ -325,10 +325,15 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
             }
         });
         transitionList.addAll(buffer);
-        
+
+        System.out.println("-----------------------------");
         System.out.println("[DEBUG] Events in Queue : " + transitionList.size());
         for (Transition t : transitionList) {
-        	System.out.println(t.toString());
+        	if(t != null){
+        		System.out.println(t.toString());
+        	} else {
+        		System.out.println("null event");
+        	}
         }
         System.out.println("-----------------------------");
     }
