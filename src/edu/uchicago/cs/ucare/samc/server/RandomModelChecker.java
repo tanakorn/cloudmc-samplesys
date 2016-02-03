@@ -83,7 +83,6 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
         for (int i = 0; i < tmp; ++i) {
             enabledTransitions.add(new AbstractNodeCrashTransition(this));
             currentCrash++;
-            numOffline++;
         }
         tmp = numOffline < numReboot - currentReboot ? numOffline : numReboot - currentReboot;
         for (int i = 0; i < tmp; ++i) {
