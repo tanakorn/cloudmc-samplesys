@@ -40,22 +40,22 @@ public abstract class DporModelChecker extends PrototypeSamc {
             LeaderElectionLocalState[] oldLocalStates = prevLocalStates.removeLast();
             LinkedList<TransitionTuple> tmpPath = (LinkedList<TransitionTuple>) currentExploringPath.clone();
             if (lastTransition.transition instanceof AbstractNodeCrashTransition) {
-            	AbstractNodeCrashTransition abstractNodeCrashTransition = (AbstractNodeCrashTransition) lastTransition.transition;
-            	LinkedList<NodeOperationTransition> transitions = abstractNodeCrashTransition.getAllRealNodeOperationTransitions(oldOnlineStatus);
-            	for (NodeOperationTransition t : transitions) {
-            		if (abstractNodeCrashTransition.id != t.id) {
-            			LinkedList<TransitionTuple> interestingPath = (LinkedList<TransitionTuple>) tmpPath.clone();
-            			interestingPath.add(new TransitionTuple(0, t));
-            			addToDporInitialPathList(interestingPath);
-            		}
-            	}
+                AbstractNodeCrashTransition abstractNodeCrashTransition = (AbstractNodeCrashTransition) lastTransition.transition;
+                LinkedList<NodeOperationTransition> transitions = abstractNodeCrashTransition.getAllRealNodeOperationTransitions(oldOnlineStatus);
+                for (NodeOperationTransition t : transitions) {
+                    if (abstractNodeCrashTransition.id != t.id) {
+                        LinkedList<TransitionTuple> interestingPath = (LinkedList<TransitionTuple>) tmpPath.clone();
+                        interestingPath.add(new TransitionTuple(0, t));
+                        addToDporInitialPathList(interestingPath);
+                    }
+                }
             } else if (lastTransition.transition instanceof AbstractNodeStartTransition) {
-            	LinkedList<NodeOperationTransition> transitions = ((AbstractNodeStartTransition) lastTransition.transition).getAllRealNodeOperationTransitions(oldOnlineStatus);
-            	for (NodeOperationTransition t : transitions) {
-            		LinkedList<TransitionTuple> interestingPath = (LinkedList<TransitionTuple>) tmpPath.clone();
-            		interestingPath.add(new TransitionTuple(0, t));
-            		addToDporInitialPathList(interestingPath);
-            	}
+                LinkedList<NodeOperationTransition> transitions = ((AbstractNodeStartTransition) lastTransition.transition).getAllRealNodeOperationTransitions(oldOnlineStatus);
+                for (NodeOperationTransition t : transitions) {
+                    LinkedList<TransitionTuple> interestingPath = (LinkedList<TransitionTuple>) tmpPath.clone();
+                    interestingPath.add(new TransitionTuple(0, t));
+                    addToDporInitialPathList(interestingPath);
+                }
             }
             Iterator<TransitionTuple> reverseIter = currentExploringPath.descendingIterator();
             Iterator<LeaderElectionLocalState[]> reverseLocalStateIter = prevLocalStates.descendingIterator();
