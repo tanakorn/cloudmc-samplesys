@@ -423,10 +423,10 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     }
 
     public boolean runEnsemble() {
-        zkController.startEnsemble();
         for (int i = 0; i < numNode; ++i) {
             setNodeOnline(i, true);
         }
+        zkController.startEnsemble();
         return true;
     }
 
