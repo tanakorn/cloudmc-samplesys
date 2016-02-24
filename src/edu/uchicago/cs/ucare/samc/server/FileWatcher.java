@@ -87,9 +87,9 @@ public class FileWatcher implements Runnable{
 	    	int sendNode = Integer.parseInt(ev.getProperty("sendNode"));
 	    	
 	    	// we can inform the steady state manually to dmck to make the
-	    	// dmck response's quicker, but it's more complicated because
-	    	// it means we need to know when our target system node gets into
-	    	// steady state. - for now we have made it get into steady state
+	    	// dmck response's quicker, but it means we need to know when 
+	    	// our target system node gets into steady state.
+	    	// the current setting is, the target-sys nodes will get into steady state
 	    	// after some time, specified by initSteadyStateTimeout
 	    	/*
 	    	if(filename.startsWith("s-")){
