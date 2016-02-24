@@ -2,7 +2,7 @@
 
 scriptdir=`dirname $0`
 
-conf_file=$scriptdir/mcsystem.conf
+conf_file=$scriptdir/target-sys.conf
 if [ $# -eq 1 ]; then
   conf_file=$1
 fi

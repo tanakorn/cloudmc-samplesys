@@ -60,15 +60,15 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     
     public PrototypeSamc(String interceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir,
-            WorkloadDriver zkController) {
-        this(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, "/tmp", zkController);
+            String workingDir, WorkloadDriver zkController) {
+        this(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, "/tmp", workingDir, zkController);
     }
     
     @SuppressWarnings("unchecked")
     public PrototypeSamc(String inceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String cacheDir,
-            WorkloadDriver zkController) {
-        super(inceptorName, ackName, maxId, globalStatePathDir, zkController);
+            String workingDir, WorkloadDriver zkController) {
+        super(inceptorName, ackName, maxId, globalStatePathDir, workingDir, zkController);
         
         dporInitialPaths = new LinkedList<LinkedList<TransitionTuple>>();
         finishedDporInitialPaths = new HashSet<LinkedList<TransitionTuple>>();

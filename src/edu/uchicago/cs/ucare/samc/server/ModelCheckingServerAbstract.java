@@ -1,6 +1,7 @@
 package edu.uchicago.cs.ucare.samc.server;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -70,6 +72,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected int globalState;
 
     protected String testRecordDirPath;
+    protected String workingDirPath;
     protected String idRecordDirPath;
     protected String codeRecordDirPath;
     protected String pathRecordFilePath;
@@ -92,10 +95,14 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected Thread modelChecking;
     protected int[] numPacketSentToId;
     
+    // dmck config
+    protected int steadyStateTimeout;
+    protected int initSteadyStateTimeout;
+    
     public LeaderElectionLocalState[] localStates;
 
     public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
-            String testRecordDirPath, WorkloadDriver zkController) {
+            String testRecordDirPath, String workingDirPath, WorkloadDriver zkController) {
         this.interceptorName = interceptorName;
         log = LoggerFactory.getLogger(this.getClass() + "." + interceptorName);
         packetQueue = new LinkedBlockingQueue<InterceptPacket>();
@@ -118,6 +125,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         }
         this.numNode = numNode;
         this.testRecordDirPath = testRecordDirPath;
+        this.workingDirPath = workingDirPath;
         this.zkController = zkController;
         this.verifier = zkController.verifier;
         pathRecordFile = null;
@@ -128,7 +136,23 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         isNodeOnline = new boolean[numNode];
         senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
         localStates = new LeaderElectionLocalState[numNode];
+        getDMCKConfig();
         this.resetTest();
+    }
+    
+    public void getDMCKConfig(){
+    	try{
+	    	String dmckConfigFile = workingDirPath + "/dmck.conf";
+	    	Properties dmckConf = new Properties();
+	        FileInputStream configInputStream = new FileInputStream(dmckConfigFile);
+	        dmckConf.load(configInputStream);
+	        configInputStream.close();
+
+	        initSteadyStateTimeout = Integer.parseInt(dmckConf.getProperty("initSteadyStateTimeout"));
+	        steadyStateTimeout = Integer.parseInt(dmckConf.getProperty("steadyStateTimeout"));
+        } catch (Exception e){
+    		log.error("Error in reading dmck config file");
+    	}
     }
     
     @Override
@@ -554,6 +578,18 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         }
     }
     
+    public void waitOnSteadyStatesByTimeout(){
+    	log.info("Starts wait on first steady states");
+    	try{
+    		Thread.sleep(initSteadyStateTimeout);
+    		for(int i=0; i<numNode; i++){
+    			informSteadyState(i, 0);
+    		}
+    	} catch (Exception e){
+    		log.error("Error while waiting on the first steady states timeout");
+    	}
+    }
+    
     @Override
     public void informActiveState(int id) throws RemoteException {
         setNodeSteady(id, false);
@@ -582,15 +618,18 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         if (log.isDebugEnabled()) {
             log.debug("Waiting node " + id + " to be in steady state");
         }
-        int waitTick = 10;
-        int i = 0;
-        while (!isNodeSteady(id) && i++ < waitTick) {
-//        while (!isNodeSteady(id)) {
-            Thread.sleep(50);
+        
+        int timeoutCounter = 0;
+        int timeoutFraction = 20;
+        while (!isNodeSteady(id) && timeoutCounter >= timeoutFraction) {
+            Thread.sleep(steadyStateTimeout/timeoutFraction);
+            timeoutCounter++;
         }
-        if (i >= waitTick) {
+        
+        if(timeoutCounter >= timeoutFraction){
             log.warn("Steady state for node " + id + " triggered by timeout");
         }
+        
         setNodeSteady(id, true);
     }
     
@@ -695,20 +734,21 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         setNodeOnline(id, true);
         setNodeSteady(id, false);
         try {
-//          waitNodeSteady(id);
-            // I'm sorry for this, waitNodeSteady now means wait for timeout 200 ms
             if (log.isDebugEnabled()) {
                 log.debug("Waiting node " + id + " to be in real steady state");
             }
-            int waitTick = 60;
-            int i = 0;
-            while (!isNodeSteady(id) && i++ < waitTick) {
-//              while (!isNodeSteady(id)) {
-                Thread.sleep(50);
+            
+            int timeoutCounter = 0;
+            int timeoutFraction = 20;
+            while (!isNodeSteady(id) && timeoutCounter >= timeoutFraction) {
+                Thread.sleep(initSteadyStateTimeout/timeoutFraction);
+                timeoutCounter++;
             }
-            if (i >= waitTick) {
-                log.warn("Steady state for node " + id + " triggered by timeout");
+            
+            if(timeoutCounter >= timeoutFraction){
+                log.warn("Steady state for new started node " + id + " triggered by timeout");
             }
+            
             setNodeSteady(id, true);
         } catch (InterruptedException e) {
             e.printStackTrace();

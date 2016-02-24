@@ -29,9 +29,9 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
     protected int currentReboot;
     
     public TreeTravelModelChecker(String interceptorName, String ackName, int numNode,
-            int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, 
-            WorkloadDriver zkController) {
-        super(interceptorName, ackName, numNode, globalStatePathDir, zkController);
+            int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir,
+            String workingDir, WorkloadDriver zkController) {
+        super(interceptorName, ackName, numNode, globalStatePathDir, workingDir, zkController);
         try {
             this.numCrash = numCrash;
             this.numReboot = numReboot;

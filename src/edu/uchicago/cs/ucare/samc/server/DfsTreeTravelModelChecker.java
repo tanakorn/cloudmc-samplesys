@@ -10,9 +10,9 @@ public class DfsTreeTravelModelChecker extends TreeTravelModelChecker {
 
     public DfsTreeTravelModelChecker(String interceptorName, String ackName, int numNode,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, 
-            String cacheDir, WorkloadDriver zkController) {
+            String workingDir, WorkloadDriver zkController) {
         super(interceptorName, ackName, numNode, numCrash, numReboot, globalStatePathDir, 
-                packetRecordDir, zkController);
+                packetRecordDir, workingDir, zkController);
     }
     
     @Override

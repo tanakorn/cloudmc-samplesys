@@ -13,10 +13,10 @@ public class DporTreeTravelModelChecker extends TreeTravelModelChecker {
 
     public DporTreeTravelModelChecker(String interceptorName, String ackName,
             int numNode, int numCrash, int numReboot,
-            String globalStatePathDir, String packetRecordDir, String cacheDir,
-            WorkloadDriver zkController) {
+            String globalStatePathDir, String packetRecordDir,
+            String workingDir, WorkloadDriver zkController) {
         super(interceptorName, ackName, numNode, numCrash, numReboot,
-                globalStatePathDir, packetRecordDir, zkController);
+                globalStatePathDir, packetRecordDir, workingDir, zkController);
     }
 
     @SuppressWarnings("unchecked")

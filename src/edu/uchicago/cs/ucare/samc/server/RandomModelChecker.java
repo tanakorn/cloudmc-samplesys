@@ -28,9 +28,9 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
     Random random;
     
     public RandomModelChecker(String inceptorName, String ackName, int maxId,
-            int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String cacheDir,
+            int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String workingDir, 
             WorkloadDriver zkController) {
-        super(inceptorName, ackName, maxId, globalStatePathDir, zkController);
+        super(inceptorName, ackName, maxId, globalStatePathDir, workingDir, zkController);
         this.numCrash = numCrash;
         this.numReboot = numReboot;
         stateDir = packetRecordDir;

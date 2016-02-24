@@ -34,10 +34,10 @@ public class TestRunner {
             System.err.println("Please specify test config file");
             System.exit(1);
         }
-        boolean isPasuedEveryTest = false;
+        boolean isPausedEveryTest = false;
         for (String param : argv) {
             if (param.equals("-p")) {
-                isPasuedEveryTest = true;
+                isPausedEveryTest = true;
             } else {
                 testRunnerConf = param;
             }
@@ -53,8 +53,8 @@ public class TestRunner {
         Class<? extends WorkloadDriver> ensembleControlloerClass = (Class<? extends WorkloadDriver>) Class.forName(workload);
         Constructor<? extends WorkloadDriver> ensembleControllerConstructor = ensembleControlloerClass.getConstructor(Integer.TYPE, String.class);
         ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir);
-        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/mc.conf", workingDir, ensembleController);
-        startExploreTesting(checker, numNode, workingDir, ensembleController, isPasuedEveryTest);
+        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/target-sys.conf", workingDir, ensembleController);
+        startExploreTesting(checker, numNode, workingDir, ensembleController, isPausedEveryTest);
     }
     
     protected static ModelCheckingServerAbstract createModelCheckerFromConf(String confFile, 
@@ -82,24 +82,30 @@ public class TestRunner {
             SpecVerifier verifier = verifierConstructor.newInstance();
             ensembleController.setVerifier(verifier);
             LOG.info("State exploration strategy is " + strategy);
-            if (strategy.equals("edu.uchicago.cs.ucare.samc.server.ProgrammableModelChecker")) {
-                String programFileName = prop.getProperty("program");
+            Class<? extends ModelCheckingServerAbstract> modelCheckerClass = (Class<? extends ModelCheckingServerAbstract>) Class.forName(strategy);
+            
+            if(ProgrammableModelChecker.class.isAssignableFrom(modelCheckerClass)){
+            	String programFileName = prop.getProperty("program");
                 if (programFileName == null) {
                     throw new RuntimeException("No program file specified");
                 }
+                LOG.info("Inspect potential bug in: " + programFileName);
                 File program = new File(programFileName);
+                Constructor<? extends ModelCheckingServerAbstract> programmableCheckerConstructor = modelCheckerClass.getConstructor(
+                		String.class, String.class, Integer.TYPE, String.class, File.class, 
+                		String.class, WorkloadDriver.class);
                 modelCheckingServerAbstract = new ProgrammableModelChecker(interceptorName, ackName, numNode, 
-                        testRecordDir, program, ensembleController);
+                        testRecordDir, program, workingDir, ensembleController);
             } else {
                 @SuppressWarnings("unchecked")
-                Class<? extends ModelCheckingServerAbstract> modelCheckerClass = (Class<? extends ModelCheckingServerAbstract>) Class.forName(strategy);
-                Constructor<? extends ModelCheckingServerAbstract> modelCheckerConstructor = modelCheckerClass.getConstructor(String.class, 
-                        String.class, Integer.TYPE, Integer.TYPE, Integer.TYPE, String.class, String.class, 
+                Constructor<? extends ModelCheckingServerAbstract> modelCheckerConstructor = modelCheckerClass.getConstructor(
+                		String.class, String.class, Integer.TYPE, Integer.TYPE, Integer.TYPE, String.class, String.class, 
                         String.class, WorkloadDriver.class);
                 modelCheckingServerAbstract = modelCheckerConstructor.newInstance(interceptorName, ackName, 
                         numNode, numCrash, numReboot, testRecordDir, traversalRecordDir, workingDir, 
                         ensembleController);
             }
+            
             verifier.modelCheckingServer = modelCheckingServerAbstract;
             ModelCheckingServer interceptorStub = (ModelCheckingServer) 
                     UnicastRemoteObject.exportObject(modelCheckingServerAbstract, 0);
@@ -131,6 +137,7 @@ public class TestRunner {
                 zkController.resetTest();
                 checker.runEnsemble();
                 ensembleController.runWorkload();
+                checker.waitOnSteadyStatesByTimeout(); // wait on first steady state timeout
                 while (!waitingFlag.exists()) {
                     Thread.sleep(30);
                 }
