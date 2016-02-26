@@ -1,5 +1,8 @@
 package edu.uchicago.cs.ucare.samc.election;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.samc.event.Event;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
@@ -15,6 +18,8 @@ public class LeaderElectionSemanticAwareModelChecker extends DporModelChecker {
             int sup1 = (int) e1.getValue(LeaderElectionPacket.LEADER_KEY);
             int sup2 = (int) e2.getValue(LeaderElectionPacket.LEADER_KEY);
             if (currSup < sup1 || currSup < sup2) {
+                return true;
+            } else if (isFinished(leState)) {
                 return true;
             }
         }
@@ -37,4 +42,19 @@ public class LeaderElectionSemanticAwareModelChecker extends DporModelChecker {
                 globalStatePathDir, packetRecordDir, cacheDir, zkController);
     }
 
+    public boolean isFinished(LeaderElectionLocalState state) {
+        int totalNode = this.numNode;
+        Map<Integer, Integer> count = new HashMap<Integer, Integer>();
+        Map<Integer, Integer> electionTable = state.getElectionTable();
+        for (Integer electedLeader : electionTable.values()){
+            count.put(electedLeader, count.containsKey(electedLeader) ? count.get(electedLeader) + 1 : 1);
+        }
+        for (Integer electedLeader : count.keySet()) {
+            int totalElect = count.get(electedLeader);
+            if (totalElect > totalNode / 2) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
