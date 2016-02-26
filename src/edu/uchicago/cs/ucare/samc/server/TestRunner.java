@@ -100,9 +100,9 @@ public class TestRunner {
                 @SuppressWarnings("unchecked")
                 Constructor<? extends ModelCheckingServerAbstract> modelCheckerConstructor = modelCheckerClass.getConstructor(
                 		String.class, String.class, Integer.TYPE, Integer.TYPE, Integer.TYPE, String.class, String.class, 
-                        String.class, WorkloadDriver.class);
+                        String.class, String.class, WorkloadDriver.class);
                 modelCheckingServerAbstract = modelCheckerConstructor.newInstance(interceptorName, ackName, 
-                        numNode, numCrash, numReboot, testRecordDir, traversalRecordDir, workingDir, 
+                        numNode, numCrash, numReboot, testRecordDir, traversalRecordDir, workingDir, workingDir,
                         ensembleController);
             }
             

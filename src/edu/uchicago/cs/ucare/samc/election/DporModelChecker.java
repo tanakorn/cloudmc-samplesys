@@ -20,14 +20,16 @@ public abstract class DporModelChecker extends PrototypeSamc {
 
     public DporModelChecker(String interceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir,
-            WorkloadDriver zkController) {
-        this(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, "/tmp", zkController);
+            String workingDir, WorkloadDriver zkController) {
+        this(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, 
+                packetRecordDir, "/tmp", workingDir, zkController);
     }
     
     public DporModelChecker(String inceptorName, String ackName, int maxId,
-            int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String cacheDir,
-            WorkloadDriver zkController) {
-        super(inceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, cacheDir, zkController);
+            int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, 
+            String cacheDir, String workingDir, WorkloadDriver zkController) {
+        super(inceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, 
+                packetRecordDir, cacheDir, workingDir, zkController);
     }
     
     public abstract boolean isDependent(LocalState state, Event e1, Event e2);
@@ -50,7 +52,8 @@ public abstract class DporModelChecker extends PrototypeSamc {
                     }
                 }
             } else if (lastTransition.transition instanceof AbstractNodeStartTransition) {
-                LinkedList<NodeOperationTransition> transitions = ((AbstractNodeStartTransition) lastTransition.transition).getAllRealNodeOperationTransitions(oldOnlineStatus);
+                LinkedList<NodeOperationTransition> transitions = 
+                        ((AbstractNodeStartTransition) lastTransition.transition).getAllRealNodeOperationTransitions(oldOnlineStatus);
                 for (NodeOperationTransition t : transitions) {
                     LinkedList<TransitionTuple> interestingPath = (LinkedList<TransitionTuple>) tmpPath.clone();
                     interestingPath.add(new TransitionTuple(0, t));
@@ -77,7 +80,8 @@ public abstract class DporModelChecker extends PrototypeSamc {
                                 continue;
                             } else if (!oldOnlineStatus[lastPacket.getFromId()]) {
                                 break;
-                            } else if (tuplePacket.getPacket().getToId() != lastPacket.getToId() || tuplePacket.getPacket().getFromId() != lastPacket.getFromId()) {
+                            } else if (tuplePacket.getPacket().getToId() != lastPacket.getToId() 
+                                    || tuplePacket.getPacket().getFromId() != lastPacket.getFromId()) {
                                 if (tuplePacket.getPacket().getToId() == lastPacket.getToId()) {
                                     int toId = tuplePacket.getPacket().getToId();
                                     if (isDependent(oldLocalStates[toId], lastPacket, tuplePacket.getPacket())) {
