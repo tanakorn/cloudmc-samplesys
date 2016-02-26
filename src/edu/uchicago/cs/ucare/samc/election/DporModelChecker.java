@@ -94,7 +94,6 @@ public abstract class DporModelChecker extends PrototypeSamc {
                         }
                     }
                 } else {
-                    addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
                     break;
                 }
             }
