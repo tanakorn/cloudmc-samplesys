@@ -8,6 +8,7 @@ import edu.uchicago.cs.ucare.samc.event.Event;
 import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeStartTransition;
+import edu.uchicago.cs.ucare.samc.transition.NodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeOperationTransition;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
@@ -93,8 +94,19 @@ public abstract class DporModelChecker extends PrototypeSamc {
                                 break;
                             }
                         } else {
-                            addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
-                            break;
+                            if (lastPacket.isObsolete()) {
+                                if (tuple.transition instanceof NodeCrashTransition) {
+                                    NodeCrashTransition crashTransition = (NodeCrashTransition) tuple.transition;
+                                    if (lastPacket.getObsoleteBy() == crashTransition.getId()) {
+                                        lastPacket.setObsolete(false);
+                                        addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
+                                        break;
+                                    }
+                                }
+                            } else {
+                                addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
+                                break;
+                            }
                         }
                     }
                 } else {

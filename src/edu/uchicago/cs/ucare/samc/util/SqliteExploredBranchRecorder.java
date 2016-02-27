@@ -15,7 +15,7 @@ public class SqliteExploredBranchRecorder implements ExploredBranchRecorder {
 
     String dbDir;
     int currentDepth;
-    String path;
+    public String path;
     SQLiteConnection db;
     SQLiteStatement createChild;
     SQLiteStatement finishChild;
