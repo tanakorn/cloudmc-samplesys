@@ -83,6 +83,7 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
         for (int i = 0; i < tmp; ++i) {
             enabledTransitions.add(new AbstractNodeCrashTransition(this));
             currentCrash++;
+            numOffline++;
         }
         tmp = numOffline < numReboot - currentReboot ? numOffline : numReboot - currentReboot;
         for (int i = 0; i < tmp; ++i) {
@@ -140,7 +141,7 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
                             AbstractNodeOperationTransition nodeOperationTransition = (AbstractNodeOperationTransition) transition;
                             transition = ((AbstractNodeOperationTransition) transition).getRealNodeOperationTransition();
                             if (transition == null) {
-                                currentEnabledTransitions.add(transition);
+                                currentEnabledTransitions.add(nodeOperationTransition);
                                 continue;
                             }
                             nodeOperationTransition.id = ((NodeOperationTransition) transition).getId();
