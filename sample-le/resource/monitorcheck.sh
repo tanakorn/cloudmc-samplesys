@@ -8,9 +8,9 @@ fi
 ./testrunner.sh &
 lastcheck=""
 while [ true ]; do
-  num1=`ls record | wc -l`
+  num1=`ls record | wc -l | sed '^ *//g'`
   sleep $interval
-  num2=`ls record | wc -l`
+  num2=`ls record | wc -l | sed '^ *//g'`
   if [ $num1 -eq $num2 ]; then
     if [ "$lastcheck" = "1" ]; then
       break

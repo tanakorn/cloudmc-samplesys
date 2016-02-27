@@ -24,7 +24,7 @@ public class NodeStartTransition extends NodeOperationTransition {
         final int prime = 31;
         int hash = 1;
         hash = prime * hash + id;
-        int tranId = ((int) ACTION_HASH) << 32;
+        int tranId = ((int) ACTION_HASH) << 16;
         tranId = tranId | (0x0000FFFF & hash);
         return tranId;
     }
