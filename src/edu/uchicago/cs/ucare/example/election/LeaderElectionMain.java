@@ -606,6 +606,16 @@ public class LeaderElectionMain {
 						        	updateStatetoDMCK();
 						        }
                                 sendAll(getCurrentMessage());
+							} else {
+							    int newLeader = isFinished();
+							    if (newLeader != -1) {
+							        LOG.info("Finished election, leader = " + newLeader);
+                                    if (newLeader == id) {
+                                        role = LEADING;
+                                    } else {
+                                        role = FOLLOWING;
+                                    }
+							    }
 							}
 							break;
 						case FOLLOWING:

@@ -1,6 +1,7 @@
 package edu.uchicago.cs.ucare.samc.server;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -16,6 +17,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -73,8 +75,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected int initialGlobalState;
     protected int globalState;
 
-    protected String workingDirPath;
     protected String testRecordDirPath;
+    protected String workingDirPath;
     protected String idRecordDirPath;
     protected String codeRecordDirPath;
     protected String pathRecordFilePath;
@@ -97,6 +99,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected Thread modelChecking;
     protected int[] numPacketSentToId;
     
+    // dmck config
     protected int steadyStateTimeout;
     protected int initSteadyStateTimeout;
     protected int waitEndExploration;
@@ -107,7 +110,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected String ipcDir;
 
     public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
-            String testRecordDirPath, WorkloadDriver zkController) {
+            String testRecordDirPath, String workingDirPath, WorkloadDriver zkController) {
         this.interceptorName = interceptorName;
         log = LoggerFactory.getLogger(this.getClass() + "." + interceptorName);
         packetQueue = new LinkedBlockingQueue<InterceptPacket>();
@@ -130,6 +133,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         }
         this.numNode = numNode;
         this.testRecordDirPath = testRecordDirPath;
+        this.workingDirPath = workingDirPath;
         this.zkController = zkController;
         this.verifier = zkController.verifier;
         pathRecordFile = null;
@@ -142,6 +146,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         localStates = new LeaderElectionLocalState[numNode];
         scmStates = "";
         ipcDir = "";
+        getDMCKConfig();
         this.resetTest();
     }
     
@@ -666,6 +671,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     
     public void waitOnSteadyStatesByTimeout(){
     	System.out.println("Starts wait on first steady states");
+    	log.info("Starts wait on first steady states");
     	try{
     		Thread.sleep(initSteadyStateTimeout);
     		for(int i=0; i<numNode; i++){
@@ -705,13 +711,14 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
             log.debug("Waiting node " + id + " to be in steady state");
         }
         
-        boolean isTimeout = false;
-        while (!isNodeSteady(id) && !isTimeout) {
-            Thread.sleep(steadyStateTimeout);
-            isTimeout = true;
+        int timeoutCounter = 0;
+        int timeoutFraction = 20;
+        while (!isNodeSteady(id) && timeoutCounter >= timeoutFraction) {
+            Thread.sleep(steadyStateTimeout/timeoutFraction);
+            timeoutCounter++;
         }
         
-        if(isTimeout){
+        if(timeoutCounter >= timeoutFraction){
             log.warn("Steady state for node " + id + " triggered by timeout");
         }
         
@@ -823,16 +830,18 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
             if (log.isDebugEnabled()) {
                 log.debug("Waiting new started node " + id + " to be in real steady state");
             }
-            
-            boolean isTimeout = false;
-            while (!isNodeSteady(id) && !isTimeout) {
-                Thread.sleep(initSteadyStateTimeout);
-                isTimeout = true;
+       
+            int timeoutCounter = 0;
+            int timeoutFraction = 20;
+            while (!isNodeSteady(id) && timeoutCounter >= timeoutFraction) {
+                Thread.sleep(initSteadyStateTimeout/timeoutFraction);
+                timeoutCounter++;
             }
             
-            if(isTimeout){
+            if(timeoutCounter >= timeoutFraction){
                 log.warn("Steady state for new started node " + id + " triggered by timeout");
             }
+            
             setNodeSteady(id, true);
         } catch (InterruptedException e) {
             e.printStackTrace();

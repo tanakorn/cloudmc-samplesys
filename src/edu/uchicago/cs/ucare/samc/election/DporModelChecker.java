@@ -50,7 +50,8 @@ public abstract class DporModelChecker extends PrototypeSamc {
                     }
                 }
             } else if (lastTransition.transition instanceof AbstractNodeStartTransition) {
-                LinkedList<NodeOperationTransition> transitions = ((AbstractNodeStartTransition) lastTransition.transition).getAllRealNodeOperationTransitions(oldOnlineStatus);
+                LinkedList<NodeOperationTransition> transitions = 
+                        ((AbstractNodeStartTransition) lastTransition.transition).getAllRealNodeOperationTransitions(oldOnlineStatus);
                 for (NodeOperationTransition t : transitions) {
                     LinkedList<TransitionTuple> interestingPath = (LinkedList<TransitionTuple>) tmpPath.clone();
                     interestingPath.add(new TransitionTuple(0, t));
@@ -77,7 +78,8 @@ public abstract class DporModelChecker extends PrototypeSamc {
                                 continue;
                             } else if (!oldOnlineStatus[lastPacket.getFromId()]) {
                                 break;
-                            } else if (tuplePacket.getPacket().getToId() != lastPacket.getToId() || tuplePacket.getPacket().getFromId() != lastPacket.getFromId()) {
+                            } else if (tuplePacket.getPacket().getToId() != lastPacket.getToId() 
+                                    || tuplePacket.getPacket().getFromId() != lastPacket.getFromId()) {
                                 if (tuplePacket.getPacket().getToId() == lastPacket.getToId()) {
                                     int toId = tuplePacket.getPacket().getToId();
                                     if (isDependent(oldLocalStates[toId], lastPacket, tuplePacket.getPacket())) {
@@ -95,7 +97,7 @@ public abstract class DporModelChecker extends PrototypeSamc {
                         }
                     }
                 } else {
-                	// reorder crash and reboot
+                	// reorder crash and reboot - korn remove this?
                 	addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
                     break;
                 }

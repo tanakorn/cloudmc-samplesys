@@ -58,18 +58,10 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     
     LinkedList<LeaderElectionLocalState[]> prevLocalStates;
     
-    public PrototypeSamc(String interceptorName, String ackName, int maxId,
-            int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir,
-            WorkloadDriver zkController, String ipcDir) {
-        this(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, "/tmp", zkController, ipcDir);
-    }
-    
-    @SuppressWarnings("unchecked")
-    public PrototypeSamc(String interceptorName, String ackName, int maxId,
+    public PrototypeSamc(String interceptorName, String ackName, int numNode,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String workingDir,
             WorkloadDriver zkController, String ipcDir) {
-        super(interceptorName, ackName, maxId, globalStatePathDir, workingDir, zkController, ipcDir);
-        
+        super(interceptorName, ackName, numNode, globalStatePathDir, workingDir, zkController, ipcDir);
         dporInitialPaths = new LinkedList<LinkedList<TransitionTuple>>();
         finishedDporInitialPaths = new HashSet<LinkedList<TransitionTuple>>();
         initialPathSecondAttempt = new HashSet<LinkedList<TransitionTuple>>();

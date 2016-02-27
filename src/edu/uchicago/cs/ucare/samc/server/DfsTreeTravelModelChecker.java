@@ -9,7 +9,7 @@ import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 public class DfsTreeTravelModelChecker extends TreeTravelModelChecker {
 
     public DfsTreeTravelModelChecker(String interceptorName, String ackName, int numNode,
-            int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, 
+            int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir,
             String workingDir, WorkloadDriver zkController, String ipcDir) {
         super(interceptorName, ackName, numNode, numCrash, numReboot, globalStatePathDir, 
                 packetRecordDir, workingDir, zkController, ipcDir);

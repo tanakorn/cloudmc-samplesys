@@ -18,16 +18,16 @@ public class DfsLevelModelChecker extends LevelModelChecker {
     
     public DfsLevelModelChecker(String interceptorName, String ackName, int numNode, 
             int numCrash, int numReboot, String globalStatePathDir, String levelRecordDir, 
-            WorkloadDriver zkController) throws FileNotFoundException {
+            String workingDir, WorkloadDriver zkController) throws FileNotFoundException {
         super(interceptorName, ackName, numNode, numCrash, numReboot, globalStatePathDir, 
-                levelRecordDir, zkController);
+                levelRecordDir, workingDir, zkController);
     }
     
     public DfsLevelModelChecker(String inceptorName, String ackName, int numNode, 
             int numCrash, int numReboot, String globalStatePathDir, String levelRecordDir, File program,
-            WorkloadDriver zkController) throws FileNotFoundException {
+            String workingDir, WorkloadDriver zkController) throws FileNotFoundException {
         super(inceptorName, ackName, numNode, numCrash, numReboot, globalStatePathDir, 
-                levelRecordDir, program, zkController);
+                levelRecordDir, program, workingDir, zkController);
     }
 
     @Override

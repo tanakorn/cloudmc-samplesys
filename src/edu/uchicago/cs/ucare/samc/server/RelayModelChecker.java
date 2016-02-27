@@ -15,20 +15,18 @@ public class RelayModelChecker extends ProgrammableModelChecker {
     
     public RelayModelChecker(String interceptorName, String ackName,
             int numNode, String globalStatePathDir,
-            WorkloadDriver zkController)
+            String workingDir, WorkloadDriver zkController)
             throws FileNotFoundException {
-        super(interceptorName, ackName, numNode, globalStatePathDir, null,
-                zkController);
+        super(interceptorName, ackName, numNode, globalStatePathDir, null, workingDir, zkController);
         currentLevelPackets = new LinkedList<PacketSendTransition>();
         resetTest();
     }
 
     public RelayModelChecker(String interceptorName, String ackName,
             int numNode, String globalStatePathDir, File program,
-            WorkloadDriver zkController)
+            String workingDir, WorkloadDriver zkController)
             throws FileNotFoundException {
-        super(interceptorName, ackName, numNode, globalStatePathDir, program,
-                zkController);
+        super(interceptorName, ackName, numNode, globalStatePathDir, program, workingDir, zkController);
         currentLevelPackets = new LinkedList<PacketSendTransition>();
         resetTest();
     }

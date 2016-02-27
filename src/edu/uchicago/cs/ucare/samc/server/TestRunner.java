@@ -108,24 +108,30 @@ public class TestRunner {
             SpecVerifier verifier = verifierConstructor.newInstance();
             ensembleController.setVerifier(verifier);
             LOG.info("State exploration strategy is " + strategy);
-            if (strategy.equals("edu.uchicago.cs.ucare.samc.server.ProgrammableModelChecker")) {
-                String programFileName = prop.getProperty("program");
+            Class<? extends ModelCheckingServerAbstract> modelCheckerClass = (Class<? extends ModelCheckingServerAbstract>) Class.forName(strategy);
+            
+            if(ProgrammableModelChecker.class.isAssignableFrom(modelCheckerClass)){
+            	String programFileName = prop.getProperty("program");
                 if (programFileName == null) {
                     throw new RuntimeException("No program file specified");
                 }
+                LOG.info("Inspect potential bug in: " + programFileName);
                 File program = new File(programFileName);
+                Constructor<? extends ModelCheckingServerAbstract> programmableCheckerConstructor = modelCheckerClass.getConstructor(
+                		String.class, String.class, Integer.TYPE, String.class, File.class, 
+                		String.class, WorkloadDriver.class);
                 modelCheckingServerAbstract = new ProgrammableModelChecker(interceptorName, ackName, numNode, 
-                        testRecordDir, program, ensembleController);
+                        testRecordDir, program, workingDir, ensembleController);
             } else {
                 @SuppressWarnings("unchecked")
-                Class<? extends ModelCheckingServerAbstract> modelCheckerClass = (Class<? extends ModelCheckingServerAbstract>) Class.forName(strategy);
-                Constructor<? extends ModelCheckingServerAbstract> modelCheckerConstructor = modelCheckerClass.getConstructor(String.class, 
-                        String.class, Integer.TYPE, Integer.TYPE, Integer.TYPE, String.class, String.class, 
+                Constructor<? extends ModelCheckingServerAbstract> modelCheckerConstructor = modelCheckerClass.getConstructor(
+                		String.class, String.class, Integer.TYPE, Integer.TYPE, Integer.TYPE, String.class, String.class, 
                         String.class, WorkloadDriver.class, String.class);
                 modelCheckingServerAbstract = modelCheckerConstructor.newInstance(interceptorName, ackName, 
-                        numNode, numCrash, numReboot, testRecordDir, traversalRecordDir, workingDir, 
+                        numNode, numCrash, numReboot, testRecordDir, traversalRecordDir, workingDir,
                         ensembleController, ipcDir);
             }
+            
             verifier.modelCheckingServer = modelCheckingServerAbstract;
             if(ipcDir == ""){
 	            ModelCheckingServer interceptorStub = (ModelCheckingServer) 
