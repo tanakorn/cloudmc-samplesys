@@ -145,7 +145,6 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
     }
 
     private void cleanUpIPCDir(){
-    	System.out.println("Going to clean up");
     	try {
         	Runtime.getRuntime().exec(new String[]{"sh","-c", "rm " + ipcDir + "/new/*"});
         	Runtime.getRuntime().exec(new String[]{"sh","-c", "rm " + ipcDir + "/send/*"});

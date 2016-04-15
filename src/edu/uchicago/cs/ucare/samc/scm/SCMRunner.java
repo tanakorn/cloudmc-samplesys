@@ -87,6 +87,13 @@ public class SCMRunner{
             String testRecordDir = prop.getProperty("test_record_dir");
             String traversalRecordDir = prop.getProperty("traversal_record_dir");
             String strategy = prop.getProperty("exploring_strategy");
+            
+            if(!strategy.equals("edu.uchicago.cs.ucare.samc.server.DfsTreeTravelModelChecker") && 
+            		!strategy.equals("edu.uchicago.cs.ucare.samc.server.RandomModelChecker")){
+            	System.out.println("SCM can only be verified with DFS or Random policies");
+            	System.exit(0);
+            }
+            
             int numCrash = Integer.parseInt(prop.getProperty("num_crash"));
             int numReboot = Integer.parseInt(prop.getProperty("num_reboot"));
             String verifierName = prop.getProperty("verifier");
