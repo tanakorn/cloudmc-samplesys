@@ -16,6 +16,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Properties;
 
+import com.sun.nio.file.SensitivityWatchEventModifier;
+
 import edu.uchicago.cs.ucare.samc.election.LeaderElectionPacket;
 import edu.uchicago.cs.ucare.samc.scm.SCMPacket;
 import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
@@ -49,7 +51,8 @@ public class FileWatcher implements Runnable{
 		
 		try{
 			WatchService service = fs.newWatchService();
-			path.register(service, StandardWatchEventKinds.ENTRY_CREATE);
+			path.register(service, new WatchEvent.Kind[]{StandardWatchEventKinds.ENTRY_CREATE}, 
+					SensitivityWatchEventModifier.HIGH);
 			
 			WatchKey key = null;
 			while(running) {

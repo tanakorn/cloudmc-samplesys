@@ -77,7 +77,6 @@ public class SCMSender {
         	
         	Process p = Runtime.getRuntime().exec("mv " + ipcDmckDir + "/new/" + msgName + " " + 
         			ipcDmckDir + "/send/" + msgName);
-        	p.waitFor();
         	
         	// wait for dmck signal
         	File ackFile = new File(ipcDmckDir + "/ack/" + msgId);
