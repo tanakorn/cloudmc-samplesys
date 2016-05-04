@@ -1,7 +1,0 @@
-installer.main.class: $installer$.org.aspectj.ToolsInstaller
-installer.basedir: aspectj@build.version.majorminor@
-build.version.long: 1.8.7
-build.version.short: 1.8.7
-build.date: Wednesday Sep 9, 2015
-build.time: Wednesday Sep 9, 2015 at 21:19:30 GMT
-copyright.allRights.from1998: Copyright (c) 1998-2001 Xerox Corporation, 2002 Palo Alto Research Center, Incorporated, 2003-2008 Contributors.  All rights reserved.
