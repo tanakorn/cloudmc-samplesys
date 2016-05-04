@@ -4,6 +4,7 @@ import java.util.LinkedList;
 
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
 
+@SuppressWarnings("serial")
 public abstract class AbstractNodeOperationTransition extends NodeOperationTransition {
 
     protected ModelCheckingServerAbstract checker;

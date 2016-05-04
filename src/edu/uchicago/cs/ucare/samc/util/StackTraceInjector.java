@@ -24,9 +24,5 @@ public class StackTraceInjector {
         }
         return detail;
     }
-    
-    private static int addHash(int hash, Object obj) {
-        return hash * 31 + obj.hashCode();
-    }
 
 }

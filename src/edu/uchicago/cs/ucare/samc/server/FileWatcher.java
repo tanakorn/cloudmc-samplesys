@@ -42,6 +42,7 @@ public class FileWatcher implements Runnable{
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void run(){
 		System.out.println("[DEBUG] Watching path: " + path);
 		FileSystem fs = path.getFileSystem();

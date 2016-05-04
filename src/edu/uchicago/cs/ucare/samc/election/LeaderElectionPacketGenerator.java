@@ -2,11 +2,7 @@ package edu.uchicago.cs.ucare.samc.election;
 
 import java.util.HashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import edu.uchicago.cs.ucare.example.election.ElectionMessage;
-import edu.uchicago.cs.ucare.example.election.interposition.LeaderElectionInterposition;
 
 public class LeaderElectionPacketGenerator {
 	

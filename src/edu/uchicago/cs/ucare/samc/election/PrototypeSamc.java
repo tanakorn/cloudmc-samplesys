@@ -59,7 +59,8 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     
     LinkedList<LeaderElectionLocalState[]> prevLocalStates;
     
-    public PrototypeSamc(String interceptorName, String ackName, int numNode,
+    @SuppressWarnings("unchecked")
+	public PrototypeSamc(String interceptorName, String ackName, int numNode,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String workingDir,
             WorkloadDriver zkController, String ipcDir) {
         super(interceptorName, ackName, numNode, globalStatePathDir, workingDir, zkController, ipcDir);
@@ -334,10 +335,9 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     
     class PathTraversalWorker extends Thread {
         
-        @Override
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("unused")
+		@Override
         public void run() {
-            int numAppliedTranstion = 0;
             if (currentDporPath != null) {
                 log.info("There is existing DPOR initial path, start with this path first");
                 String tmp = "DPOR initial path\n";
@@ -411,7 +411,6 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                             nodeOperationTransition.id = ((NodeOperationTransition) tuple.transition).getId();
                         }
                         pathRecordFile.write((tuple.transition.toString() + "\n").getBytes());
-                        numAppliedTranstion++;
                         if (tuple.transition.apply()) {
                             updateGlobalState();
                             if (tuple.transition instanceof PacketSendTransition) {
@@ -488,7 +487,6 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                             nodeOperationTransition.id = ((NodeOperationTransition) transition).getId();
                         }
                         pathRecordFile.write((transition.toString() + "\n").getBytes());
-                        numAppliedTranstion++;
                         if (transition.apply()) {
                             updateGlobalState();
                             if (transition instanceof PacketSendTransition) {

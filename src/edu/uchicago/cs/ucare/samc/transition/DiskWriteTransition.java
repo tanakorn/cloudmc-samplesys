@@ -3,6 +3,7 @@ package edu.uchicago.cs.ucare.samc.transition;
 import edu.uchicago.cs.ucare.samc.event.DiskWrite;
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
 
+@SuppressWarnings("serial")
 public class DiskWriteTransition extends Transition {
     
     public static final String ACTION = "diskwrite"; 

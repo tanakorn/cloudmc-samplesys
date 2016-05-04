@@ -2,6 +2,7 @@ package edu.uchicago.cs.ucare.samc.event;
 
 import java.util.List;
 
+@SuppressWarnings("serial")
 public class InterceptPacket extends Event {
     
     public static final String SOURCE_KEY = "sourceNode";

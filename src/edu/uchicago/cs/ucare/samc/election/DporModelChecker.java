@@ -33,7 +33,8 @@ public abstract class DporModelChecker extends PrototypeSamc {
     
     public abstract boolean isDependent(LocalState state, Event e1, Event e2);
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     protected void calculateDPORInitialPaths() {
         TransitionTuple lastTransition;
         while ((lastTransition = currentExploringPath.pollLast()) != null) {
@@ -62,9 +63,7 @@ public abstract class DporModelChecker extends PrototypeSamc {
             Iterator<TransitionTuple> reverseIter = currentExploringPath.descendingIterator();
             Iterator<LeaderElectionLocalState[]> reverseLocalStateIter = prevLocalStates.descendingIterator();
             Iterator<boolean[]> reverseOnlineStatusIter = prevOnlineStatus.descendingIterator();
-            int index = currentExploringPath.size();
             while (reverseIter.hasNext()) {
-                index--;
                 TransitionTuple tuple = reverseIter.next();
                 oldLocalStates = reverseLocalStateIter.next();
                 oldOnlineStatus = reverseOnlineStatusIter.next();

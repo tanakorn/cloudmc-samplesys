@@ -45,7 +45,6 @@ public class FileSystemExploredBranchRecorder implements ExploredBranchRecorder 
         currentDir = origin.currentDir;
     }
 
-    @Override
     public void markBelowSubtreeFinished() {
         try {
             File finishedFile = new File(currentDir + "/.finished");
@@ -58,7 +57,6 @@ public class FileSystemExploredBranchRecorder implements ExploredBranchRecorder 
         }
     }
 
-    @Override
     public void markBelowSubtreeFinished(String note) {
         try {
             FileOutputStream fos = new FileOutputStream(currentDir + "/.finished");
@@ -74,20 +72,17 @@ public class FileSystemExploredBranchRecorder implements ExploredBranchRecorder 
         }
     }
 
-    @Override
     public boolean isSubtreeBelowFinished() {
         File finishedFlag = new File(currentDir + "/.finished");
         return finishedFlag.exists();
     }
     
-    @Override
     public boolean isSubtreeBelowChildFinished(long child) {
 //        LOG.info("korn is subtree finished " + currentDir + "/" + child);
         File finishedFlag = new File(currentDir + "/" + child + "/.finished");
         return finishedFlag.exists();
     }
     
-    @Override
     public boolean isSubtreeBelowChildrenFinished(long[] children) {
         StringBuilder strBuilder = new StringBuilder(currentDir);
         for (long child : children) {
@@ -102,7 +97,6 @@ public class FileSystemExploredBranchRecorder implements ExploredBranchRecorder 
         return finishedFlag.exists();
     }
 
-    @Override
     public boolean createChild(long child) {
         File currentIdDirFile = new File(currentDir + "/" + child);
         if (!currentIdDirFile.exists()) {
@@ -111,22 +105,18 @@ public class FileSystemExploredBranchRecorder implements ExploredBranchRecorder 
         return true;
     }
 
-    @Override
     public boolean noteThisNode(String key, String value) {
         return noteThisNode(key, value.getBytes(), true);
     }
     
-    @Override
     public boolean noteThisNode(String key, String value, boolean overwrite) {
         return noteThisNode(key, value.getBytes(), overwrite);
     }
     
-    @Override
     public boolean noteThisNode(String key, byte[] value) {
         return noteThisNode(key, value, true);
     }
     
-    @Override
     public boolean noteThisNode(String key, byte[] value, boolean overwrite) {
         File note = new File(currentDir + "/" + key);
         try {
@@ -144,7 +134,6 @@ public class FileSystemExploredBranchRecorder implements ExploredBranchRecorder 
         }
     }
     
-    @Override
     public byte[] readThisNode(String key) {
 //        LOG.info("korn reading " + currentDir + "/" + key);
         File note = new File(currentDir + "/" + key);
@@ -165,26 +154,22 @@ public class FileSystemExploredBranchRecorder implements ExploredBranchRecorder 
         }
     }
 
-    @Override
     public void traverseUpward(int hop) {
         for (int i = 0; i < hop && currentDepth > 0; ++i, --currentDepth) {
             currentDir = currentDir.substring(0, currentDir.lastIndexOf('/'));
         }
     }
 
-    @Override
     public void traverseDownTo(long child) {
         currentDir = currentDir + "/" + child;
         ++currentDepth;
     }
 
-    @Override
     public void resetTraversal() {
         currentDepth = 0;
         currentDir = initDir;
     }
 
-    @Override
     public int getCurrentDepth() {
         return currentDepth;
     }

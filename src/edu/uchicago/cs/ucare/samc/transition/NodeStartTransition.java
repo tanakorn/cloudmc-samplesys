@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
 
+@SuppressWarnings("serial")
 public class NodeStartTransition extends NodeOperationTransition {
     
     final static Logger LOG = LoggerFactory.getLogger(NodeStartTransition.class);

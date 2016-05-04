@@ -199,7 +199,8 @@ public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
             this.sleep = sleep;
         }
 
-        @Override
+        @SuppressWarnings("serial")
+		@Override
         Transition getRealTransition(ModelCheckingServerAbstract checker) {
             return new Transition() {
 
@@ -224,7 +225,8 @@ public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
     
     class ExitInstructionTransaction extends InstructionTransition {
 
-        @Override
+        @SuppressWarnings("serial")
+		@Override
         Transition getRealTransition(ModelCheckingServerAbstract checker) {
             return new Transition() {
                 

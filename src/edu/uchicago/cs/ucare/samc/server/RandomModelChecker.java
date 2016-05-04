@@ -107,7 +107,6 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
     class PathTraversalWorker extends Thread {
         
         @Override
-        @SuppressWarnings("unchecked")
         public void run() {
             int numWaitTime = 0;
             while (true) {
@@ -170,7 +169,8 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
 
     }
 
-    static abstract class AbstractNodeOperationTransition extends NodeOperationTransition {
+    @SuppressWarnings("serial")
+	static abstract class AbstractNodeOperationTransition extends NodeOperationTransition {
         
         static final Random RANDOM = new Random(System.currentTimeMillis());
         
@@ -186,7 +186,8 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
         
     }
 
-    static class AbstractNodeCrashTransition extends AbstractNodeOperationTransition {
+    @SuppressWarnings("serial")
+	static class AbstractNodeCrashTransition extends AbstractNodeOperationTransition {
         
         public AbstractNodeCrashTransition(ModelCheckingServerAbstract checker) {
             super(checker);
@@ -240,7 +241,8 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
         
     }
     
-    static class AbstractNodeStartTransition extends AbstractNodeOperationTransition {
+    @SuppressWarnings("serial")
+	static class AbstractNodeStartTransition extends AbstractNodeOperationTransition {
         
         public AbstractNodeStartTransition(ModelCheckingServerAbstract checker) {
             super(checker);

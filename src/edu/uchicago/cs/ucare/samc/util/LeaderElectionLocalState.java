@@ -2,6 +2,7 @@ package edu.uchicago.cs.ucare.samc.util;
 
 import java.util.Map;
 
+@SuppressWarnings("serial")
 public class LeaderElectionLocalState extends LocalState {
 	
 	int leader;

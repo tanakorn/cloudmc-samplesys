@@ -57,7 +57,6 @@ public class SqliteExploredBranchRecorder implements ExploredBranchRecorder {
         resetTraversal();
     }
 
-    @Override
     public void markBelowSubtreeFinished() {
         try {
             if (LOG.isDebugEnabled()) {
@@ -72,7 +71,6 @@ public class SqliteExploredBranchRecorder implements ExploredBranchRecorder {
         }
     }
 
-    @Override
     public void markBelowSubtreeFinished(String note) {
         try {
             finishChild.reset();
@@ -88,7 +86,6 @@ public class SqliteExploredBranchRecorder implements ExploredBranchRecorder {
         }
     }
 
-    @Override
     public boolean isSubtreeBelowFinished() {
         try {
             isChildFinished.reset();
@@ -105,7 +102,6 @@ public class SqliteExploredBranchRecorder implements ExploredBranchRecorder {
         return false;
     }
 
-    @Override
     public boolean isSubtreeBelowChildFinished(long child) {
         try {
             isChildFinished.reset();
@@ -122,7 +118,6 @@ public class SqliteExploredBranchRecorder implements ExploredBranchRecorder {
         return false;
     }
 
-    @Override
     public boolean isSubtreeBelowChildrenFinished(long[] children) {
         String tmpPath = path;
         for (long child : children) {
@@ -144,7 +139,6 @@ public class SqliteExploredBranchRecorder implements ExploredBranchRecorder {
         return false;
     }
 
-    @Override
     public boolean createChild(long child) {
         try {
             createChild.reset();
@@ -157,12 +151,10 @@ public class SqliteExploredBranchRecorder implements ExploredBranchRecorder {
         return false;
     }
 
-    @Override
     public boolean noteThisNode(String key, String value) {
         return noteThisNode(key, value, true);
     }
 
-    @Override
     public boolean noteThisNode(String key, String value, boolean overwrite) {
         if (overwrite) {
             try {
@@ -190,17 +182,14 @@ public class SqliteExploredBranchRecorder implements ExploredBranchRecorder {
         return false;
     }
 
-    @Override
     public boolean noteThisNode(String key, byte[] value) {
         return noteThisNode(key, value, true);
     }
 
-    @Override
     public boolean noteThisNode(String key, byte[] value, boolean overwrite) {
         return noteThisNode(key, new String(value), overwrite);
     }
 
-    @Override
     public byte[] readThisNode(String key) {
         try {
             readNote.reset();
@@ -217,25 +206,21 @@ public class SqliteExploredBranchRecorder implements ExploredBranchRecorder {
         return null;
     }
 
-    @Override
     public void traverseUpward(int hop) {
         for (int i = 0; i < hop && currentDepth > 0; ++i, --currentDepth) {
             path = path.substring(0, path.lastIndexOf('/'));
         }
     }
 
-    @Override
     public void traverseDownTo(long child) {
         path = path + "/" + child;
         ++currentDepth;
     }
 
-    @Override
     public int getCurrentDepth() {
         return currentDepth;
     }
 
-    @Override
     public void resetTraversal() {
         currentDepth = 0;
         path = "/root";

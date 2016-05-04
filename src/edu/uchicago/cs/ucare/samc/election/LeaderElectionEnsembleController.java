@@ -1,12 +1,9 @@
 package edu.uchicago.cs.ucare.samc.election;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +52,7 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
         for (int i = 0; i < numNode; ++i) {
             try {
             	startNode(i);
-                Thread.sleep(300);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 LOG.error("Error in starting node " + i);
             }
@@ -69,7 +66,7 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
         for (int i=0; i<numNode; i++) {
         	try {
             	stopNode(i);
-                Thread.sleep(50);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 LOG.error("Error in stopping node " + i);
             }
@@ -106,7 +103,6 @@ public class LeaderElectionEnsembleController extends WorkloadDriver {
     
     class LogWriter implements Runnable {
 
-        @Override
         public void run() {
             byte[] buff = new byte[256];
             while (true) {

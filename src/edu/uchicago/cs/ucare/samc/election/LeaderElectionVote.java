@@ -1,10 +1,9 @@
 package edu.uchicago.cs.ucare.samc.election;
 
 import java.io.Serializable;
-import java.nio.ByteBuffer;
-
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 
+@SuppressWarnings("serial")
 public class LeaderElectionVote implements Serializable {
 	
 	int sender;

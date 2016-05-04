@@ -83,7 +83,8 @@ public class TestRunner {
     	}
     }
     
-    protected static ModelCheckingServerAbstract createModelCheckerFromConf(String confFile, 
+    @SuppressWarnings("unchecked")
+	protected static ModelCheckingServerAbstract createModelCheckerFromConf(String confFile, 
             String workingDir, WorkloadDriver ensembleController, String ipcDir) throws ClassNotFoundException, 
             NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, 
             IllegalArgumentException, InvocationTargetException {
@@ -102,7 +103,6 @@ public class TestRunner {
             int numReboot = Integer.parseInt(prop.getProperty("num_reboot"));
             String verifierName = prop.getProperty("verifier");
             String ackName = "Ack";
-            @SuppressWarnings("unchecked")
             Class<? extends SpecVerifier> verifierClass = (Class<? extends SpecVerifier>) Class.forName(verifierName);
             Constructor<? extends SpecVerifier> verifierConstructor = verifierClass.getConstructor();
             SpecVerifier verifier = verifierConstructor.newInstance();
@@ -117,13 +117,9 @@ public class TestRunner {
                 }
                 LOG.info("Inspect potential bug in: " + programFileName);
                 File program = new File(programFileName);
-                Constructor<? extends ModelCheckingServerAbstract> programmableCheckerConstructor = modelCheckerClass.getConstructor(
-                		String.class, String.class, Integer.TYPE, String.class, File.class, 
-                		String.class, WorkloadDriver.class);
                 modelCheckingServerAbstract = new ProgrammableModelChecker(interceptorName, ackName, numNode, 
                         testRecordDir, program, workingDir, ensembleController);
             } else {
-                @SuppressWarnings("unchecked")
                 Constructor<? extends ModelCheckingServerAbstract> modelCheckerConstructor = modelCheckerClass.getConstructor(
                 		String.class, String.class, Integer.TYPE, Integer.TYPE, Integer.TYPE, String.class, String.class, 
                         String.class, WorkloadDriver.class, String.class);

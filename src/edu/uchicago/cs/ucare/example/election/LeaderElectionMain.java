@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -12,24 +11,17 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.Random;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.example.election.interposition.LeaderElectionInterposition;
-import edu.uchicago.cs.ucare.samc.election.LeaderElectionAspectProperties;
 import edu.uchicago.cs.ucare.samc.election.LeaderElectionPacket;
-import edu.uchicago.cs.ucare.samc.server.ModelCheckingServer;
 import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
-import edu.uchicago.cs.ucare.samc.util.PacketReceiveAck;
 
 public class LeaderElectionMain {
 	
@@ -105,7 +97,6 @@ public class LeaderElectionMain {
         final ServerSocket server = new ServerSocket(myAddress.getPort());
         Thread listeningThread = new Thread(new Runnable() {
 
-			@Override
 			public void run() {
 				while (true) {
 		            Socket connection;

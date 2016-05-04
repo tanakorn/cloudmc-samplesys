@@ -1,7 +1,6 @@
 package edu.uchicago.cs.ucare.samc.scm;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;

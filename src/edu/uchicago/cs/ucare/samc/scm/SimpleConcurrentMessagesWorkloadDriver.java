@@ -103,7 +103,6 @@ public class SimpleConcurrentMessagesWorkloadDriver extends WorkloadDriver{
 	
 	class LogWriter implements Runnable {
 
-        @Override
         public void run() {
             byte[] buff = new byte[256];
             while (true) {

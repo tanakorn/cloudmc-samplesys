@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
 
+@SuppressWarnings("serial")
 public class PacketSendTransition extends Transition implements Serializable {
     
     final static Logger LOG = LoggerFactory.getLogger(PacketSendTransition.class);
@@ -18,7 +19,6 @@ public class PacketSendTransition extends Transition implements Serializable {
     public static final String ACTION = "packetsend";
     private static final short ACTION_HASH = (short) ACTION.hashCode();
     public static final Comparator<PacketSendTransition> COMPARATOR = new Comparator<PacketSendTransition>() {
-        @Override
         public int compare(PacketSendTransition o1, PacketSendTransition o2) {
             Integer i1 = o1.getPacket().getId();
             Integer i2 = o2.getPacket().getId();

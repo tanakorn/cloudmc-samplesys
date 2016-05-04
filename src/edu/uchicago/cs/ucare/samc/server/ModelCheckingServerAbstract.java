@@ -3,7 +3,6 @@ package edu.uchicago.cs.ucare.samc.server;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.IOException;
@@ -21,8 +20,6 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.Properties;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +36,6 @@ import edu.uchicago.cs.ucare.samc.util.LocalState;
 import edu.uchicago.cs.ucare.samc.util.PacketReceiveAck;
 import edu.uchicago.cs.ucare.samc.util.PacketReleaseCallback;
 import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
-import edu.uchicago.cs.ucare.samc.server.TestRunner;
 
 public abstract class ModelCheckingServerAbstract implements ModelCheckingServer {
     
@@ -109,7 +105,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     
     protected String ipcDir;
 
-    public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
+    @SuppressWarnings("unchecked")
+	public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
             String testRecordDirPath, String workingDirPath, WorkloadDriver zkController) {
         this.interceptorName = interceptorName;
         log = LoggerFactory.getLogger(this.getClass() + "." + interceptorName);
@@ -150,7 +147,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         this.resetTest();
     }
     
-    public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
+    @SuppressWarnings("unchecked")
+	public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
             String testRecordDirPath, String workingDirPath, WorkloadDriver zkController, 
             String ipcDir) {
         this.interceptorName = interceptorName;
@@ -210,7 +208,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     	}
     }
     
-    @Override
     public void requestWrite(DiskWrite write) {
         log.info("Intercept disk write " + write.toString());
         writeFinished.put(write, false);
@@ -230,12 +227,10 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         writeFinished.remove(write);
     }
     
-    @Override
     public void requestWriteImmediately(DiskWrite write) {
         
     }
     
-    @Override
     public void registerCallback(int id, String callbackName) throws RemoteException {
         try {
             if (log.isDebugEnabled()) {
@@ -263,7 +258,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         }
     }
     
-    @Override
     public void setLocalState(int nodeId, LocalState localState) throws RemoteException {
     	localStates[nodeId] = (LeaderElectionLocalState) localState;
     }
@@ -295,7 +289,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         return false;
     }
     
-    @Override
     public void offerPacket(InterceptPacket packet) throws RemoteException {
         senderReceiverQueues[packet.getFromId()][packet.getToId()].add(packet);
         log.info("Intercept packet " + packet.toString());
@@ -322,7 +315,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
             }
         }
         Collections.sort(buffer, new Comparator<PacketSendTransition>() {
-            @Override
             public int compare(PacketSendTransition o1, PacketSendTransition o2) {
                 Integer i1 = o1.getPacket().getId();
                 Integer i2 = o2.getPacket().getId();
@@ -361,7 +353,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
             }
         }
         Collections.sort(buffer, new Comparator<InterceptPacket>() {
-            @Override
             public int compare(InterceptPacket o1, InterceptPacket o2) {
                 Integer i1 = o1.getId();
                 Integer i2 = o2.getId();
@@ -378,7 +369,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
             writeQueue.clear();
         }
         Arrays.sort(tmp, new Comparator<DiskWrite>() {
-            @Override
             public int compare(DiskWrite o1, DiskWrite o2) {
                 Integer i1 = o1.getWriteId();
                 Integer i2 = o2.getWriteId();
@@ -402,7 +392,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         return false;
     }
 
-    @Override
     public void setTestId(int testId) {
         log.info("This test has id = " + testId);
         this.testId = testId;
@@ -422,7 +411,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         }
     }
 
-    @Override
     public void updateLocalState(int id, int state) throws RemoteException {
         localState[id] = state;
         if (log.isDebugEnabled()) {
@@ -430,7 +418,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         }
     }
 
-    @Override
     public void recordCodeTrace(int nodeId, int stackTraceHash)
             throws RemoteException {
         try {
@@ -445,7 +432,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         }
     }
 
-    @Override
     public void recordProtocol(int nodeId, int protocolHash)
             throws RemoteException {
         
@@ -575,7 +561,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         return isNodeOnline(write.getNodeId()) ? result : false;
     }
     
-    @Override
     public boolean waitPacket(int toId) throws RemoteException {
         while (isNodeOnline(toId)) {
             if (isSystemSteady() && !isThereOutstandingPacketTransition()) {
@@ -652,7 +637,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         return true;
     }
 
-    @Override
     public void informSteadyState(int id, int runningState) throws RemoteException {
         setNodeSteady(id, true);
         if (log.isDebugEnabled()) {
@@ -682,7 +666,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     	}
     }
     
-    @Override
     public void informActiveState(int id) throws RemoteException {
         setNodeSteady(id, false);
     }
@@ -741,7 +724,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         }
     }
     
-    public void resetTest() {
+    @SuppressWarnings("unchecked")
+	public void resetTest() {
         log.debug("Test reset");
         writeQueue.clear();
         senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
@@ -863,7 +847,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         
         final Logger LOG = LoggerFactory.getLogger(PacketReceiveAckImpl.class);
         
-        @Override
         public void ack(int packetId, int id) throws RemoteException {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Acking back for packet id " + packetId + " from node id " + id);
@@ -877,7 +860,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         
         final Logger LOG = LoggerFactory.getLogger(DiskWriteAckImpl.class);
 
-        @Override
         public void ack(int writeId, int nodeId) throws RemoteException {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Acking back for disk write id " + writeId + " from node id " + nodeId);

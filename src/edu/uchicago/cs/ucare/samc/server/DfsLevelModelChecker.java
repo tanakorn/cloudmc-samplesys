@@ -39,7 +39,6 @@ public class DfsLevelModelChecker extends LevelModelChecker {
     public int nextTransitionOrder(LinkedList<PacketSendTransition> packetTransition, 
             LinkedList<Transition> nextTransitionOrder) {
         Collections.sort(packetTransition, new Comparator<Transition>() {
-            @Override
             public int compare(Transition o1, Transition o2) {
                 Integer id1 = o1.getTransitionId();
                 Integer id2 = o2.getTransitionId();

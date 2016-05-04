@@ -1,5 +1,6 @@
 package edu.uchicago.cs.ucare.samc.event;
 
+@SuppressWarnings("serial")
 public class DiskWrite extends Event {
     
     public static final String WRITE_NODE_KEY = "writeNode";

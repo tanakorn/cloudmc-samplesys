@@ -12,7 +12,8 @@ public class StackTraceLogger {
         }
     }
     
-    public static void debugStackTrace(Class type) {
+    @SuppressWarnings("rawtypes")
+	public static void debugStackTrace(Class type) {
         Logger log = LoggerFactory.getLogger(type);
         StackTraceElement[] stackTraces = Thread.currentThread().getStackTrace();
         for (int i = 1; i < stackTraces.length; ++i) {
@@ -28,7 +29,8 @@ public class StackTraceLogger {
         }
     }
     
-    public static void infoStackTrace(Class type) {
+    @SuppressWarnings("rawtypes")
+	public static void infoStackTrace(Class type) {
         Logger log = LoggerFactory.getLogger(type);
         StackTraceElement[] stackTraces = Thread.currentThread().getStackTrace();
         for (int i = 1; i < stackTraces.length; ++i) {

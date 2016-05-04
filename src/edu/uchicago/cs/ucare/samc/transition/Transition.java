@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.List;
 
+@SuppressWarnings("serial")
 public abstract class Transition implements Serializable {
     
     public final String ACTION = "nothing";
@@ -12,7 +13,6 @@ public abstract class Transition implements Serializable {
     public abstract int getTransitionId();
     
     public static final Comparator<Transition> COMPARATOR = new Comparator<Transition>() {
-        @Override
         public int compare(Transition o1, Transition o2) {
             Integer i1 = o1.getTransitionId();
             Integer i2 = o2.getTransitionId();

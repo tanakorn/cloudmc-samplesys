@@ -4,11 +4,7 @@ import java.rmi.Naming;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import edu.uchicago.cs.ucare.example.election.ElectionMessage;
-import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain.Sender;
 import edu.uchicago.cs.ucare.samc.election.LeaderElectionAspectProperties;
 import edu.uchicago.cs.ucare.samc.election.LeaderElectionCallback;

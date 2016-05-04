@@ -2,6 +2,7 @@ package edu.uchicago.cs.ucare.samc.election;
 
 import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
 
+@SuppressWarnings("serial")
 public class LeaderElectionPacket extends InterceptPacket {
     
     public static final String ROLE_KEY = "role";

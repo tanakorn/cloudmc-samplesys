@@ -2,6 +2,7 @@ package edu.uchicago.cs.ucare.samc.scm;
 
 import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
 
+@SuppressWarnings("serial")
 public class SCMPacket extends InterceptPacket {
 	
     public static final String MSG_CONTENT = "msgContent";
