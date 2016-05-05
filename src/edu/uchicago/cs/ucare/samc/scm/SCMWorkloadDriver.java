@@ -10,10 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 
-public class SimpleConcurrentMessagesWorkloadDriver extends WorkloadDriver{
+public class SCMWorkloadDriver extends WorkloadDriver{
 	
 
-    private final static Logger LOG = LoggerFactory.getLogger(SimpleConcurrentMessagesWorkloadDriver.class);
+    private final static Logger LOG = LoggerFactory.getLogger(SCMWorkloadDriver.class);
 	
 	String ipcDmckDir;
 	String ipcScmDir;
@@ -22,7 +22,7 @@ public class SimpleConcurrentMessagesWorkloadDriver extends WorkloadDriver{
     Thread consoleWriter;
     FileOutputStream[] consoleLog;
 	
-	public SimpleConcurrentMessagesWorkloadDriver(int numNode, String workingDir, String ipcDir) {
+	public SCMWorkloadDriver(int numNode, String workingDir, String ipcDir) {
 		super(numNode, workingDir);
 		ipcDmckDir = ipcDir;
         ipcScmDir = ipcDir + "-scm";
