@@ -1,22 +1,10 @@
 package edu.uchicago.cs.ucare.samc.server;
 
+import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.FileSystem;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
-import java.nio.file.WatchEvent.Kind;
-import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Properties;
-
-import com.sun.nio.file.SensitivityWatchEventModifier;
 
 import edu.uchicago.cs.ucare.samc.election.LeaderElectionPacket;
 import edu.uchicago.cs.ucare.samc.scm.SCMPacket;
@@ -24,57 +12,34 @@ import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 
 public class FileWatcher implements Runnable{
 	
-	Path path;
+	File path;
 	ModelCheckingServerAbstract checker;
 	private boolean running;
 	
 	public FileWatcher(String sPath, ModelCheckingServerAbstract modelChecker){
-		path = Paths.get(sPath + "/send");
+		path = new File(sPath + "/send");
 		checker = modelChecker;
 		running = true;
 		
-		try {
-			Boolean isFolder = (Boolean) Files.getAttribute(path,
-					"basic:isDirectory", NOFOLLOW_LINKS);
-			if (!isFolder) {
-				throw new IllegalArgumentException("Path: " + path + " is not a folder");
-			}
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
+		if (!path.isDirectory()) {
+			throw new IllegalArgumentException("Path: " + path + " is not a folder");
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	public void run(){
 		System.out.println("[DEBUG] Watching path: " + path);
-		FileSystem fs = path.getFileSystem();
 		
-		try{
-			WatchService service = fs.newWatchService();
-			path.register(service, new WatchEvent.Kind[]{StandardWatchEventKinds.ENTRY_CREATE}, 
-					SensitivityWatchEventModifier.HIGH);
-			
-			WatchKey key = null;
-			while(running) {
-				key = service.take();
-				Kind<?> kind = null;
-				for(WatchEvent<?> watchEvent : key.pollEvents()) {
-					kind = watchEvent.kind();
-					if (StandardWatchEventKinds.ENTRY_CREATE == kind) {
-						// A new Path was created 
-						Path newFile = ((WatchEvent<Path>) watchEvent).context();
-						processNewFile(newFile.toString());
-					}
-					
-					if(!key.reset()) {
-						break;
-					}
+		while(running){
+			if(path.listFiles().length > 0){
+				for(File file : path.listFiles()){
+					processNewFile(file.getName());
 				}
 			}
-		} catch(IOException ioe) {
-			ioe.printStackTrace();
-		} catch(InterruptedException ie){
-			ie.printStackTrace();
+			try {
+				Thread.sleep(50);
+			} catch (InterruptedException ie) {
+				ie.printStackTrace();
+			}
 		}
 	}
 	
