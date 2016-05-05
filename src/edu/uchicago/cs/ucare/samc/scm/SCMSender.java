@@ -75,7 +75,7 @@ public class SCMSender {
         	writer.println("msgContent=" + msgContent);
         	writer.close();
         	
-        	Process p = Runtime.getRuntime().exec("mv " + ipcDmckDir + "/new/" + msgName + " " + 
+        	Runtime.getRuntime().exec("mv " + ipcDmckDir + "/new/" + msgName + " " + 
         			ipcDmckDir + "/send/" + msgName);
         	
         	// wait for dmck signal
