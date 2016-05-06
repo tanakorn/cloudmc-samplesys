@@ -52,7 +52,7 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
             return;
         }
         super.resetTest();
-        modelChecking = new PacketExplorer();
+        modelChecking = new PathTraversalWorker();
         enabledPacketList = new LinkedList<InterceptPacket>();
         enabledTransitionList = new LinkedList<Transition>();
         exploredBranchRecorder.resetTraversal();
@@ -101,7 +101,7 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
         exploredBranchRecorder.noteThisNode(".test_id", testId + "");
     }
     
-    class PacketExplorer extends Thread {
+    class PathTraversalWorker extends Thread {
 
         @Override
         @SuppressWarnings("unchecked")
