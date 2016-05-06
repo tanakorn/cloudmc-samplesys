@@ -119,7 +119,7 @@ public class SCMRunner{
         return (ModelCheckingServerAbstract) modelCheckingServerAbstract;
 	}
 	
-	protected static void startExploreTesting(ModelCheckingServerAbstract checker, int numNode, String workingDir,
+	protected static void startExploreTesting(final ModelCheckingServerAbstract checker, int numNode, String workingDir,
             WorkloadDriver scmWorkloadDriver, boolean pauseEveryPathExploration) throws IOException {
         File gspathDir = new File(workingDir + "/record");
         int testNum = gspathDir.list().length + 1;
@@ -127,6 +127,13 @@ public class SCMRunner{
         File waitingFlag = new File(workingDir + "/state/.waiting");
         
         try {
+        	
+        	Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run() {
+                	checker.stopEnsemble();
+                }
+            });
+        	
             for (; !finishedFlag.exists(); ++testNum) {
                 waitingFlag.delete();
                 checker.setTestId(testNum);
