@@ -9,19 +9,16 @@ import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 
-public class LeaderElectionEnsembleController extends WorkloadDriver {
+public class LeaderElectionWorkloadDriver extends WorkloadDriver {
     
-    private final static Logger LOG = LoggerFactory.getLogger(LeaderElectionEnsembleController.class);
-    
-    String ipcDir;
+    private final static Logger LOG = LoggerFactory.getLogger(LeaderElectionWorkloadDriver.class);
     
     Process[] node;
     Thread consoleWriter;
     FileOutputStream[] consoleLog;
     
-    public LeaderElectionEnsembleController(int numNode, String workingDir, String sIpcDir) {
-        super(numNode, workingDir);
-        ipcDir = sIpcDir;
+    public LeaderElectionWorkloadDriver(int numNode, String workingDir, String ipcDir, String samcDir, String targetSysDir) {
+        super(numNode, workingDir, ipcDir, samcDir, targetSysDir);
         node = new Process[numNode];
         consoleLog = new FileOutputStream[numNode];
         consoleWriter = new Thread(new LogWriter());

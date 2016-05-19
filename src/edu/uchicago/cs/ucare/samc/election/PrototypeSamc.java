@@ -70,8 +70,6 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         initialPathSecondAttempt = new HashSet<LinkedList<TransitionTuple>>();
         this.numCrash = numCrash;
         this.numReboot = numReboot;
-        dporInitialPaths = new LinkedList<LinkedList<TransitionTuple>>();
-        finishedDporInitialPaths = new HashSet<LinkedList<TransitionTuple>>();
         try {
             File initialPathFile = new File(workingDir + "/initialPaths");
             if (initialPathFile.exists()) {

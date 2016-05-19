@@ -4,12 +4,18 @@ public abstract class WorkloadDriver {
     
     protected int numNode;
     protected String workingDir;
+    protected String ipcDir;
+    protected String samcDir;
+    protected String targetSysDir;
     
     public SpecVerifier verifier;
 
-    public WorkloadDriver(int numNode, String workingDir) {
+    public WorkloadDriver(int numNode, String workingDir, String ipcDir, String samcDir, String targetSysDir) {
         this.numNode = numNode;
         this.workingDir = workingDir;
+        this.ipcDir = ipcDir;
+        this.samcDir = samcDir;
+        this.targetSysDir = targetSysDir;
     }
     
     public WorkloadDriver(int numNode, String workingDir, SpecVerifier verifier) {

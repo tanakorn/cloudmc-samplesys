@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-if [ $# -lt 7 ]; then
-  echo "usage: genmc <mc_name> <num_node> <num_crash> <strategy> <working_dir> <use_ipc> <ipc_dir> [other_vars]"
+if [ $# -lt 6 ]; then
+  echo "usage: genmc <mc_name> <num_node> <num_crash> <strategy> <working_dir> <ipc_dir> [other_vars]"
   exit 1
 fi
 
@@ -10,9 +10,8 @@ num_node=$2
 num_crash=$3
 strategy=$4
 working_dir=$5
-use_ipc=$6
-ipc_dir=$7
-other_vars=$8
+ipc_dir=$6
+other_vars=$7
 
 echo mc_name=$mc_name > $working_dir/target-sys.conf
 echo working_dir=$working_dir >> $working_dir/target-sys.conf
@@ -24,5 +23,4 @@ echo num_crash=$num_crash >> $working_dir/target-sys.conf
 for var in $other_vars; do
   echo $var >> $working_dir/target-sys.conf
 done
-echo use_ipc=$use_ipc >> $working_dir/target-sys.conf
 echo ipc_dir=$ipc_dir >> $working_dir/target-sys.conf

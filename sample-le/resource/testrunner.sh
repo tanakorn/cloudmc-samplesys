@@ -10,5 +10,5 @@ done
 export CLASSPATH=$CLASSPATH:$classpath
 export PATH=$PATH:bin/
 
-java -Dlog4j.configuration=mc_log.properties -Delectiontest.dir=WORKING_DIR edu.uchicago.cs.ucare.samc.server.TestRunner ./target-sys.conf
+java -Dlog4j.configuration=mc_log.properties -Delectiontest.dir=WORKING_DIR edu.uchicago.cs.ucare.samc.server.LeaderElectionRunner ./target-sys.conf
 

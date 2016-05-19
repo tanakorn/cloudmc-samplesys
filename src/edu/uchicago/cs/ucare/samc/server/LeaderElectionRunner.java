@@ -21,11 +21,11 @@ import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
 
-public class TestRunner {
+public class LeaderElectionRunner {
     
-    final static Logger LOG = LoggerFactory.getLogger(TestRunner.class);
+    final static Logger LOG = LoggerFactory.getLogger(LeaderElectionRunner.class);
     
-    static WorkloadDriver ensembleController;
+    static WorkloadDriver workloadDriver;
     
     public static void main(String[] argv) throws IOException, ClassNotFoundException, 
             NoSuchMethodException, SecurityException, InstantiationException, 
@@ -50,34 +50,31 @@ public class TestRunner {
     
     public static void prepareModelChecker(String testRunnerConf, boolean isPausedEveryTest){
     	try{
-	    	Properties testRunnerProp = new Properties();
+	    	Properties configProp = new Properties();
 	        FileInputStream configInputStream = new FileInputStream(testRunnerConf);
-	        testRunnerProp.load(configInputStream);
+	        configProp.load(configInputStream);
 	        configInputStream.close();
 	        
-	        String workingDir = testRunnerProp.getProperty("working_dir");
-	        int numNode = Integer.parseInt(testRunnerProp.getProperty("num_node"));
-	        String workload = testRunnerProp.getProperty("workload_driver");
-	        boolean useIPC = Integer.parseInt(testRunnerProp.getProperty("use_ipc")) == 1;
-	        String ipcDir = "";
-	        if(useIPC){
-	        	ipcDir = testRunnerProp.getProperty("ipc_dir");
-	        }
+	        String workingDir = configProp.getProperty("working_dir");
+	        String ipcDir = configProp.getProperty("ipc_dir");
+	        String samcDir = configProp.getProperty("samc_dir");
+	        String targetSysDir = configProp.getProperty("target_sys_dir") != "" ? configProp.getProperty("target_sys_dir") : "";
+	        int numNode = Integer.parseInt(configProp.getProperty("num_node"));
+	        String workloadDriverName = configProp.getProperty("workload_driver");
 	        @SuppressWarnings("unchecked")
-	        Class<? extends WorkloadDriver> ensembleControllerClass = (Class<? extends WorkloadDriver>) Class.forName(workload);
-	        Constructor<? extends WorkloadDriver> ensembleControllerConstructor = ensembleControllerClass.getConstructor(Integer.TYPE, String.class, String.class);
-	        ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir, ipcDir);
-	        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/target-sys.conf", workingDir, ensembleController, ipcDir);
-	        if(useIPC){
-	        	// activate Directory Watcher
-	            Thread dirWatcher;
-	            
-	        	dirWatcher = new Thread(new FileWatcher(ipcDir, checker));
-	        	dirWatcher.start();
-	        	
-	        	Thread.sleep(500);
-	        }
-	        startExploreTesting(checker, numNode, workingDir, ensembleController, isPausedEveryTest);
+	        Class<? extends WorkloadDriver> workloadDriverClass = (Class<? extends WorkloadDriver>) Class.forName(workloadDriverName);
+	        Constructor<? extends WorkloadDriver> workloadDriverConstructor = workloadDriverClass.getConstructor(Integer.TYPE, String.class, 
+	        		String.class, String.class, String.class);
+	        workloadDriver = workloadDriverConstructor.newInstance(numNode, workingDir, ipcDir, samcDir, targetSysDir);
+	        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/target-sys.conf", workingDir, workloadDriver, ipcDir);
+	        
+	        // activate Directory Watcher
+	        Thread dirWatcher;   
+        	dirWatcher = new Thread(new FileWatcher(ipcDir, checker));
+        	dirWatcher.start();
+        	Thread.sleep(500);
+	        
+	        startExploreTesting(checker, numNode, workingDir, workloadDriver, isPausedEveryTest);
     	} catch (Exception e){
     		e.printStackTrace();
     	}
@@ -167,7 +164,7 @@ public class TestRunner {
                 reset.waitFor();
                 zkController.resetTest();
                 checker.runEnsemble();
-                ensembleController.runWorkload();
+                workloadDriver.runWorkload();
                 checker.waitOnSteadyStatesByTimeout(); // wait on first steady state timeout
                 while (!waitingFlag.exists()) {
                     Thread.sleep(30);

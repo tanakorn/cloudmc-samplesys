@@ -18,7 +18,7 @@ public class SCMRunner{
 
     final static Logger LOG = LoggerFactory.getLogger(SCMRunner.class);
     
-	static WorkloadDriver ensembleController;
+	static WorkloadDriver workloadDriver;
 	
 	public static void main(String[] argv){
 		String configFileLocation = null;
@@ -47,16 +47,18 @@ public class SCMRunner{
 	        configInputStream.close();
 	        String workingDir = config.getProperty("working_dir");
 	        String ipcDir = config.getProperty("ipc_dir");
-	        String workload = config.getProperty("workload_driver");
+	        String samcDir = config.getProperty("samc_dir");
+	        String targetSysDir = config.getProperty("target_sys_dir") != "" ? config.getProperty("target_sys_dir") : "";	        
+	        String workloadDriverName = config.getProperty("workload_driver");
 	        int numNode = Integer.parseInt(config.getProperty("num_node"));
 	        
 	        @SuppressWarnings("unchecked")
-	        Class<? extends WorkloadDriver> ensembleControllerClass = (Class<? extends WorkloadDriver>) Class.forName(workload);
-	        Constructor<? extends WorkloadDriver> ensembleControllerConstructor = ensembleControllerClass.getConstructor(Integer.TYPE, 
-	        		String.class, String.class);
-	        ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir, ipcDir);
+	        Class<? extends WorkloadDriver> workloadDriverClass = (Class<? extends WorkloadDriver>) Class.forName(workloadDriverName);
+	        Constructor<? extends WorkloadDriver> workloadDriverConstructor = workloadDriverClass.getConstructor(Integer.TYPE, 
+	        		String.class, String.class, String.class, String.class);
+	        workloadDriver = workloadDriverConstructor.newInstance(numNode, workingDir, ipcDir, samcDir, targetSysDir);
 	        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/target-sys.conf", workingDir, 
-	        		ensembleController, ipcDir);
+	        		workloadDriver, ipcDir);
 	        
 	        // activate Directory Watcher
             Thread dirWatcher;
@@ -65,7 +67,7 @@ public class SCMRunner{
         	Thread.sleep(500);
         	
         	// start path explorations
-        	startExploreTesting(checker, numNode, workingDir, ensembleController, pauseEveryPathExploration);
+        	startExploreTesting(checker, numNode, workingDir, workloadDriver, pauseEveryPathExploration);
 	        
     	} catch (Exception e){
     		e.printStackTrace();
@@ -139,7 +141,7 @@ public class SCMRunner{
                 checker.setTestId(testNum);
                 scmWorkloadDriver.resetTest();
                 checker.runEnsemble();
-                ensembleController.runWorkload();
+                workloadDriver.runWorkload();
                 checker.waitOnSteadyStatesByTimeout(); // wait on first steady state timeout
                 while (!waitingFlag.exists()) {
                     Thread.sleep(30);
