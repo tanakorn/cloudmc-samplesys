@@ -29,17 +29,17 @@ public class LeaderElectionSemanticAwareModelChecker extends DporModelChecker {
     public LeaderElectionSemanticAwareModelChecker(String interceptorName,
             String ackName, int maxId, int numCrash, int numReboot,
             String globalStatePathDir, String packetRecordDir,
-            WorkloadDriver zkController, String ipcDir) {
+            WorkloadDriver workloadDriver, String ipcDir) {
         this(interceptorName, ackName, maxId, numCrash, numReboot,
-                globalStatePathDir, packetRecordDir, "/tmp", zkController, ipcDir);
+                globalStatePathDir, packetRecordDir, "/tmp", workloadDriver, ipcDir);
     }
 
     public LeaderElectionSemanticAwareModelChecker(String inceptorName,
             String ackName, int maxId, int numCrash, int numReboot,
             String globalStatePathDir, String packetRecordDir, String workingDir,
-            WorkloadDriver zkController, String ipcDir) {
+            WorkloadDriver workloadDriver, String ipcDir) {
         super(inceptorName, ackName, maxId, numCrash, numReboot,
-                globalStatePathDir, packetRecordDir, workingDir, zkController, ipcDir);                
+                globalStatePathDir, packetRecordDir, workingDir, workloadDriver, ipcDir);                
     }
 
     public boolean isFinished(LeaderElectionLocalState state) {

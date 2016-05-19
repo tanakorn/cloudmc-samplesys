@@ -62,8 +62,8 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     @SuppressWarnings("unchecked")
 	public PrototypeSamc(String interceptorName, String ackName, int numNode,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String workingDir,
-            WorkloadDriver zkController, String ipcDir) {
-        super(interceptorName, ackName, numNode, globalStatePathDir, workingDir, zkController, ipcDir);
+            WorkloadDriver workloadDriver, String ipcDir) {
+        super(interceptorName, ackName, numNode, globalStatePathDir, workingDir, workloadDriver, ipcDir);
         dporInitialPaths = new LinkedList<LinkedList<TransitionTuple>>();
         finishedDporInitialPaths = new HashSet<LinkedList<TransitionTuple>>();
         finishedDporInitialPathStrings = new HashSet<String>();
@@ -453,7 +453,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                         exploredBranchRecorder.resetTraversal();
                         exploredBranchRecorder.markBelowSubtreeFinished();
                         log.warn("Finished exploring all states");
-                        zkController.stopEnsemble();
+                        workloadDriver.stopEnsemble();
                         System.exit(0);
                     } else {
                         currentDporPath = dporInitialPaths.remove();

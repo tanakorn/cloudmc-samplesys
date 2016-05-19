@@ -36,8 +36,8 @@ public abstract class LevelModelChecker extends ProgrammableModelChecker {
     
     public LevelModelChecker(String interceptorName, String ackName, int numNode,
             int numCrash, int numReboot, String globalStatePathDir, String levelRecordDir, 
-            String workingDir, WorkloadDriver zkController) throws FileNotFoundException {
-        super(interceptorName, ackName, numNode, globalStatePathDir, null, workingDir, zkController);
+            String workingDir, WorkloadDriver workloadDriver) throws FileNotFoundException {
+        super(interceptorName, ackName, numNode, globalStatePathDir, null, workingDir, workloadDriver);
         this.numCrash = numCrash;
         this.numReboot = numReboot;
         if (numCrash > numNode || numReboot > numCrash) {
@@ -63,8 +63,8 @@ public abstract class LevelModelChecker extends ProgrammableModelChecker {
 
     public LevelModelChecker(String inceptorName, String ackName, int numNode,
             int numCrash, int numReboot, String globalStatePathDir, String levelRecordDir, File program,
-            String workingDir, WorkloadDriver zkController) throws FileNotFoundException {
-        super(inceptorName, ackName, numNode, globalStatePathDir, program, workingDir, zkController);
+            String workingDir, WorkloadDriver workloadDriver) throws FileNotFoundException {
+        super(inceptorName, ackName, numNode, globalStatePathDir, program, workingDir, workloadDriver);
         this.numCrash = numCrash;
         this.numReboot = numReboot;
         if (numCrash > numNode || numReboot > numCrash) {
@@ -278,7 +278,7 @@ public abstract class LevelModelChecker extends ProgrammableModelChecker {
                     System.exit(1);
                 } else {
                     log.error("There might be some errors");
-                    zkController.stopEnsemble();
+                    workloadDriver.stopEnsemble();
                     System.exit(1);
                 }
             }

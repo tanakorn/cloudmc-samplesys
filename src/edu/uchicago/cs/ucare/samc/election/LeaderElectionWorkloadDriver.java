@@ -78,7 +78,6 @@ public class LeaderElectionWorkloadDriver extends WorkloadDriver {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Stopping node " + id);
         }
-        System.out.println("Stopping node " + id);
         try {
             Runtime.getRuntime().exec(workingDir + "/killNode.sh " + id);
         } catch (IOException e) {
@@ -142,8 +141,6 @@ public class LeaderElectionWorkloadDriver extends WorkloadDriver {
         	Runtime.getRuntime().exec(new String[]{"sh","-c", "rm " + ipcDir + "/new/*"});
         	Runtime.getRuntime().exec(new String[]{"sh","-c", "rm " + ipcDir + "/send/*"});
         	Runtime.getRuntime().exec(new String[]{"sh","-c", "rm " + ipcDir + "/ack/*"});
-        	
-        	System.out.println("Finished cleaning up");
         } catch (IOException e) {
         	LOG.error("Error in cleaning up ipcDir");
         }

@@ -86,7 +86,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected FileOutputStream local2File;
     protected FileOutputStream resultFile;
 
-    protected WorkloadDriver zkController;
+    protected WorkloadDriver workloadDriver;
     protected SpecVerifier verifier;
     
     protected LinkedList<Transition> currentEnabledTransitions = new LinkedList<Transition>();
@@ -107,7 +107,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
 
     @SuppressWarnings("unchecked")
 	public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
-            String testRecordDirPath, String workingDirPath, WorkloadDriver zkController) {
+            String testRecordDirPath, String workingDirPath, WorkloadDriver workloadDriver) {
         this.interceptorName = interceptorName;
         log = LoggerFactory.getLogger(this.getClass() + "." + interceptorName);
         packetQueue = new LinkedBlockingQueue<InterceptPacket>();
@@ -131,8 +131,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         this.numNode = numNode;
         this.testRecordDirPath = testRecordDirPath;
         this.workingDirPath = workingDirPath;
-        this.zkController = zkController;
-        this.verifier = zkController.verifier;
+        this.workloadDriver = workloadDriver;
+        this.verifier = workloadDriver.verifier;
         pathRecordFile = null;
         localRecordFile = null;
         codeRecordFiles = new FileOutputStream[numNode];
@@ -149,7 +149,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     
     @SuppressWarnings("unchecked")
 	public ModelCheckingServerAbstract(String interceptorName, String ackName, int numNode,
-            String testRecordDirPath, String workingDirPath, WorkloadDriver zkController, 
+            String testRecordDirPath, String workingDirPath, WorkloadDriver workloadDriver, 
             String ipcDir) {
         this.interceptorName = interceptorName;
         log = LoggerFactory.getLogger(this.getClass() + "." + interceptorName);
@@ -176,8 +176,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         this.numNode = numNode;
         this.testRecordDirPath = testRecordDirPath;
         this.workingDirPath = workingDirPath;
-        this.zkController = zkController;
-        this.verifier = zkController.verifier;
+        this.workloadDriver = workloadDriver;
+        this.verifier = workloadDriver.verifier;
         pathRecordFile = null;
         localRecordFile = null;
         codeRecordFiles = new FileOutputStream[numNode];
@@ -496,7 +496,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     }
 
     public boolean killNode(int id) {
-        zkController.stopNode(id);
+        workloadDriver.stopNode(id);
         setNodeOnline(id, false);
         for (int i = 0; i < numNode; ++i) {
             senderReceiverQueues[i][id].clear();
@@ -509,12 +509,12 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         for (int i = 0; i < numNode; ++i) {
             setNodeOnline(i, true);
         }
-        zkController.startEnsemble();
+        workloadDriver.startEnsemble();
         return true;
     }
 
     public boolean stopEnsemble() {
-        zkController.stopEnsemble();
+        workloadDriver.stopEnsemble();
         for (int i = 0; i < numNode; ++i) {
             setNodeOnline(i, false);
             for (int j = 0; j < numNode; ++j) {
@@ -807,7 +807,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     	if (isNodeOnline(id)) {
             return true;
         }
-        zkController.startNode(id);
+        workloadDriver.startNode(id);
         setNodeOnline(id, true);
         setNodeSteady(id, false);
         try {

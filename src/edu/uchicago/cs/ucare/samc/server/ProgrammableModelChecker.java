@@ -25,8 +25,8 @@ public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
     
     public ProgrammableModelChecker(String interceptorName, String ackName, 
             int numNode, String globalStatePathDir, File program, 
-            String workingDir, WorkloadDriver zkController) throws FileNotFoundException {
-        super(interceptorName, ackName, numNode, globalStatePathDir, workingDir, zkController);
+            String workingDir, WorkloadDriver workloadDriver) throws FileNotFoundException {
+        super(interceptorName, ackName, numNode, globalStatePathDir, workingDir, workloadDriver);
         this.program = program;
         afterProgramModelChecker = null;
         resetTest();

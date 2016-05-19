@@ -74,7 +74,7 @@ public class LeaderElectionRunner {
         	dirWatcher.start();
         	Thread.sleep(500);
 	        
-	        startExploreTesting(checker, numNode, workingDir, workloadDriver, isPausedEveryTest);
+	        startExploreTesting(checker, numNode, workingDir, isPausedEveryTest);
     	} catch (Exception e){
     		e.printStackTrace();
     	}
@@ -142,8 +142,8 @@ public class LeaderElectionRunner {
         return (ModelCheckingServerAbstract) modelCheckingServerAbstract;
     }
     
-    protected static void startExploreTesting(final ModelCheckingServerAbstract checker, int numNode, String workingDir,
-            WorkloadDriver zkController, boolean isPausedEveryTest) throws IOException {
+    protected static void startExploreTesting(final ModelCheckingServerAbstract checker, int numNode, String workingDir, 
+    		boolean isPausedEveryTest) throws IOException {
         File gspathDir = new File(workingDir + "/record");
         int testNum = gspathDir.list().length + 1;
         File finishedFlag = new File(workingDir + "/state/.finished");
@@ -162,7 +162,7 @@ public class LeaderElectionRunner {
                 Process reset = Runtime.getRuntime().exec("resettest " + numNode + 
                         " " + workingDir);
                 reset.waitFor();
-                zkController.resetTest();
+                workloadDriver.resetTest();
                 checker.runEnsemble();
                 workloadDriver.runWorkload();
                 checker.waitOnSteadyStatesByTimeout(); // wait on first steady state timeout

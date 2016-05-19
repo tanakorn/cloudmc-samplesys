@@ -18,16 +18,16 @@ public class DfsLevelModelChecker extends LevelModelChecker {
     
     public DfsLevelModelChecker(String interceptorName, String ackName, int numNode, 
             int numCrash, int numReboot, String globalStatePathDir, String levelRecordDir, 
-            String workingDir, WorkloadDriver zkController) throws FileNotFoundException {
+            String workingDir, WorkloadDriver workloadDriver) throws FileNotFoundException {
         super(interceptorName, ackName, numNode, numCrash, numReboot, globalStatePathDir, 
-                levelRecordDir, workingDir, zkController);
+                levelRecordDir, workingDir, workloadDriver);
     }
     
     public DfsLevelModelChecker(String inceptorName, String ackName, int numNode, 
             int numCrash, int numReboot, String globalStatePathDir, String levelRecordDir, File program,
-            String workingDir, WorkloadDriver zkController) throws FileNotFoundException {
+            String workingDir, WorkloadDriver workloadDriver) throws FileNotFoundException {
         super(inceptorName, ackName, numNode, numCrash, numReboot, globalStatePathDir, 
-                levelRecordDir, program, workingDir, zkController);
+                levelRecordDir, program, workingDir, workloadDriver);
     }
 
     @Override
@@ -201,7 +201,7 @@ public class DfsLevelModelChecker extends LevelModelChecker {
                         continue;
                     }
                   }
-                  boolean verifiedResult = zkController.verifier.verify();
+                  boolean verifiedResult = workloadDriver.verifier.verify();
                   exploredTransitionRecorder.markBelowSubtreeFinished();
                   recordTestId();
                   exploredTransitionRecorder.noteThisNode(".result", verifiedResult ? "pass" : "failed");
@@ -274,7 +274,7 @@ public class DfsLevelModelChecker extends LevelModelChecker {
                   System.exit(1);
               } else {
                   log.error("There might be some errors");
-                  zkController.stopEnsemble();
+                  workloadDriver.stopEnsemble();
                   System.exit(1);
               }
           }

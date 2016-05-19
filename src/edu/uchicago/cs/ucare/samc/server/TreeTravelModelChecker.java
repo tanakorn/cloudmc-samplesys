@@ -30,8 +30,8 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
     
     public TreeTravelModelChecker(String interceptorName, String ackName, int numNode,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, 
-            String workingDir, WorkloadDriver zkController, String ipcDir) {
-        super(interceptorName, ackName, numNode, globalStatePathDir, workingDir, zkController, 
+            String workingDir, WorkloadDriver workloadDriver, String ipcDir) {
+        super(interceptorName, ackName, numNode, globalStatePathDir, workingDir, workloadDriver, 
         		ipcDir);
         try {
             this.numCrash = numCrash;
@@ -179,12 +179,12 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                 } else if (exploredBranchRecorder.getCurrentDepth() == 0) {
                 	System.out.println("Finished exploring all states");
                     log.warn("Finished exploring all states");
-                    zkController.stopEnsemble();
+                    workloadDriver.stopEnsemble();
                     System.exit(0);
                 } else {
                 	System.out.println("There might be some errors");
                     log.error("There might be some errors");
-                    zkController.stopEnsemble();
+                    workloadDriver.stopEnsemble();
                     System.exit(1);
                 }
             }
