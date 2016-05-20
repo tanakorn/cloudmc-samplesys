@@ -40,8 +40,8 @@ cp $scriptdir/readconfig $working_dir/readconfig
 cp $scriptdir/resource/le_log.properties $working_dir/
 cp $scriptdir/resource/runnode $working_dir/
 cp $scriptdir/resource/mc_log.properties $working_dir/
-sed "s:WORKING_DIR:$working_dir:" $scriptdir/resource/samplelerunner.sh > $working_dir/samplelerunner.sh
-chmod 755 $working_dir/samplelerunner.sh
+sed "s:WORKING_DIR:$working_dir:" $scriptdir/resource/sampleleRunner.sh > $working_dir/sampleleRunner.sh
+chmod 755 $working_dir/sampleleRunner.sh
 sed "s:WORKING_DIR:$working_dir:" $scriptdir/resource/startNode.sh > $working_dir/startNode.sh
 chmod 755 $working_dir/startNode.sh
 cp $scriptdir/resource/killNode.sh $working_dir/killNode.sh
