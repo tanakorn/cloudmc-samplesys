@@ -159,7 +159,7 @@ public class LeaderElectionRunner {
             for (; !finishedFlag.exists(); ++testNum) {
                 waitingFlag.delete();
                 checker.setTestId(testNum);
-                Process reset = Runtime.getRuntime().exec("resettest " + numNode + 
+                Process reset = Runtime.getRuntime().exec("./bin/resettest " + numNode + 
                         " " + workingDir);
                 reset.waitFor();
                 workloadDriver.resetTest();

@@ -33,6 +33,7 @@ cp $scriptdir/resettest $working_dir/bin/resettest
 cp $scriptdir/setlemc_testid $working_dir/bin/setlemc_testid
 
 cp $scriptdir/dmck.conf $working_dir/dmck.conf
+cp $scriptdir/readconfig $working_dir/readconfig
 
 #mkdir $working_dir/log
 

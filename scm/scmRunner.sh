@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-dmck_dir=/home/jeff/Huawei/SAMC-IPC
-classpath=$dmck_dir/bin
-lib=$dmck_dir/lib
+. ./readconfig
+
+classpath=$samc_dir/bin
+lib=$samc_dir/lib
 for j in `ls $lib/*.jar`; do
   classpath=$classpath:$j
 done

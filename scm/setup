@@ -20,6 +20,7 @@ sed "s:WORKING_DIR:$working_dir:" $scriptdir/scmRunner.sh > $working_dir/scmRunn
 chmod 755 $working_dir/scmRunner.sh
 cp $scriptdir/killNode.sh $working_dir/killNode.sh
 chmod 755 $working_dir/killNode.sh
+cp $scriptdir/readconfig $working_dir/readconfig
 cp $scriptdir/dmck.conf $working_dir/dmck.conf
 cp $scriptdir/target-sys.conf $working_dir/target-sys.conf
 echo traversal_record_dir=$working_dir/state >> $working_dir/target-sys.conf
