@@ -1,0 +1,145 @@
+package edu.uchicago.cs.ucare.samc.concoord;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.util.Properties;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import edu.uchicago.cs.ucare.samc.server.FileWatcher;
+import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
+import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
+import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
+
+public class ConcoordRunner{
+
+    final static Logger LOG = LoggerFactory.getLogger(ConcoordRunner.class);
+    
+	static WorkloadDriver ensembleController;
+	
+	public static void main(String[] argv){
+		String configFileLocation = null;
+		if (argv.length == 0) {
+            System.err.println("Please specify test config file");
+            System.exit(1);
+        }
+		boolean pauseEveryPathExploration = false;
+        for (String param : argv) {
+            if (param.equals("-p")) {
+            	pauseEveryPathExploration = true;
+            } else {
+                configFileLocation = param;
+            }
+        }
+        
+        prepareModelChecker(configFileLocation, pauseEveryPathExploration);
+	}
+	
+	public static void prepareModelChecker(String configFileLocation, boolean pauseEveryPathExploration){
+    	try{
+	    	Properties config = new Properties();
+	        FileInputStream configInputStream = new FileInputStream(configFileLocation);
+	        
+	        config.load(configInputStream);
+	        configInputStream.close();
+	        String workingDir = config.getProperty("working_dir");
+	        String ipcDir = config.getProperty("ipc_dir");
+	        String workload = config.getProperty("workload_driver");
+	        int numNode = Integer.parseInt(config.getProperty("num_node"));
+	        
+	        @SuppressWarnings("unchecked")
+	        Class<? extends WorkloadDriver> ensembleControllerClass = (Class<? extends WorkloadDriver>) Class.forName(workload);
+	        Constructor<? extends WorkloadDriver> ensembleControllerConstructor = ensembleControllerClass.getConstructor(Integer.TYPE, 
+	        		String.class, String.class);
+	        ensembleController = ensembleControllerConstructor.newInstance(numNode, workingDir, ipcDir);
+	        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/target-sys.conf", workingDir, 
+	        		ensembleController, ipcDir);
+	        
+	        // activate Directory Watcher
+            Thread dirWatcher;
+        	dirWatcher = new Thread(new FileWatcher(ipcDir, checker));
+        	dirWatcher.start();
+        	Thread.sleep(500);
+        	
+        	// start path explorations
+        	startExploreTesting(checker, numNode, workingDir, ensembleController, pauseEveryPathExploration);
+	        
+    	} catch (Exception e){
+    		e.printStackTrace();
+    	}
+    }
+	
+	protected static ModelCheckingServerAbstract createModelCheckerFromConf(String confFile, 
+            String workingDir, WorkloadDriver ensembleController, String ipcDir) {
+		ModelCheckingServerAbstract modelCheckingServerAbstract = null;
+		try {
+            Properties prop = new Properties();
+            FileInputStream configInputStream = new FileInputStream(confFile);
+            prop.load(configInputStream);
+            configInputStream.close();
+            
+            String interceptorName = prop.getProperty("mc_name");
+            int numNode = Integer.parseInt(prop.getProperty("num_node"));
+            String testRecordDir = prop.getProperty("test_record_dir");
+            String traversalRecordDir = prop.getProperty("traversal_record_dir");
+            String strategy = prop.getProperty("exploring_strategy");
+            int numCrash = Integer.parseInt(prop.getProperty("num_crash"));
+            int numReboot = Integer.parseInt(prop.getProperty("num_reboot"));
+            String verifierName = prop.getProperty("verifier");
+            String ackName = "Ack";
+            
+            @SuppressWarnings("unchecked")
+            Class<? extends SpecVerifier> verifierClass = (Class<? extends SpecVerifier>) Class.forName(verifierName);
+            Constructor<? extends SpecVerifier> verifierConstructor = verifierClass.getConstructor();
+            SpecVerifier verifier = verifierConstructor.newInstance();
+            ensembleController.setVerifier(verifier);
+            LOG.info("State exploration strategy is " + strategy);
+            @SuppressWarnings("unchecked")
+            Class<? extends ModelCheckingServerAbstract> modelCheckerClass = (Class<? extends ModelCheckingServerAbstract>) Class.forName(strategy);
+            Constructor<? extends ModelCheckingServerAbstract> modelCheckerConstructor = modelCheckerClass.getConstructor(String.class, 
+                    String.class, Integer.TYPE, Integer.TYPE, Integer.TYPE, String.class, String.class, 
+                    String.class, WorkloadDriver.class, String.class);
+            modelCheckingServerAbstract = modelCheckerConstructor.newInstance(interceptorName, ackName, 
+                    numNode, numCrash, numReboot, testRecordDir, traversalRecordDir, workingDir, 
+                    ensembleController, ipcDir);
+            verifier.modelCheckingServer = modelCheckingServerAbstract;
+		} catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (ModelCheckingServerAbstract) modelCheckingServerAbstract;
+	}
+	
+	protected static void startExploreTesting(ModelCheckingServerAbstract checker, int numNode, String workingDir,
+            WorkloadDriver concoordWorkloadDriver, boolean pauseEveryPathExploration) throws IOException {
+        File gspathDir = new File(workingDir + "/record");
+        int testNum = gspathDir.list().length + 1;
+        File finishedFlag = new File(workingDir + "/state/.finished");
+        File waitingFlag = new File(workingDir + "/state/.waiting");
+        
+        try {
+            for (; !finishedFlag.exists(); ++testNum) {
+                waitingFlag.delete();
+                checker.setTestId(testNum);
+                concoordWorkloadDriver.resetTest();
+                checker.runEnsemble();
+                ensembleController.runWorkload();
+                checker.waitOnSteadyStatesByTimeout(); // wait on first steady state timeout
+                while (!waitingFlag.exists()) {
+                    Thread.sleep(30);
+                }
+                checker.stopEnsemble();
+                if (pauseEveryPathExploration) {
+                    System.out.print("enter to continue");
+                    System.in.read();
+                }
+            }
+            System.exit(0);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}

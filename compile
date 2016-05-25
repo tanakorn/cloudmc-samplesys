@@ -6,6 +6,8 @@ elif [ $# -eq 1 ] && [ $1 == 'scm' ]; then
 	ant clean && ant && ./scm/setup
 elif [ $# -eq 1 ] && [ $1 == 'sample-le' ]; then
 	ant clean && ant && ./sample-le/setup
+elif [ $# -eq 1 ] && [ $1 == 'concoord-le' ]; then
+	ant clean && ant && ./concoord-le/setup
 else
 	echo "usage: ./compile [optional : scm / sample-le]"
   exit 1
