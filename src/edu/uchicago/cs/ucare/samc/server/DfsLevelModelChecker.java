@@ -1,6 +1,5 @@
 package edu.uchicago.cs.ucare.samc.server;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collections;
@@ -18,18 +17,11 @@ public class DfsLevelModelChecker extends LevelModelChecker {
     
     public DfsLevelModelChecker(String interceptorName, String ackName, int numNode, 
             int numCrash, int numReboot, String globalStatePathDir, String levelRecordDir, 
-            String workingDir, WorkloadDriver workloadDriver) throws FileNotFoundException {
+            String workingDir, WorkloadDriver workloadDriver, String ipcDir) throws FileNotFoundException {
         super(interceptorName, ackName, numNode, numCrash, numReboot, globalStatePathDir, 
-                levelRecordDir, workingDir, workloadDriver);
+                levelRecordDir, workingDir, workloadDriver, ipcDir);
     }
     
-    public DfsLevelModelChecker(String inceptorName, String ackName, int numNode, 
-            int numCrash, int numReboot, String globalStatePathDir, String levelRecordDir, File program,
-            String workingDir, WorkloadDriver workloadDriver) throws FileNotFoundException {
-        super(inceptorName, ackName, numNode, numCrash, numReboot, globalStatePathDir, 
-                levelRecordDir, program, workingDir, workloadDriver);
-    }
-
     @Override
     public void resetTest() {
         super.resetTest();
@@ -222,8 +214,8 @@ public class DfsLevelModelChecker extends LevelModelChecker {
               LinkedList<Transition> transitions = new LinkedList<Transition>();
               int transitionHash = nextTransitionOrder(currentLevelPackets, transitions);
               if (transitionHash != 0) {
-                  if (log.isDebugEnabled()) {
-                      log.debug("Transition order for " + transitionHash + "\n" + 
+                  if (LOG.isDebugEnabled()) {
+                      LOG.debug("Transition order for " + transitionHash + "\n" + 
                               Transition.extract(transitions));
                   }
                   exploredTransitionRecorder.createChild(transitionHash);
@@ -238,7 +230,7 @@ public class DfsLevelModelChecker extends LevelModelChecker {
                               updateGlobalState();
                           }
                       } catch (IOException e) {
-                          log.error("", e);
+                          LOG.error("", e);
                       }
                   }
                   boolean isThereNextLevel = isThereEnabledPacket();
@@ -263,17 +255,17 @@ public class DfsLevelModelChecker extends LevelModelChecker {
                                        Transition.extract(transitions));
                                exploredTransitionRecorder.noteThisNode(".next_level", isThereNextLevel + "",  true);
                            } catch (IOException e) {
-                               log.error("", e);
+                               LOG.error("", e);
                            }
                        }
                   }
                   currentLevelPackets.clear();
                   currentLevelTransitions.clear();
               } else if (exploredTransitionRecorder.getCurrentDepth() == 0) {
-                  log.warn("Finished exploring all states");
+                  LOG.warn("Finished exploring all states");
                   System.exit(1);
               } else {
-                  log.error("There might be some errors");
+                  LOG.error("There might be some errors");
                   workloadDriver.stopEnsemble();
                   System.exit(1);
               }

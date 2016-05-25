@@ -5,9 +5,11 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Random;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.almworks.sqlite4java.SQLiteException;
 
+import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
 import edu.uchicago.cs.ucare.samc.transition.NodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeOperationTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeStartTransition;
@@ -37,7 +39,7 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
         try {
             exploredBranchRecorder = new SqliteExploredBranchRecorder(packetRecordDir);
         } catch (SQLiteException e) {
-            log.error("", e);
+            LOG.error("", e);
         }
         random = new Random(System.currentTimeMillis());
         resetTest();
@@ -58,7 +60,7 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
         try {
             waiting.createNewFile();
         } catch (IOException e) {
-            log.error("", e);
+            LOG.error("", e);
         }
     }
     
@@ -112,7 +114,9 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
             while (true) {
                 getOutstandingTcpPacketTransition(currentEnabledTransitions);
                 adjustCrashReboot(currentEnabledTransitions);
-                if (currentEnabledTransitions.isEmpty() && numWaitTime >= 2) {
+                printTransitionQueues(currentEnabledTransitions);
+                boolean terminationPoint = checkTerminationPoint(currentEnabledTransitions);
+                if (terminationPoint && numWaitTime >= 2) {
                     boolean verifiedResult = verifier.verify();
                     String detail = verifier.verificationDetail();
                     saveResult(verifiedResult + " ; " + detail + "\n");
@@ -121,7 +125,7 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
                 	System.out.println("---- End of Path Execution ----");
                     resetTest();
                     break;
-                } else if (currentEnabledTransitions.isEmpty()) {
+                } else if (terminationPoint) {
                     try {
                         numWaitTime++;
                         Thread.sleep(100);
@@ -130,11 +134,34 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
                     continue;
                 }
                 numWaitTime = 0;
-                Transition transition = nextTransition(currentEnabledTransitions);
+                Transition transition;
+                // take next path based on initial path or current policy
+                boolean recordPath = true;
+                if(hasInitialPath && !hasFinishedInitialPath){
+                	System.out.println("[INFO] directed by initial path");
+                	transition = nextInitialTransition(currentEnabledTransitions);
+                	recordPath = false;
+                } else {
+                	transition = nextTransition(currentEnabledTransitions);
+                }
                 if (transition != null) {
-                    exploredBranchRecorder.createChild(transition.getTransitionId());
-                    exploredBranchRecorder.traverseDownTo(transition.getTransitionId());
-                    exploredBranchRecorder.noteThisNode(".packets", transition.toString(), false);
+                	if(recordPath){
+	                    exploredBranchRecorder.createChild(transition.getTransitionId());
+	                    exploredBranchRecorder.traverseDownTo(transition.getTransitionId());
+	                    exploredBranchRecorder.noteThisNode(".packets", transition.toString(), false);
+                	}
+                	// check next event execution
+                	boolean cleanTransition = verifier.verifyNextTransition(transition);
+                	if(!cleanTransition){
+                		String detail = verifier.verificationDetail();
+                        saveResult(cleanTransition + " ; " + detail + "\n");
+                        recordTestId();
+                        exploredBranchRecorder.markBelowSubtreeFinished();
+                    	System.out.println("[NEXT TRANSITION] False next transition");
+                    	System.out.println("---- End of Path Execution ----");
+                        resetTest();
+                        break;
+                	}
                     try {
                         saveLocalState();
                         if (transition instanceof AbstractNodeOperationTransition) {
@@ -149,17 +176,35 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
                         pathRecordFile.write((transition.toString() + "\n").getBytes());
                         if (transition.apply()) {
                             updateGlobalState();
+                            // jef : remove just crashed node events in queue
+                            if(transition instanceof NodeCrashTransition){
+                            	NodeCrashTransition crash = (NodeCrashTransition) transition;
+                                ListIterator<Transition> iter = currentEnabledTransitions.listIterator();
+                                while (iter.hasNext()) {
+                                    Transition t = iter.next();
+                                    if (t instanceof PacketSendTransition) {
+                                        PacketSendTransition p = (PacketSendTransition) t;
+                                        if (p.getPacket().getFromId() == crash.getId()) {
+                                        	System.out.println("[DEBUG] remove event: " + p.toString());
+                                            iter.remove();
+                                        }
+                                    }
+                                }
+                                for (ConcurrentLinkedQueue<InterceptPacket> queue : senderReceiverQueues[crash.getId()]) {
+                                    queue.clear();
+                                }
+                            }
                         }
                     } catch (IOException e) {
-                        log.error("", e);
+                        LOG.error("", e);
                     }
                 } else if (exploredBranchRecorder.getCurrentDepth() == 0) {
-                    log.warn("Finished exploring all states");
+                    LOG.warn("Finished exploring all states");
                 } else {
                     try {
                         pathRecordFile.write("duplicated\n".getBytes());
                     } catch (IOException e) {
-                        log.error("", e);
+                        LOG.error("", e);
                     }
                     resetTest();
                     break;

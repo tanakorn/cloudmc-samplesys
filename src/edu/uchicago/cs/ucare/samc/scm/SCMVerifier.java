@@ -4,11 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
+import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
 
 public class SCMVerifier extends SpecVerifier {
 	
-	protected static final Logger log = LoggerFactory.getLogger(SCMVerifier.class);
+	protected static final Logger LOG = LoggerFactory.getLogger(SCMVerifier.class);
     
 	boolean pathState;
 	String pathOrder;
@@ -22,6 +23,7 @@ public class SCMVerifier extends SpecVerifier {
     	this.modelCheckingServer = modelCheckingServer;
     }
 
+    @Override
     public boolean verify(){
     	pathOrder = modelCheckingServer.scmStates;
     	if(modelCheckingServer.scmStates.length() > 2){
@@ -34,6 +36,13 @@ public class SCMVerifier extends SpecVerifier {
     	return true;
     }
     
+    @Override
+	public boolean verifyNextTransition(Transition transition) {
+    	// none
+		return true;
+	}
+
+    @Override
     public String verificationDetail(){
     	if(pathState){
         	return "Current path (" + pathOrder +") doesn't have 'bac' order in its order.";

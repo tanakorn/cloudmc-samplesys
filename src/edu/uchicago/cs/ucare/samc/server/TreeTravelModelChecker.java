@@ -21,8 +21,6 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
     
     protected String stateDir;
     protected ExploredBranchRecorder exploredBranchRecorder;
-    protected LinkedList<InterceptPacket> enabledPacketList;
-    protected LinkedList<Transition> enabledTransitionList;
     protected int numCrash;
     protected int numReboot;
     protected int currentCrash;
@@ -39,7 +37,7 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
             this.stateDir = packetRecordDir;
             exploredBranchRecorder = new SqliteExploredBranchRecorder(packetRecordDir);
         } catch (SQLiteException e) {
-            log.error("", e);
+            LOG.error("", e);
         }
         resetTest();
     }
@@ -53,14 +51,13 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
         }
         super.resetTest();
         modelChecking = new PathTraversalWorker();
-        enabledPacketList = new LinkedList<InterceptPacket>();
-        enabledTransitionList = new LinkedList<Transition>();
+        currentEnabledTransitions = new LinkedList<Transition>();
         exploredBranchRecorder.resetTraversal();
         File waiting = new File(stateDir + "/.waiting");
         try {
             waiting.createNewFile();
         } catch (IOException e) {
-            log.error("", e);
+            LOG.error("", e);
         }
         currentCrash = 0;
         currentReboot = 0;
@@ -111,9 +108,11 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
             LinkedList<LinkedList<Transition>> pastEnabledTransitionList = 
                     new LinkedList<LinkedList<Transition>>();
             while (true) {
-            	getOutstandingTcpPacketTransition(enabledTransitionList);
-            	adjustCrashAndReboot(enabledTransitionList);
-                if (enabledTransitionList.isEmpty() && hasWaited) {
+            	getOutstandingTcpPacketTransition(currentEnabledTransitions);
+            	adjustCrashAndReboot(currentEnabledTransitions);
+            	printTransitionQueues(currentEnabledTransitions);
+            	boolean terminationPoint = checkTerminationPoint(currentEnabledTransitions);
+                if (terminationPoint && hasWaited) {
                 	boolean verifiedResult = verifier.verify();
                     String detail = verifier.verificationDetail();
                     saveResult(verifiedResult + " ; " + detail + "\n");
@@ -135,7 +134,7 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                 		resetTest();
                         break;
                 	}
-                } else if(enabledTransitionList.isEmpty()){
+                } else if(terminationPoint){
                 	try {
                     	System.out.println("[DEBUG] wait for any long process");
                         hasWaited = true;
@@ -146,19 +145,41 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                     continue;
                 }
                 hasWaited = false;
-                pastEnabledTransitionList.addFirst((LinkedList<Transition>) enabledTransitionList.clone());
-                Transition nextTransition = nextTransition(enabledTransitionList);
-                if (nextTransition != null) {
-                    exploredBranchRecorder.createChild(nextTransition.getTransitionId());
-                    exploredBranchRecorder.traverseDownTo(nextTransition.getTransitionId());
-                    exploredBranchRecorder.noteThisNode(".packet", nextTransition.toString());
+                pastEnabledTransitionList.addFirst((LinkedList<Transition>) currentEnabledTransitions.clone());
+                Transition transition;
+                boolean recordPath = true;
+                if(hasInitialPath && !hasFinishedInitialPath){
+                	transition = nextInitialTransition(currentEnabledTransitions);
+                	System.out.println("[INFO] next transition is directed by initialPath");
+                	recordPath = false;
+                } else {
+                    transition = nextTransition(currentEnabledTransitions);
+                }
+                if (transition != null) {
+                	if(recordPath){
+	                    exploredBranchRecorder.createChild(transition.getTransitionId());
+	                    exploredBranchRecorder.traverseDownTo(transition.getTransitionId());
+	                    exploredBranchRecorder.noteThisNode(".packet", transition.toString());
+                	}
+                	// check next event execution
+                	boolean cleanTransition = verifier.verifyNextTransition(transition);
+                	if(!cleanTransition){
+                		String detail = verifier.verificationDetail();
+                        saveResult(cleanTransition + " ; " + detail + "\n");
+                        recordTestId();
+                        exploredBranchRecorder.markBelowSubtreeFinished();
+                    	System.out.println("[NEXT TRANSITION] False next transition");
+                    	System.out.println("---- End of Path Execution ----");
+                        resetTest();
+                        break;
+                	}
                     try {
-                        if (nextTransition.apply()) {
-                            pathRecordFile.write((nextTransition.toString() + "\n").getBytes());
+                        if (transition.apply()) {
+                            pathRecordFile.write((transition.toString() + "\n").getBytes());
                             updateGlobalState();
-                            if (nextTransition instanceof NodeCrashTransition) {
-                                NodeCrashTransition crash = (NodeCrashTransition) nextTransition;
-                                ListIterator<Transition> iter = enabledTransitionList.listIterator();
+                            if (transition instanceof NodeCrashTransition) {
+                                NodeCrashTransition crash = (NodeCrashTransition) transition;
+                                ListIterator<Transition> iter = currentEnabledTransitions.listIterator();
                                 while (iter.hasNext()) {
                                     Transition t = iter.next();
                                     if (t instanceof PacketSendTransition) {
@@ -174,16 +195,16 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                             }
                         }
                     } catch (Exception e) {
-                        log.error("", e);
+                        LOG.error("", e);
                     }
                 } else if (exploredBranchRecorder.getCurrentDepth() == 0) {
                 	System.out.println("Finished exploring all states");
-                    log.warn("Finished exploring all states");
+                    LOG.warn("Finished exploring all states");
                     workloadDriver.stopEnsemble();
                     System.exit(0);
                 } else {
                 	System.out.println("There might be some errors");
-                    log.error("There might be some errors");
+                    LOG.error("There might be some errors");
                     workloadDriver.stopEnsemble();
                     System.exit(1);
                 }

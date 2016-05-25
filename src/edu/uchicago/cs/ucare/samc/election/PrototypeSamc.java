@@ -101,17 +101,17 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                 finishedDporInitialPaths = new HashSet<LinkedList<TransitionTuple>>();
             }
         } catch (FileNotFoundException e1) {
-            log.warn("", e1);
+            LOG.warn("", e1);
         } catch (IOException e1) {
-            log.warn("", e1);
+            LOG.warn("", e1);
         } catch (ClassNotFoundException e) {
-            log.warn("", e);
+            LOG.warn("", e);
         }
         stateDir = packetRecordDir;
         try {
             exploredBranchRecorder = new SqliteExploredBranchRecorder(packetRecordDir);
         } catch (SQLiteException e) {
-            log.error("", e);
+            LOG.error("", e);
         }
         this.workingDir = workingDir;
         resetTest();
@@ -135,7 +135,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         try {
             waiting.createNewFile();
         } catch (IOException e) {
-            log.error("", e);
+            LOG.error("", e);
         }
         prevLocalStates = new LinkedList<LeaderElectionLocalState[]>();
     }
@@ -277,7 +277,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         newDporInitialPath.add(newTransition);
         String newPath = pathToString(newDporInitialPath);
         if (!finishedDporInitialPaths.contains(newDporInitialPath) && !finishedDporInitialPathStrings.contains(newPath)) {
-            log.info("Transition " + newTransition.transition + " is dependent with " + oldTransition.transition + " at state " + oldTransition.state + " " + newDporInitialPath.hashCode());
+            LOG.info("Transition " + newTransition.transition + " is dependent with " + oldTransition.transition + " at state " + oldTransition.state + " " + newDporInitialPath.hashCode());
             dporInitialPaths.add(newDporInitialPath);
             finishedDporInitialPaths.add(newDporInitialPath);
             finishedDporInitialPathStrings.add(newPath);
@@ -309,22 +309,22 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
             oos.writeObject(dumbFinishedDporInitialPaths);
             oos.close();
         } catch (FileNotFoundException e) {
-            log.error("", e);
+            LOG.error("", e);
         } catch (IOException e) {
-            log.error("", e);
+            LOG.error("", e);
         }
     }
     
     protected void findDPORInitialPaths() {
         calculateDPORInitialPaths();
-        log.info("There are " + dporInitialPaths.size() + " initial path of DPOR");
+        LOG.info("There are " + dporInitialPaths.size() + " initial path of DPOR");
         int i = 1;
         for (LinkedList<TransitionTuple> path : dporInitialPaths) {
             String tmp = "DPOR path no. " + i++ + "\n";
             for (TransitionTuple tuple : path) {
                 tmp += tuple.toString() + "\n";
             }
-            log.info(tmp);
+            LOG.info(tmp);
         }
         saveDPORInitialPaths();
     }
@@ -337,18 +337,19 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
 		@Override
         public void run() {
             if (currentDporPath != null) {
-                log.info("There is existing DPOR initial path, start with this path first");
+                LOG.info("There is existing DPOR initial path, start with this path first");
                 String tmp = "DPOR initial path\n";
                 for (TransitionTuple tuple : currentDporPath) {
                     tmp += tuple.toString() + "\n";
                 }
-                log.info(tmp);
+                LOG.info(tmp);
                 for (TransitionTuple tuple : currentDporPath) {
                     getOutstandingTcpPacketTransition(currentEnabledTransitions);
                     getOutstandingDiskWrite(currentEnabledTransitions);
                     adjustCrashReboot(currentEnabledTransitions);
                     updateGlobalState2();
                     recordEnabledTransitions(globalState2, currentEnabledTransitions);
+                    printTransitionQueues(currentEnabledTransitions);
                     boolean isThereThisTuple = false;
                     for (int i = 0; i < 35; ++i) {
                         if (tuple.transition instanceof NodeCrashTransition) {
@@ -371,20 +372,20 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                                 getOutstandingDiskWrite(currentEnabledTransitions);
                                 adjustCrashReboot(currentEnabledTransitions);
                             } catch (InterruptedException e) {
-                                log.error("", e);
+                                LOG.error("", e);
                             }
                         }
                     }
                     if (!isThereThisTuple) {
-                        log.error("Being in wrong state, there is not transition " + 
+                        LOG.error("Being in wrong state, there is not transition " + 
                                 tuple.transition.getTransitionId() + " to apply");
                         try {
                             pathRecordFile.write("no transition\n".getBytes());
                         } catch (IOException e) {
-                            log.error("", e);
+                            LOG.error("", e);
                         }
                         if (!initialPathSecondAttempt.contains(currentDporPath)) {
-                            log.warn("Try this initial path one more time");
+                            LOG.warn("Try this initial path one more time");
                             dporInitialPaths.addFirst(currentDporPath);
                             initialPathSecondAttempt.add(currentDporPath);
                         }
@@ -421,7 +422,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                             }
                         }
                     } catch (IOException e) {
-                        log.error("", e);
+                        LOG.error("", e);
                     }
                     exploredBranchRecorder.createChild(tuple.transition.getTransitionId());
                     exploredBranchRecorder.traverseDownTo(tuple.transition.getTransitionId());
@@ -430,7 +431,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                     } 
                 }
             }
-            log.info("Try to find new path/Continue from DPOR initial path");
+            LOG.info("Try to find new path/Continue from DPOR initial path");
             boolean hasWaited = false;
             while (true) {
                 getOutstandingTcpPacketTransition(currentEnabledTransitions);
@@ -438,6 +439,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                 adjustCrashReboot(currentEnabledTransitions);
                 updateGlobalState2();
                 recordEnabledTransitions(globalState2, currentEnabledTransitions);
+                printTransitionQueues(currentEnabledTransitions);
                 if (currentEnabledTransitions.isEmpty() && hasWaited) {
                     boolean verifiedResult = verifier.verify();
                     String detail = verifier.verificationDetail();
@@ -446,13 +448,13 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                     for (TransitionTuple tuple : currentExploringPath) {
                         mainPath += tuple.toString() + "\n";
                     }
-                    log.info("Main path\n" + mainPath);
+                    LOG.info("Main path\n" + mainPath);
                     exploredBranchRecorder.markBelowSubtreeFinished();
                     findDPORInitialPaths();
                     if (dporInitialPaths.size() == 0) {
                         exploredBranchRecorder.resetTraversal();
                         exploredBranchRecorder.markBelowSubtreeFinished();
-                        log.warn("Finished exploring all states");
+                        LOG.warn("Finished exploring all states");
                         workloadDriver.stopEnsemble();
                         System.exit(0);
                     } else {
@@ -499,13 +501,13 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                             }
                         }
                     } catch (IOException e) {
-                        log.error("", e);
+                        LOG.error("", e);
                     }
                     exploredBranchRecorder.createChild(transition.getTransitionId());
                     exploredBranchRecorder.traverseDownTo(transition.getTransitionId());
                 } else if (exploredBranchRecorder.getCurrentDepth() == 0) {
                 	System.out.println("Finished exploring all states");
-                    log.warn("Finished exploring all states");
+                    LOG.warn("Finished exploring all states");
                 } else {
                     if (dporInitialPaths.size() == 0) {
                         exploredBranchRecorder.resetTraversal();
@@ -517,7 +519,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                     try {
                         pathRecordFile.write("duplicated\n".getBytes());
                     } catch (IOException e) {
-                        log.error("", e);
+                        LOG.error("", e);
                     }
                     resetTest();
                     break;

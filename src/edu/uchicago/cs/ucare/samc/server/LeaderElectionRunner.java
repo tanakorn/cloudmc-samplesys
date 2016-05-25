@@ -2,21 +2,15 @@ package edu.uchicago.cs.ucare.samc.server;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.samc.server.FileWatcher;
-import edu.uchicago.cs.ucare.samc.server.ModelCheckingServer;
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
@@ -66,7 +60,7 @@ public class LeaderElectionRunner {
 	        Constructor<? extends WorkloadDriver> workloadDriverConstructor = workloadDriverClass.getConstructor(Integer.TYPE, String.class, 
 	        		String.class, String.class, String.class);
 	        workloadDriver = workloadDriverConstructor.newInstance(numNode, workingDir, ipcDir, samcDir, targetSysDir);
-	        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/target-sys.conf", workingDir, workloadDriver, ipcDir);
+	        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/target-sys.conf", workingDir, ipcDir);
 	        
 	        // activate Directory Watcher
 	        Thread dirWatcher;   
@@ -82,7 +76,7 @@ public class LeaderElectionRunner {
     
     @SuppressWarnings("unchecked")
 	protected static ModelCheckingServerAbstract createModelCheckerFromConf(String confFile, 
-            String workingDir, WorkloadDriver ensembleController, String ipcDir) throws ClassNotFoundException, 
+            String workingDir, String ipcDir) throws ClassNotFoundException, 
             NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, 
             IllegalArgumentException, InvocationTargetException {
         ModelCheckingServerAbstract modelCheckingServerAbstract = null;
@@ -98,12 +92,13 @@ public class LeaderElectionRunner {
             String strategy = prop.getProperty("exploring_strategy");
             int numCrash = Integer.parseInt(prop.getProperty("num_crash"));
             int numReboot = Integer.parseInt(prop.getProperty("num_reboot"));
+            String initialPath = prop.getProperty("initial_path") != null ? prop.getProperty("initial_path") : "";
             String verifierName = prop.getProperty("verifier");
             String ackName = "Ack";
             Class<? extends SpecVerifier> verifierClass = (Class<? extends SpecVerifier>) Class.forName(verifierName);
             Constructor<? extends SpecVerifier> verifierConstructor = verifierClass.getConstructor();
             SpecVerifier verifier = verifierConstructor.newInstance();
-            ensembleController.setVerifier(verifier);
+            workloadDriver.setVerifier(verifier);
             LOG.info("State exploration strategy is " + strategy);
             Class<? extends ModelCheckingServerAbstract> modelCheckerClass = (Class<? extends ModelCheckingServerAbstract>) Class.forName(strategy);
             
@@ -115,28 +110,18 @@ public class LeaderElectionRunner {
                 LOG.info("Inspect potential bug in: " + programFileName);
                 File program = new File(programFileName);
                 modelCheckingServerAbstract = new ProgrammableModelChecker(interceptorName, ackName, numNode, 
-                        testRecordDir, program, workingDir, ensembleController);
+                        testRecordDir, program, workingDir, workloadDriver, ipcDir);
             } else {
                 Constructor<? extends ModelCheckingServerAbstract> modelCheckerConstructor = modelCheckerClass.getConstructor(
                 		String.class, String.class, Integer.TYPE, Integer.TYPE, Integer.TYPE, String.class, String.class, 
                         String.class, WorkloadDriver.class, String.class);
                 modelCheckingServerAbstract = modelCheckerConstructor.newInstance(interceptorName, ackName, 
                         numNode, numCrash, numReboot, testRecordDir, traversalRecordDir, workingDir,
-                        ensembleController, ipcDir);
+                        workloadDriver, ipcDir);
             }
-            
+            modelCheckingServerAbstract.setInitialPath(initialPath);
             verifier.modelCheckingServer = modelCheckingServerAbstract;
-            if(ipcDir == ""){
-	            ModelCheckingServer interceptorStub = (ModelCheckingServer) 
-	                    UnicastRemoteObject.exportObject(modelCheckingServerAbstract, 0);
-	            Registry r = LocateRegistry.getRegistry();
-	            r.rebind(interceptorName, interceptorStub);
-            }
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return (ModelCheckingServerAbstract) modelCheckingServerAbstract;

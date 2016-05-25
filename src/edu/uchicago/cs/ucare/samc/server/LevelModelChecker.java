@@ -36,8 +36,8 @@ public abstract class LevelModelChecker extends ProgrammableModelChecker {
     
     public LevelModelChecker(String interceptorName, String ackName, int numNode,
             int numCrash, int numReboot, String globalStatePathDir, String levelRecordDir, 
-            String workingDir, WorkloadDriver workloadDriver) throws FileNotFoundException {
-        super(interceptorName, ackName, numNode, globalStatePathDir, null, workingDir, workloadDriver);
+            String workingDir, WorkloadDriver workloadDriver, String ipcDir) throws FileNotFoundException {
+        super(interceptorName, ackName, numNode, globalStatePathDir, null, workingDir, workloadDriver, ipcDir);
         this.numCrash = numCrash;
         this.numReboot = numReboot;
         if (numCrash > numNode || numReboot > numCrash) {
@@ -48,7 +48,7 @@ public abstract class LevelModelChecker extends ProgrammableModelChecker {
         try {
             exploredTransitionRecorder = new SqliteExploredBranchRecorder(levelRecordDir);
         } catch (SQLiteException e) {
-            log.error(e.getLocalizedMessage(), e);
+            LOG.error(e.getLocalizedMessage(), e);
         }
         currentLevelPackets = new LinkedList<PacketSendTransition>();
         previousLevelPacketInfo = new LinkedList<LinkedList<PacketSendTransition>>();
@@ -60,35 +60,6 @@ public abstract class LevelModelChecker extends ProgrammableModelChecker {
         currentCrashList = null;
         resetTest();
     }
-
-    public LevelModelChecker(String inceptorName, String ackName, int numNode,
-            int numCrash, int numReboot, String globalStatePathDir, String levelRecordDir, File program,
-            String workingDir, WorkloadDriver workloadDriver) throws FileNotFoundException {
-        super(inceptorName, ackName, numNode, globalStatePathDir, program, workingDir, workloadDriver);
-        this.numCrash = numCrash;
-        this.numReboot = numReboot;
-        if (numCrash > numNode || numReboot > numCrash) {
-            throw new RuntimeException("The number of node, crash, or reboot is wrong");
-        }
-//        exploredTransitionRecorder = new FileSystemExploredBranchRecorder(levelRecordDir);
-        this.stateDir = levelRecordDir;
-        try {
-            exploredTransitionRecorder = new SqliteExploredBranchRecorder(levelRecordDir);
-        } catch (SQLiteException e) {
-            log.error(e.getLocalizedMessage(), e);
-        }
-        currentLevelPackets = new LinkedList<PacketSendTransition>();
-        previousLevelPacketInfo = new LinkedList<LinkedList<PacketSendTransition>>();
-        currentLevelTransitions = new LinkedList<Transition>();
-        previousLevelTransitionInfo = new LinkedList<LinkedList<Transition>>();
-        previousLevelNumCrashInfo = new LinkedList<Integer>();
-        previousLevelNumRebootInfo = new LinkedList<Integer>();
-        previousOnlineStatus = new LinkedList<boolean[]>();
-        resetTest();
-    }
-    
-//    public abstract int nextTransitionOrder(LinkedList<PacketSendTransition> packetTransition, 
-//            LinkedList<Transition> nextTransitionOrder);
 
     @SuppressWarnings("unchecked")
     public void saveCurrentLevelInfo() {
@@ -121,7 +92,7 @@ public abstract class LevelModelChecker extends ProgrammableModelChecker {
         try {
             waiting.createNewFile();
         } catch (IOException e) {
-            log.error("", e);
+            LOG.error("", e);
         }
         previousLevelNumCrashInfo.clear();
         previousOnlineStatus.clear();
@@ -141,9 +112,9 @@ public abstract class LevelModelChecker extends ProgrammableModelChecker {
 //    @Override
 //    public boolean waitPacket(int toId) throws RemoteException {
 //        waitPacket.incrementAndGet();
-//        log.info("korn wait packet " + toId);
+//        LOG.info("korn wait packet " + toId);
 //        boolean getPacket = super.waitPacket(toId);
-//        log.info("korn get packet " + toId);
+//        LOG.info("korn get packet " + toId);
 //        waitPacket.decrementAndGet();
 //        return getPacket;
 //    }
@@ -165,7 +136,7 @@ public abstract class LevelModelChecker extends ProgrammableModelChecker {
                 try {
                     waitBufferQueueStable();
                 } catch (InterruptedException e) {
-                    log.error("", e);
+                    LOG.error("", e);
                     continue;
                 }
                 LinkedList<InterceptPacket> thisLevelPackets = new LinkedList<InterceptPacket>();
@@ -201,7 +172,7 @@ public abstract class LevelModelChecker extends ProgrammableModelChecker {
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException e) {
-                        log.error(e.toString());
+                        LOG.error(e.toString());
                     }
                     continue;
                 }
@@ -209,8 +180,8 @@ public abstract class LevelModelChecker extends ProgrammableModelChecker {
                 LinkedList<Transition> transitions = new LinkedList<Transition>();
                 int transitionHash = nextTransitionOrder(currentLevelPackets, transitions);
                 if (transitionHash != 0) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Transition order for " + transitionHash + "\n" + 
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Transition order for " + transitionHash + "\n" + 
                                 Transition.extract(transitions));
                     }
 //                    onlineCarryTable = Arrays.copyOf(isNodeOnline, numNode);
@@ -233,13 +204,13 @@ public abstract class LevelModelChecker extends ProgrammableModelChecker {
                                 updateGlobalState();
                             }
                         } catch (IOException e) {
-                            log.error("", e);
+                            LOG.error("", e);
                         }
                     }
                     try {
                         waitBufferQueueStable();
                     } catch (InterruptedException e) {
-                        log.error("", e);
+                        LOG.error("", e);
                     }
                     boolean isThereNextLevel = isThereEnabledPacket();
                     exploredTransitionRecorder.noteThisNode(".next_level", isThereNextLevel + "", true);
@@ -265,19 +236,19 @@ public abstract class LevelModelChecker extends ProgrammableModelChecker {
                                  exploredTransitionRecorder.noteThisNode(".next_level", isThereNextLevel + "",  true);
                                  waitBufferQueueStable();
                              } catch (IOException e) {
-                                 log.error("", e);
+                                 LOG.error("", e);
                              } catch (InterruptedException e) {
-                                 log.error("", e);
+                                 LOG.error("", e);
                              }
                          }
                     }
                     currentLevelPackets.clear();
                     currentLevelTransitions.clear();
                 } else if (exploredTransitionRecorder.getCurrentDepth() == 0) {
-                    log.warn("Finished exploring all states");
+                    LOG.warn("Finished exploring all states");
                     System.exit(1);
                 } else {
-                    log.error("There might be some errors");
+                    LOG.error("There might be some errors");
                     workloadDriver.stopEnsemble();
                     System.exit(1);
                 }

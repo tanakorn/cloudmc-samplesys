@@ -97,6 +97,7 @@ public class SCMRunner{
             
             int numCrash = Integer.parseInt(prop.getProperty("num_crash"));
             int numReboot = Integer.parseInt(prop.getProperty("num_reboot"));
+            String initialPath = prop.getProperty("initial_path") != null ? prop.getProperty("initial_path") : "";
             String verifierName = prop.getProperty("verifier");
             String ackName = "Ack";
             
@@ -114,6 +115,7 @@ public class SCMRunner{
             modelCheckingServerAbstract = modelCheckerConstructor.newInstance(interceptorName, ackName, 
                     numNode, numCrash, numReboot, testRecordDir, traversalRecordDir, workingDir, 
                     ensembleController, ipcDir);
+            modelCheckingServerAbstract.setInitialPath(initialPath);
             verifier.modelCheckingServer = modelCheckingServerAbstract;
 		} catch (Exception e) {
             e.printStackTrace();

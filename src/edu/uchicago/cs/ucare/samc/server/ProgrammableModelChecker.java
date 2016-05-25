@@ -25,8 +25,8 @@ public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
     
     public ProgrammableModelChecker(String interceptorName, String ackName, 
             int numNode, String globalStatePathDir, File program, 
-            String workingDir, WorkloadDriver workloadDriver) throws FileNotFoundException {
-        super(interceptorName, ackName, numNode, globalStatePathDir, workingDir, workloadDriver);
+            String workingDir, WorkloadDriver workloadDriver, String ipcDir) throws FileNotFoundException {
+        super(interceptorName, ackName, numNode, globalStatePathDir, workingDir, workloadDriver, ipcDir);
         this.program = program;
         afterProgramModelChecker = null;
         resetTest();
@@ -57,6 +57,7 @@ public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
             InstructionTransition instruction;
             while (parser != null && (instruction = parser.readNextInstruction()) != null) {
                 getOutstandingTcpPacketTransition(currentEnabledTransitions);
+                printTransitionQueues(currentEnabledTransitions);
                 Transition transition = instruction.getRealTransition(checker);
                 if (transition == null) {
                     break;
@@ -152,7 +153,7 @@ public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
-                    log.error("", e);
+                    LOG.error("", e);
                 }
                 getOutstandingTcpPacketTransition(currentEnabledTransitions);
             }

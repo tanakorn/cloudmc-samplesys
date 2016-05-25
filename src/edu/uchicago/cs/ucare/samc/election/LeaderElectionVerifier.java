@@ -5,12 +5,13 @@ import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
+import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
 
 public class LeaderElectionVerifier extends SpecVerifier {
     
-    protected static final Logger log = LoggerFactory.getLogger(LeaderElectionVerifier.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(LeaderElectionVerifier.class);
     
     
     public LeaderElectionVerifier() {
@@ -79,6 +80,12 @@ public class LeaderElectionVerifier extends SpecVerifier {
     }
     
     @Override
+	public boolean verifyNextTransition(Transition transition) {
+    	// none
+		return true;
+	}
+    
+    @Override
     public String verificationDetail() {
         StringBuilder strBuilder = new StringBuilder();
         for (int i = 0; i < modelCheckingServer.isNodeOnline.length; ++i) {
@@ -97,5 +104,7 @@ public class LeaderElectionVerifier extends SpecVerifier {
         }
         return strBuilder.toString();
     }
+
+	
     
 }
