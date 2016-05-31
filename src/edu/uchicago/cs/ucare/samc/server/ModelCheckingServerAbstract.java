@@ -70,6 +70,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     public boolean[] isNodeOnline;
 
     protected ConcurrentLinkedQueue<InterceptPacket>[][] senderReceiverQueues;
+    protected LinkedList<InterceptPacket> localEventQueue;
 
     protected int testId;
 
@@ -151,6 +152,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         resultFile = null;
         isNodeOnline = new boolean[numNode];
         senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
+        localEventQueue = new LinkedList<InterceptPacket>();
         localStates = new LeaderElectionLocalState[numNode];
         scmStates = "";
         ipcDir = "";
@@ -196,6 +198,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         resultFile = null;
         isNodeOnline = new boolean[numNode];
         senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
+        localEventQueue = new LinkedList<InterceptPacket>();
         localStates = new LeaderElectionLocalState[numNode];
         scmStates = "";
         this.ipcDir = ipcDir;
@@ -328,6 +331,11 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         LOG.info("Intercept packet " + packet.toString());
     }
     
+    public void offerLocalEvent(InterceptPacket packet) {
+    	localEventQueue.add(packet);
+        LOG.info("Intercept packet " + packet.toString());
+    }
+    
     public void getOutstandingTcpPacketTransition(LinkedList<Transition> transitionList) {
         boolean[][] filter = new boolean[numNode][numNode];
         for (int i = 0; i < numNode; ++i) {
@@ -356,6 +364,9 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
             }
         });
         transitionList.addAll(buffer);
+        
+        // add local events to queue
+        getLocalEvents(transitionList);
     }
     
     public void getOutstandingTcpPacket(LinkedList<InterceptPacket> packetList) {
@@ -383,6 +394,14 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
             }
         });
         packetList.addAll(buffer);
+    }
+    
+    public void getLocalEvents(LinkedList<Transition> transitionList){
+    	LinkedList<PacketSendTransition> buffer = new LinkedList<PacketSendTransition>();
+    	for(int i = localEventQueue.size() - 1; i>-1; i--){
+    		buffer.add(new PacketSendTransition(this, localEventQueue.remove(i)));
+    	}
+    	transitionList.addAll(buffer);
     }
     
     public void printTransitionQueues(LinkedList<Transition> transitionList){
