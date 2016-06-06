@@ -239,6 +239,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
 	    	while ((line = initialPathReader.readLine()) != null){
 	    		this.initialPath.add(line);
 	    	}
+	    	initialPathReader.close();
     	} catch (Exception e){
     		LOG.error("Error in readInitialPath");
     		System.out.println("Error in readInitialPath");
@@ -997,7 +998,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         
     }
     
- // for initialPaths
+    // for initialPaths
     abstract class InstructionTransition {
 
         abstract Transition getRealTransition(ModelCheckingServerAbstract checker);
