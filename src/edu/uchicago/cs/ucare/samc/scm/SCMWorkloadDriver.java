@@ -16,6 +16,7 @@ public class SCMWorkloadDriver extends WorkloadDriver{
     private final static Logger LOG = LoggerFactory.getLogger(SCMWorkloadDriver.class);
 	
 	String ipcScmDir;
+	int testId;
 	
 	Process[] node;
     Thread consoleWriter;
@@ -28,6 +29,7 @@ public class SCMWorkloadDriver extends WorkloadDriver{
         consoleLog = new FileOutputStream[numNode];
         consoleWriter = new Thread(new LogWriter());
         consoleWriter.start();
+        testId = 0;
     }
 
 	public void startNode(int id) {
@@ -35,7 +37,7 @@ public class SCMWorkloadDriver extends WorkloadDriver{
 		if(id == 0){
 			try {
 				node[id] = Runtime.getRuntime().exec(workingDir + "/startSCMReceiver.sh " + ipcScmDir + 
-						" " + ipcDir + " " + (numNode-1));
+						" " + ipcDir + " " + (numNode-1) + " " + testId);
 				System.out.println("Start Receiver");
 				LOG.info("Start Receiver");	
 			} catch (IOException e) {
@@ -44,7 +46,7 @@ public class SCMWorkloadDriver extends WorkloadDriver{
 		} else {
 			try {
 				node[id] = Runtime.getRuntime().exec(workingDir + "/startSCMSender.sh " + ipcScmDir + 
-						" " + ipcDir + " " + id);
+						" " + ipcDir + " " + id + " " + testId);
 				System.out.println("Start Sender " + id);
 				LOG.info("Start Sender " + id);	
 			} catch (IOException e) {
@@ -97,6 +99,12 @@ public class SCMWorkloadDriver extends WorkloadDriver{
                 LOG.error("", e);
             }
         }
+		testId++;
+		try {
+			Runtime.getRuntime().exec("mkdir " + workingDir + "/" + testId);
+		} catch (IOException e) {
+            LOG.error("", e);
+		}
 	}
 	
 	class LogWriter implements Runnable {
