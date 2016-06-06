@@ -806,6 +806,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         numCurrentCrash = 0;
         numCurrentReboot = 0;
         initialPathCounter = 0;
+        this.hasFinishedInitialPath = !hasInitialPath;
         localState = new int[numNode];
         scmStates = "";
         globalState = 0;
