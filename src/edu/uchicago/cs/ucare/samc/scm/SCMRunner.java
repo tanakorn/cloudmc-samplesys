@@ -61,13 +61,13 @@ public class SCMRunner{
 	        		workloadDriver, ipcDir);
 	        
 	        // activate Directory Watcher
-            Thread dirWatcher;
-        	dirWatcher = new Thread(new FileWatcher(ipcDir, checker));
-        	dirWatcher.start();
+	        FileWatcher dirWatcher = new FileWatcher(ipcDir, checker);
+            Thread watcher = new Thread(dirWatcher);
+        	watcher.start();
         	Thread.sleep(500);
         	
         	// start path explorations
-        	startExploreTesting(checker, numNode, workingDir, workloadDriver, pauseEveryPathExploration);
+        	startExploreTesting(checker, numNode, workingDir, workloadDriver, pauseEveryPathExploration, dirWatcher);
 	        
     	} catch (Exception e){
     		e.printStackTrace();
@@ -124,7 +124,7 @@ public class SCMRunner{
 	}
 	
 	protected static void startExploreTesting(final ModelCheckingServerAbstract checker, int numNode, String workingDir,
-            WorkloadDriver scmWorkloadDriver, boolean pauseEveryPathExploration) throws IOException {
+            WorkloadDriver scmWorkloadDriver, boolean pauseEveryPathExploration, FileWatcher dirWatcher) throws IOException {
         File gspathDir = new File(workingDir + "/record");
         int testNum = gspathDir.list().length + 1;
         File finishedFlag = new File(workingDir + "/state/.finished");
@@ -149,6 +149,7 @@ public class SCMRunner{
                     Thread.sleep(30);
                 }
                 checker.stopEnsemble();
+                dirWatcher.resetPacketCount();
                 if (pauseEveryPathExploration) {
                     System.out.print("enter to continue");
                     System.in.read();

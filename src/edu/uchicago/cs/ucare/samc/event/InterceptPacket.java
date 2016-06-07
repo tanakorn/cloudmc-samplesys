@@ -7,6 +7,7 @@ public class InterceptPacket extends Event {
     
     public static final String SOURCE_KEY = "sourceNode";
     public static final String DESTINATION_KEY = "destinationNode";
+    public static final String FILENAME = "filename";
     
     public InterceptPacket() {
     }
@@ -15,10 +16,11 @@ public class InterceptPacket extends Event {
         super(callbackId);
     }
     
-    public InterceptPacket(int id, String callbackId, int fromId, int toId) {
+    public InterceptPacket(int id, String callbackId, int fromId, int toId, String filename) {
         super(id, callbackId);
         addKeyValue(SOURCE_KEY, fromId);
         addKeyValue(DESTINATION_KEY, toId);
+        addKeyValue(FILENAME, filename);
         obsolete = false;
         obsoleteBy = -1;
     }

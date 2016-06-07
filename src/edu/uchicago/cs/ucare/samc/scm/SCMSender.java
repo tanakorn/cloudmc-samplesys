@@ -79,18 +79,18 @@ public class SCMSender {
         			ipcDmckDir + "/send/" + msgName);
         	
         	// wait for dmck signal
-        	File ackFile = new File(ipcDmckDir + "/ack/" + msgId);
-        	LOG.info("start waiting for file : " + msgId + " at " + ackFile.getPath());
+        	File ackFile = new File(ipcDmckDir + "/ack/" + msgName);
+        	LOG.info("start waiting for file : " + msgName + " at " + ackFile.getPath());
         	while(!ackFile.exists()){
         		// wait
         	}
         	
         	try{
         		// receive dmck signal
-            	LOG.info("DMCK has enabled this file : " + msgId);
-            	Runtime.getRuntime().exec("rm " + ipcDmckDir + "/ack/" + msgId);
+            	LOG.info("DMCK has enabled this file : " + msgName);
+            	Runtime.getRuntime().exec("rm " + ipcDmckDir + "/ack/" + msgName);
         	} catch (Exception e){
-            	LOG.error("ack file failed on file : " + msgId);
+            	LOG.error("ack file failed on file : " + msgName);
         	}
     	} catch (Exception e) {
     		e.printStackTrace();

@@ -21,7 +21,7 @@ public class LeaderElectionPacketGenerator {
         ++count;
         int id = 31 * hash + count;
         packetCount.put(hash, count);
-        return new LeaderElectionPacket(id, callbackName, fromId, toId, role, leader);
+        return new LeaderElectionPacket(id, callbackName, fromId, toId, "le-" + id, role, leader);
     }
     
     private static int leaderElectionHashCodeWithoutId(int fromId, int toId, int role, int leader) {

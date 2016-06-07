@@ -670,16 +670,16 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     	try {
     		if(ipcDir != ""){
     			try{
-    	        	PrintWriter writer = new PrintWriter(ipcDir + "/new/" + packet.getId(), "UTF-8");
+    	        	PrintWriter writer = new PrintWriter(ipcDir + "/new/" + packet.getValue(InterceptPacket.FILENAME), "UTF-8");
     	        	writer.println("eventId=" + packet.getId());
     		        writer.close();
     		        
     		    	System.out.println("Enable event with ID : " + packet.getId());
     		        
-    		        Runtime.getRuntime().exec("mv " + ipcDir + "/new/" + packet.getId() + " " + 
-    		        		ipcDir + "/ack/" + packet.getId());
+    		        Runtime.getRuntime().exec("mv " + ipcDir + "/new/" + packet.getValue(InterceptPacket.FILENAME) + " " + 
+    		        		ipcDir + "/ack/" + packet.getValue(InterceptPacket.FILENAME));
             	} catch (Exception e) {
-            		System.out.println("[DEBUG] error in creating new file : " + packet.getId());
+            		System.out.println("[DEBUG] error in creating new file : " + packet.getValue(InterceptPacket.FILENAME));
             	}
             	
     			result = true;

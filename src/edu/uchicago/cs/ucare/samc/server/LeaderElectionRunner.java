@@ -63,12 +63,12 @@ public class LeaderElectionRunner {
 	        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/target-sys.conf", workingDir, ipcDir);
 	        
 	        // activate Directory Watcher
-	        Thread dirWatcher;   
-        	dirWatcher = new Thread(new FileWatcher(ipcDir, checker));
-        	dirWatcher.start();
+	        FileWatcher dirWatcher = new FileWatcher(ipcDir, checker);
+            Thread watcher = new Thread(dirWatcher);
+        	watcher.start();
         	Thread.sleep(500);
 	        
-	        startExploreTesting(checker, numNode, workingDir, isPausedEveryTest);
+	        startExploreTesting(checker, numNode, workingDir, isPausedEveryTest, dirWatcher);
     	} catch (Exception e){
     		e.printStackTrace();
     	}
@@ -128,7 +128,7 @@ public class LeaderElectionRunner {
     }
     
     protected static void startExploreTesting(final ModelCheckingServerAbstract checker, int numNode, String workingDir, 
-    		boolean isPausedEveryTest) throws IOException {
+    		boolean isPausedEveryTest, FileWatcher dirWatcher) throws IOException {
         File gspathDir = new File(workingDir + "/record");
         int testNum = gspathDir.list().length + 1;
         File finishedFlag = new File(workingDir + "/state/.finished");
@@ -155,6 +155,7 @@ public class LeaderElectionRunner {
                     Thread.sleep(30);
                 }
                 checker.stopEnsemble();
+                dirWatcher.resetPacketCount();
                 if (isPausedEveryTest) {
                     System.out.print("enter to continue");
                     System.in.read();

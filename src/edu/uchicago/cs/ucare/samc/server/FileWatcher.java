@@ -14,12 +14,12 @@ public class FileWatcher implements Runnable{
 	
 	File path;
 	ModelCheckingServerAbstract checker;
-	private boolean running;
+	private HashMap<Integer, Integer> packetCount;
 	
 	public FileWatcher(String sPath, ModelCheckingServerAbstract modelChecker){
 		path = new File(sPath + "/send");
 		checker = modelChecker;
-		running = true;
+		resetPacketCount();
 		
 		if (!path.isDirectory()) {
 			throw new IllegalArgumentException("Path: " + path + " is not a folder");
@@ -27,9 +27,9 @@ public class FileWatcher implements Runnable{
 	}
 	
 	public void run(){
-		System.out.println("[DEBUG] Watching path: " + path);
+		System.out.println("[DEBUG] FileWatcher is looking after: " + path);
 		
-		while(running){
+		while(!Thread.interrupted()){
 			if(path.listFiles().length > 0){
 				for(File file : path.listFiles()){
 					processNewFile(file.getName());
@@ -43,8 +43,8 @@ public class FileWatcher implements Runnable{
 		}
 	}
 	
-	public void terminate(){
-		running = false;
+	public void resetPacketCount(){
+		packetCount = new HashMap<Integer, Integer>();
 	}
 	
 	public synchronized void processNewFile(String filename){
@@ -88,27 +88,29 @@ public class FileWatcher implements Runnable{
 		    	int sendRole = Integer.parseInt(ev.getProperty("sendRole"));
 		    	int leader = Integer.parseInt(ev.getProperty("leader"));
 		    	int eventId = Integer.parseInt(filename.substring(3));
+		    	int hashId = commonHashId(eventId);
 		    	
-		    	System.out.println("[DEBUG] Process new File : eventId-"+ eventId + " callbackName-" + callbackName +
+		    	System.out.println("[DEBUG] Process new File " + filename + " : hashId-" + hashId +  " callbackName-" + callbackName +
 		    			" sendNode-" + sendNode + " sendRole-" + sendRole + " recvNode-" + recvNode + 
 		    			" leader-" + leader);
 		    	
 		    	// create eventPacket and store it to DMCK queue
-		    	LeaderElectionPacket packet = new LeaderElectionPacket(eventId, callbackName, 
-		    			sendNode, recvNode, sendRole, leader);
+		    	LeaderElectionPacket packet = new LeaderElectionPacket(hashId, callbackName, 
+		    			sendNode, recvNode, filename, sendRole, leader);
 		    	checker.offerPacket(packet);
 	    	} else
 	    	// SCM
 	    	if(filename.startsWith("scm-")){
 		    	String callbackName = ev.getProperty("callbackName");
 	    		int eventId = Integer.parseInt(filename.substring(4));
+	    		int hashId = commonHashId(eventId);
 		    	int recvNode = Integer.parseInt(ev.getProperty("recvNode"));
 		    	String msgContent = ev.getProperty("msgContent");
 	    		
-		    	System.out.println("[DEBUG] Receive msg no " + eventId + " from node-" + sendNode +
+		    	System.out.println("[DEBUG] Receive msg " + filename + " : hashId-" + hashId +  " from node-" + sendNode +
 		    			" to node-" + recvNode + " callbackName-" + callbackName + " msgContent-" + msgContent);
 		    	
-		    	SCMPacket packet = new SCMPacket(eventId, callbackName, sendNode, recvNode, msgContent);
+		    	SCMPacket packet = new SCMPacket(hashId, callbackName, sendNode, recvNode, filename, msgContent);
 		    	checker.offerPacket(packet);
 	    	} else if (filename.startsWith("updatescm-")){
 		    	String msgContent = filename.substring(10);
@@ -123,5 +125,15 @@ public class FileWatcher implements Runnable{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private int commonHashId(int eventId){
+		Integer count = packetCount.get(eventId);
+        if (count == null) {
+            count = 0;
+        }
+        count++;
+        packetCount.put(eventId, count);
+        return 31 * eventId + count;
 	}
 }

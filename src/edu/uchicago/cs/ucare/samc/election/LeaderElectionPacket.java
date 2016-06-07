@@ -9,8 +9,8 @@ public class LeaderElectionPacket extends InterceptPacket {
     public static final String LEADER_KEY = "leader";
 
 	public LeaderElectionPacket(int id, String callbackName, int fromId,
-			int toId, int role, int leader) {
-		super(id, callbackName, fromId, toId);
+			int toId, String filename, int role, int leader) {
+		super(id, callbackName, fromId, toId, filename);
 		addKeyValue(ROLE_KEY, role);
 		addKeyValue(LEADER_KEY, leader);
 	}

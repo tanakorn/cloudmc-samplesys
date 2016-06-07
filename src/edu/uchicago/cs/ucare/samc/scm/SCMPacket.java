@@ -8,8 +8,8 @@ public class SCMPacket extends InterceptPacket {
     public static final String MSG_CONTENT = "msgContent";
 	
 	public SCMPacket(int id, String callbackName, int fromId,
-			int toId, String msgContent) {
-		super(id, callbackName, fromId, toId);
+			int toId, String filename, String msgContent) {
+		super(id, callbackName, fromId, toId, filename);
 		addKeyValue(MSG_CONTENT, msgContent);
 	}
 	

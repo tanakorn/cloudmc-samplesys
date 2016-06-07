@@ -479,7 +479,7 @@ public class LeaderElectionMain {
 		        writer.println("leader=" + leader);
 		        writer.close();
         	} catch (Exception e) {
-            	LOG.error("[DEBUG] error in creating new file : " + eventId);
+            	LOG.error("[DEBUG] error in creating new file : le-" + eventId);
         	}
         	
         	// move new file to send folder - commit message
@@ -514,8 +514,8 @@ public class LeaderElectionMain {
         	*/
         	
         	// wait for dmck signal
-        	File ackFile = new File(ipcDir + "/ack/", Integer.toString(eventId));
-        	LOG.info("[DEBUG] start waiting for file : " + eventId);
+        	File ackFile = new File(ipcDir + "/ack/le-" + eventId);
+        	LOG.info("[DEBUG] start waiting for file : le-" + eventId);
         	while(!ackFile.exists()){
         		// wait
         	}
@@ -524,7 +524,7 @@ public class LeaderElectionMain {
         	//msgIntercepted--;
 //        	LOG.info("[DEBUG] ack file : " + eventId);
         	try{
-            	Runtime.getRuntime().exec("rm " + ipcDir + "/ack/" + eventId);
+            	Runtime.getRuntime().exec("rm " + ipcDir + "/ack/le-" + eventId);
         	} catch (Exception e){
         		e.printStackTrace();
         	}
