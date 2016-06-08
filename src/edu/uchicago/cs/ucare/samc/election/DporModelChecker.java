@@ -14,7 +14,6 @@ import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.transition.TransitionTuple;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
-import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 import edu.uchicago.cs.ucare.samc.util.LocalState;
 
 public abstract class DporModelChecker extends PrototypeSamc {
@@ -39,7 +38,7 @@ public abstract class DporModelChecker extends PrototypeSamc {
         TransitionTuple lastTransition;
         while ((lastTransition = currentExploringPath.pollLast()) != null) {
             boolean[] oldOnlineStatus = prevOnlineStatus.removeLast();
-            LeaderElectionLocalState[] oldLocalStates = prevLocalStates.removeLast();
+            LocalState[] oldLocalStates = prevLocalStates.removeLast();
             LinkedList<TransitionTuple> tmpPath = (LinkedList<TransitionTuple>) currentExploringPath.clone();
             if (lastTransition.transition instanceof AbstractNodeCrashTransition) {
                 AbstractNodeCrashTransition abstractNodeCrashTransition = (AbstractNodeCrashTransition) lastTransition.transition;
@@ -61,7 +60,7 @@ public abstract class DporModelChecker extends PrototypeSamc {
                 }
             }
             Iterator<TransitionTuple> reverseIter = currentExploringPath.descendingIterator();
-            Iterator<LeaderElectionLocalState[]> reverseLocalStateIter = prevLocalStates.descendingIterator();
+            Iterator<LocalState[]> reverseLocalStateIter = prevLocalStates.descendingIterator();
             Iterator<boolean[]> reverseOnlineStatusIter = prevOnlineStatus.descendingIterator();
             while (reverseIter.hasNext()) {
                 TransitionTuple tuple = reverseIter.next();

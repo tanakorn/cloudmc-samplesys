@@ -7,7 +7,7 @@ import java.util.Map;
 @SuppressWarnings("serial")
 public class Event implements Serializable {
     
-    public static final String EVENT_ID_KEY = "eventId";
+    public static final String HASH_ID_KEY = "hashId";
     
     protected Map<String, Serializable> keyValuePairs;
     protected String callbackId;
@@ -20,16 +20,16 @@ public class Event implements Serializable {
         obsoleteBy = -1;
     }
     
-    public Event(int eventId) {
+    public Event(int hashId) {
         keyValuePairs = new HashMap<String, Serializable>();
-        addKeyValue(EVENT_ID_KEY, eventId);
+        addKeyValue(HASH_ID_KEY, hashId);
         obsolete = false;
         obsoleteBy = -1;
     }
     
-    public Event(int eventId, String callbackId) {
+    public Event(int hashId, String callbackId) {
         keyValuePairs = new HashMap<String, Serializable>();
-        addKeyValue(EVENT_ID_KEY, eventId);
+        addKeyValue(HASH_ID_KEY, hashId);
         this.callbackId = callbackId;
         obsolete = false;
         obsoleteBy = -1;

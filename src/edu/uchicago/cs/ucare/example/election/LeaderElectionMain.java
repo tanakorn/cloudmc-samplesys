@@ -412,7 +412,7 @@ public class LeaderElectionMain {
                     if (LeaderElectionInterposition.SAMC_ENABLED) {
                         try {
                             LeaderElectionPacket packet = new LeaderElectionPacket("LeaderElectionCallback" + id);
-                            packet.addKeyValue(LeaderElectionPacket.EVENT_ID_KEY, LeaderElectionInterposition.hash(msg, this.otherId));
+                            packet.addKeyValue(LeaderElectionPacket.HASH_ID_KEY, LeaderElectionInterposition.hash(msg, this.otherId));
                             packet.addKeyValue(LeaderElectionPacket.SOURCE_KEY, id);
                             packet.addKeyValue(LeaderElectionPacket.DESTINATION_KEY, this.otherId);
                             packet.addKeyValue(LeaderElectionPacket.LEADER_KEY, msg.getLeader());

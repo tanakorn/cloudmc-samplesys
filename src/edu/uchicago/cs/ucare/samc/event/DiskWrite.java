@@ -17,11 +17,11 @@ public class DiskWrite extends Event {
     }
     
     public int getWriteId() {
-        return (Integer) getValue(EVENT_ID_KEY);
+        return (Integer) getValue(HASH_ID_KEY);
     }
     
     public void setWriteId(int id) {
-        addKeyValue(EVENT_ID_KEY, id);
+        addKeyValue(HASH_ID_KEY, id);
     }
     
     public int getNodeId() {

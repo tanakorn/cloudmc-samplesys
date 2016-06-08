@@ -31,7 +31,7 @@ import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.transition.TransitionTuple;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.ExploredBranchRecorder;
-import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
+import edu.uchicago.cs.ucare.samc.util.LocalState;
 import edu.uchicago.cs.ucare.samc.util.SqliteExploredBranchRecorder;
 
 public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
@@ -57,7 +57,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     int globalState2;
     LinkedList<boolean[]> prevOnlineStatus;
     
-    LinkedList<LeaderElectionLocalState[]> prevLocalStates;
+    LinkedList<LocalState[]> prevLocalStates;
     
     @SuppressWarnings("unchecked")
 	public PrototypeSamc(String interceptorName, String ackName, int numNode,
@@ -137,7 +137,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         } catch (IOException e) {
             LOG.error("", e);
         }
-        prevLocalStates = new LinkedList<LeaderElectionLocalState[]>();
+        prevLocalStates = new LinkedList<LocalState[]>();
     }
     
     public Transition nextTransition(LinkedList<Transition> transitions) {
@@ -402,7 +402,8 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                     try {
                         currentExploringPath.add(new TransitionTuple(globalState2, tuple.transition));
                         prevOnlineStatus.add(isNodeOnline.clone());
-                        prevLocalStates.add(localStates.clone());
+                        addGlobalStateHistory();
+//                        prevLocalStates.add(localStates.clone());
                         saveLocalState();
                         if (tuple.transition instanceof AbstractNodeOperationTransition) {
                             AbstractNodeOperationTransition nodeOperationTransition = (AbstractNodeOperationTransition) tuple.transition;
@@ -478,8 +479,8 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                     try {
                         currentExploringPath.add(new TransitionTuple(globalState2, transition));
                         prevOnlineStatus.add(isNodeOnline.clone());
-                        prevOnlineStatus.add(isNodeOnline.clone());
-                        prevLocalStates.add(localStates.clone());
+                        addGlobalStateHistory();
+//                        prevLocalStates.add(localStates.clone());
                         saveLocalState();
                         if (transition instanceof AbstractNodeOperationTransition) {
                             AbstractNodeOperationTransition nodeOperationTransition = (AbstractNodeOperationTransition) transition;
@@ -526,6 +527,12 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                 }
             }
         }
+
+		private void addGlobalStateHistory() {
+			if(interceptorName.equals("sampleLEModelChecker")){
+				prevLocalStates.add(localStates.clone());
+			}
+		}
 
     }
 
