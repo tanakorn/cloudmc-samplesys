@@ -403,7 +403,6 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                         currentExploringPath.add(new TransitionTuple(globalState2, tuple.transition));
                         prevOnlineStatus.add(isNodeOnline.clone());
                         addGlobalStateHistory();
-//                        prevLocalStates.add(localStates.clone());
                         saveLocalState();
                         if (tuple.transition instanceof AbstractNodeOperationTransition) {
                             AbstractNodeOperationTransition nodeOperationTransition = (AbstractNodeOperationTransition) tuple.transition;
@@ -480,7 +479,6 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                         currentExploringPath.add(new TransitionTuple(globalState2, transition));
                         prevOnlineStatus.add(isNodeOnline.clone());
                         addGlobalStateHistory();
-//                        prevLocalStates.add(localStates.clone());
                         saveLocalState();
                         if (transition instanceof AbstractNodeOperationTransition) {
                             AbstractNodeOperationTransition nodeOperationTransition = (AbstractNodeOperationTransition) transition;
