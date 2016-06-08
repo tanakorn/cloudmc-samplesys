@@ -19,15 +19,10 @@ import edu.uchicago.cs.ucare.samc.util.LocalState;
 public abstract class DporModelChecker extends PrototypeSamc {
 
     public DporModelChecker(String interceptorName, String ackName, int maxId,
-            int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir,
-            WorkloadDriver workloadDriver, String ipcDir) {
-        this(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, "/tmp", workloadDriver, ipcDir);
-    }
-    
-    public DporModelChecker(String inceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String cacheDir,
             WorkloadDriver workloadDriver, String ipcDir) {
-        super(inceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, cacheDir, workloadDriver, ipcDir);
+        super(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, 
+        		cacheDir, workloadDriver, ipcDir);
     }
     
     public abstract boolean isDependent(LocalState state, Event e1, Event e2);
