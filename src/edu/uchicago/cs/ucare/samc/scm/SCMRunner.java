@@ -126,7 +126,7 @@ public class SCMRunner{
 	protected static void startExploreTesting(final ModelCheckingServerAbstract checker, int numNode, String workingDir,
             WorkloadDriver scmWorkloadDriver, boolean pauseEveryPathExploration, FileWatcher dirWatcher) throws IOException {
         File gspathDir = new File(workingDir + "/record");
-        int testNum = gspathDir.list().length + 1;
+        int testId = gspathDir.list().length + 1;
         File finishedFlag = new File(workingDir + "/state/.finished");
         File waitingFlag = new File(workingDir + "/state/.waiting");
         
@@ -138,10 +138,10 @@ public class SCMRunner{
                 }
             });
         	
-            for (; !finishedFlag.exists(); ++testNum) {
+            for (; !finishedFlag.exists(); ++testId) {
                 waitingFlag.delete();
-                checker.setTestId(testNum);
-                scmWorkloadDriver.resetTest();
+                checker.setTestId(testId);
+                scmWorkloadDriver.resetTest(testId);
                 checker.runEnsemble();
                 workloadDriver.runWorkload();
                 checker.waitOnSteadyStatesByTimeout(); // wait on first steady state timeout

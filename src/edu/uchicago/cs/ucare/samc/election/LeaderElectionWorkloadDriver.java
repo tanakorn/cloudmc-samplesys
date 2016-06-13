@@ -25,7 +25,7 @@ public class LeaderElectionWorkloadDriver extends WorkloadDriver {
         consoleWriter.start();
     }
     
-    public void resetTest() {
+    public void resetTest(int testId) {
         for (int i = 0; i < numNode; ++i) {
             if (consoleLog[i] != null) {
                 try {
@@ -40,6 +40,7 @@ public class LeaderElectionWorkloadDriver extends WorkloadDriver {
                 LOG.error("", e);
             }
         }
+        this.testId = testId;
     }
     
     public void startEnsemble() {

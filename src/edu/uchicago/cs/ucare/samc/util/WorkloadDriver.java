@@ -7,6 +7,7 @@ public abstract class WorkloadDriver {
     protected String ipcDir;
     protected String samcDir;
     protected String targetSysDir;
+    protected int testId;
     
     public SpecVerifier verifier;
 
@@ -16,6 +17,7 @@ public abstract class WorkloadDriver {
         this.ipcDir = ipcDir;
         this.samcDir = samcDir;
         this.targetSysDir = targetSysDir;
+        testId = 0;
     }
     
     public WorkloadDriver(int numNode, String workingDir, SpecVerifier verifier) {
@@ -27,7 +29,7 @@ public abstract class WorkloadDriver {
     public abstract void stopNode(int id);
     public abstract void startEnsemble();
     public abstract void stopEnsemble();
-    public abstract void resetTest();
+    public abstract void resetTest(int testId);
     
     public abstract void runWorkload();
     

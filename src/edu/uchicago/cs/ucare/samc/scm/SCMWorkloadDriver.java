@@ -15,12 +15,11 @@ public class SCMWorkloadDriver extends WorkloadDriver{
 
     private final static Logger LOG = LoggerFactory.getLogger(SCMWorkloadDriver.class);
 	
-	String ipcScmDir;
-	int testId;
+	private String ipcScmDir;
 	
-	Process[] node;
-    Thread consoleWriter;
-    FileOutputStream[] consoleLog;
+	private Process[] node;
+	private Thread consoleWriter;
+	private FileOutputStream[] consoleLog;
 	
 	public SCMWorkloadDriver(int numNode, String workingDir, String ipcDir, String samcDir, String targetSysDir) {
 		super(numNode, workingDir, ipcDir, samcDir, targetSysDir);
@@ -29,7 +28,6 @@ public class SCMWorkloadDriver extends WorkloadDriver{
         consoleLog = new FileOutputStream[numNode];
         consoleWriter = new Thread(new LogWriter());
         consoleWriter.start();
-        testId = 0;
     }
 
 	public void startNode(int id) {
@@ -84,7 +82,7 @@ public class SCMWorkloadDriver extends WorkloadDriver{
         }
 	}
 
-	public void resetTest() {
+	public void resetTest(int testId) {
 		for (int i = 0; i < numNode; ++i) {
             if (consoleLog[i] != null) {
                 try {
@@ -99,9 +97,9 @@ public class SCMWorkloadDriver extends WorkloadDriver{
                 LOG.error("", e);
             }
         }
-		testId++;
+		this.testId = testId;
 		try {
-			Runtime.getRuntime().exec("mkdir " + workingDir + "/" + testId);
+			Runtime.getRuntime().exec("mkdir " + workingDir + "/" + this.testId);
 		} catch (IOException e) {
             LOG.error("", e);
 		}

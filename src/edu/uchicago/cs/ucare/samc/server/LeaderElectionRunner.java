@@ -130,7 +130,7 @@ public class LeaderElectionRunner {
     protected static void startExploreTesting(final ModelCheckingServerAbstract checker, int numNode, String workingDir, 
     		boolean isPausedEveryTest, FileWatcher dirWatcher) throws IOException {
         File gspathDir = new File(workingDir + "/record");
-        int testNum = gspathDir.list().length + 1;
+        int testId = gspathDir.list().length + 1;
         File finishedFlag = new File(workingDir + "/state/.finished");
         File waitingFlag = new File(workingDir + "/state/.waiting");
         try {
@@ -141,13 +141,13 @@ public class LeaderElectionRunner {
                 }
             });
         	
-            for (; !finishedFlag.exists(); ++testNum) {
+            for (; !finishedFlag.exists(); ++testId) {
                 waitingFlag.delete();
-                checker.setTestId(testNum);
+                checker.setTestId(testId);
                 Process reset = Runtime.getRuntime().exec("./bin/resettest " + numNode + 
                         " " + workingDir);
                 reset.waitFor();
-                workloadDriver.resetTest();
+                workloadDriver.resetTest(testId);
                 checker.runEnsemble();
                 workloadDriver.runWorkload();
                 checker.waitOnSteadyStatesByTimeout(); // wait on first steady state timeout
