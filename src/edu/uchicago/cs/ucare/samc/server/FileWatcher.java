@@ -2,9 +2,13 @@ package edu.uchicago.cs.ucare.samc.server;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.PrintWriter;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Properties;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.samc.election.LeaderElectionPacket;
 import edu.uchicago.cs.ucare.samc.scm.SCMPacket;
@@ -12,11 +16,15 @@ import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 
 public class FileWatcher implements Runnable{
 	
+	private final static Logger LOG = LoggerFactory.getLogger(FileWatcher.class);
+	
+	String ipcDir;
 	File path;
 	ModelCheckingServerAbstract checker;
 	private HashMap<Integer, Integer> packetCount;
 	
 	public FileWatcher(String sPath, ModelCheckingServerAbstract modelChecker){
+		ipcDir = sPath;
 		path = new File(sPath + "/send");
 		checker = modelChecker;
 		resetPacketCount();
@@ -79,6 +87,7 @@ public class FileWatcher implements Runnable{
 	    		}
 	    		
 	    		System.out.println("[DEBUG] Receive update state " + filename);
+	    		LOG.info("[DEBUG] Receive update state " + filename);
 	    		
 	    		LeaderElectionLocalState state = new LeaderElectionLocalState(leader, sendRole, electionTable);
 	    		checker.setLocalState(sendNode, state);
@@ -91,6 +100,9 @@ public class FileWatcher implements Runnable{
 		    	int hashId = commonHashId(eventId);
 		    	
 		    	System.out.println("[DEBUG] Process new File " + filename + " : hashId-" + hashId +  " callbackName-" + callbackName +
+		    			" sendNode-" + sendNode + " sendRole-" + sendRole + " recvNode-" + recvNode + 
+		    			" leader-" + leader);
+		    	LOG.info("[DEBUG] Process new File " + filename + " : hashId-" + hashId +  " callbackName-" + callbackName +
 		    			" sendNode-" + sendNode + " sendRole-" + sendRole + " recvNode-" + recvNode + 
 		    			" leader-" + leader);
 		    	
@@ -109,6 +121,8 @@ public class FileWatcher implements Runnable{
 	    		
 		    	System.out.println("[DEBUG] Receive msg " + filename + " : hashId-" + hashId +  " from node-" + sendNode +
 		    			" to node-" + recvNode + " callbackName-" + callbackName + " msgContent-" + msgContent);
+		    	LOG.info("[DEBUG] Receive msg " + filename + " : hashId-" + hashId +  " from node-" + sendNode +
+		    			" to node-" + recvNode + " callbackName-" + callbackName + " msgContent-" + msgContent);
 		    	
 		    	SCMPacket packet = new SCMPacket(hashId, callbackName, sendNode, recvNode, filename, msgContent);
 		    	checker.offerPacket(packet);
@@ -116,6 +130,7 @@ public class FileWatcher implements Runnable{
 		    	String msgContent = filename.substring(10);
 		    	
 		    	System.out.println("[DEBUG] Receive state update from node-" + sendNode + " msgContent-" + msgContent);
+		    	LOG.info("[DEBUG] Receive state update from node-" + sendNode + " msgContent-" + msgContent);
 		    	
 		    	checker.setSCMState(msgContent);
 	    	}
@@ -125,6 +140,24 @@ public class FileWatcher implements Runnable{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	// if we would like to directly release an event, 
+	// use this function instead of offering the packet to SAMC
+	public void ignoreEvent(String filename){
+		try{
+        	PrintWriter writer = new PrintWriter(ipcDir + "/new/" + filename, "UTF-8");
+        	writer.println("eventId=" + filename);
+	        writer.close();
+	        
+	        System.out.println("DMCK for now ignores event with ID : " + filename);
+	        LOG.info("DMCK for now ignores event with ID : " + filename);
+	        
+	        Runtime.getRuntime().exec("mv " + ipcDir + "/new/" + filename + " " + 
+	        		ipcDir + "/ack/" + filename);
+    	} catch (Exception e) {
+    		LOG.error("Error in ignoring event with file : " + filename);
+    	}
 	}
 	
 	private int commonHashId(int eventId){
