@@ -98,6 +98,22 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
         exploredBranchRecorder.noteThisNode(".test_id", testId + "");
     }
     
+    protected void saveNextTransition(String nextTransition) {
+    	try {
+            localRecordFile.write(("Next Execute: " + nextTransition + "\n").getBytes());
+        } catch (IOException e) {
+            LOG.error("", e);
+        }
+    }
+    
+    protected void saveFinishedPath() {
+    	try {
+            localRecordFile.write(("Finished Path: " + exploredBranchRecorder.getCurrentPath() + "\n").getBytes());
+        } catch (IOException e) {
+            LOG.error("", e);
+        }
+    }
+    
     class PathTraversalWorker extends Thread {
 
         @Override
@@ -118,11 +134,13 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                     saveResult(verifiedResult + " ; " + detail + "\n");
                     recordTestId();
                     exploredBranchRecorder.markBelowSubtreeFinished();
+                    saveFinishedPath();
                     for (LinkedList<Transition> pastTransitions : pastEnabledTransitionList) {
                         exploredBranchRecorder.traverseUpward(1);
                         Transition nextTransition = nextTransition(pastTransitions);
                         if (nextTransition == null) {
                             exploredBranchRecorder.markBelowSubtreeFinished();
+                            saveFinishedPath();
                         	hasExploredAll = true;
                         } else {
                         	hasExploredAll = false;
@@ -168,6 +186,19 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                         saveResult(cleanTransition + " ; " + detail + "\n");
                         recordTestId();
                         exploredBranchRecorder.markBelowSubtreeFinished();
+                        saveFinishedPath();
+                        for (LinkedList<Transition> pastTransitions : pastEnabledTransitionList) {
+                            exploredBranchRecorder.traverseUpward(1);
+                            Transition nextTransition = nextTransition(pastTransitions);
+                            if (nextTransition == null) {
+                                exploredBranchRecorder.markBelowSubtreeFinished();
+                                saveFinishedPath();
+                            	hasExploredAll = true;
+                            } else {
+                            	hasExploredAll = false;
+                                break;
+                            }
+                        }
                     	System.out.println("[NEXT TRANSITION] False next transition");
                     	System.out.println("---- End of Path Execution ----");
                         resetTest();

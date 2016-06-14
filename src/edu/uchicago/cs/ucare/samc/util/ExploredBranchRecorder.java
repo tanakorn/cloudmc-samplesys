@@ -17,5 +17,6 @@ public interface ExploredBranchRecorder {
     public void traverseDownTo(long child);
     public int getCurrentDepth();
     public void resetTraversal();
+    public String getCurrentPath();
 
 }

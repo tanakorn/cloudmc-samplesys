@@ -173,5 +173,9 @@ public class FileSystemExploredBranchRecorder implements ExploredBranchRecorder 
     public int getCurrentDepth() {
         return currentDepth;
     }
+    
+    public String getCurrentPath() {
+    	return currentDir;
+    }
 
 }

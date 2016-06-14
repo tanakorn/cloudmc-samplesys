@@ -225,5 +225,9 @@ public class SqliteExploredBranchRecorder implements ExploredBranchRecorder {
         currentDepth = 0;
         path = "/root";
     }
+    
+    public String getCurrentPath() {
+    	return path;
+    }
 
 }

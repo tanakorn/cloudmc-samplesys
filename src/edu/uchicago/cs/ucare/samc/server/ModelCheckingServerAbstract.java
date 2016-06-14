@@ -406,18 +406,29 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     }
     
     public void printTransitionQueues(LinkedList<Transition> transitionList){
-    	System.out.println("-----------------------------");
-        System.out.println("[DEBUG] Events in Queue : " + transitionList.size());
-        int counter = 1;
-        for (Transition t : transitionList) {
-        	if(t != null){
-        		System.out.println(counter + ". " + t.toString());
-        	} else {
-        		System.out.println(counter + ". " + "null event");
-        	}
-        	counter++;
+    	try {
+	    	System.out.println("-----------------------------");
+	        localRecordFile.write(("-----------------------------\n").getBytes());
+	        
+	        System.out.println("[DEBUG] Events in Queue : " + transitionList.size());
+	        localRecordFile.write(("Events in Queue : " + transitionList.size() + "\n").getBytes());
+	        
+	        int counter = 1;
+	        for (Transition t : transitionList) {
+	        	if(t != null){
+	        		System.out.println(counter + ". " + t.toString());
+	    	        localRecordFile.write((counter + ". " + t.toString() + "\n").getBytes());
+	        	} else {
+	        		System.out.println(counter + ". null event");
+	    	        localRecordFile.write((counter + ". null event" + "\n").getBytes());
+	        	}
+	        	counter++;
+	        }
+	        System.out.println("-----------------------------");
+	        localRecordFile.write(("-----------------------------\n").getBytes());
+    	} catch (IOException e) {
+            LOG.error("", e);
         }
-        System.out.println("-----------------------------");
     }
     
     public void printPacketQueues(LinkedList<InterceptPacket> packetList){
