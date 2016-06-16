@@ -5,12 +5,12 @@ import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
 @SuppressWarnings("serial")
 public class SCMPacket extends InterceptPacket {
 	
-    public static final String MSG_CONTENT = "msgContent";
+    public static final String VOTE = "vote";
 	
 	public SCMPacket(int id, String callbackName, int fromId,
-			int toId, String filename, String msgContent) {
+			int toId, String filename, int vote) {
 		super(id, callbackName, fromId, toId, filename);
-		addKeyValue(MSG_CONTENT, msgContent);
+		addKeyValue(VOTE, vote);
 	}
 	
 }

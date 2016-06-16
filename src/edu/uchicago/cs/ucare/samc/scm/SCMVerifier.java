@@ -11,12 +11,12 @@ public class SCMVerifier extends SpecVerifier {
 	
 	protected static final Logger LOG = LoggerFactory.getLogger(SCMVerifier.class);
     
-	boolean pathState;
-	String pathOrder;
+	boolean error;
+	int receiverVote;
 	
     public SCMVerifier() {
-    	pathState = true;
-    	pathOrder = "";
+    	error = false;
+    	receiverVote = 0;
     }
     
     public SCMVerifier(ModelCheckingServerAbstract modelCheckingServer) {
@@ -25,15 +25,13 @@ public class SCMVerifier extends SpecVerifier {
 
     @Override
     public boolean verify(){
-    	pathOrder = modelCheckingServer.scmStates;
-    	if(modelCheckingServer.scmStates.length() > 2){
-    		if(modelCheckingServer.scmStates.indexOf("bac") >= 0){
-    			pathState = false;
-    			return false;
-    		}
+    	receiverVote = modelCheckingServer.receiverState;
+    	if(modelCheckingServer.receiverState != 4){
+    		error = true;
+    		return false;
+    	} else {
+    		return true;
     	}
-    	pathState = true;
-    	return true;
     }
     
     @Override
@@ -44,10 +42,10 @@ public class SCMVerifier extends SpecVerifier {
 
     @Override
     public String verificationDetail(){
-    	if(pathState){
-        	return "Current path (" + pathOrder +") doesn't have 'bac' order in its order.";
+    	if(error){
+        	return "Receiver vote is not 4, but " + receiverVote;
     	} else {
-        	return "Current path (" + pathOrder +") has 'bac' order in its order. In this SCM example, this is an error order.";
+        	return "Receiver is in correct state. The vote is " + receiverVote;
     	}
     }
 

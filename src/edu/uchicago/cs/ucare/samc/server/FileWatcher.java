@@ -117,22 +117,22 @@ public class FileWatcher implements Runnable{
 	    		int eventId = Integer.parseInt(filename.substring(4));
 	    		int hashId = commonHashId(eventId);
 		    	int recvNode = Integer.parseInt(ev.getProperty("recvNode"));
-		    	String msgContent = ev.getProperty("msgContent");
+		    	int vote = Integer.parseInt(ev.getProperty("vote"));
 	    		
 		    	System.out.println("[DEBUG] Receive msg " + filename + " : hashId-" + hashId +  " from node-" + sendNode +
-		    			" to node-" + recvNode + " callbackName-" + callbackName + " msgContent-" + msgContent);
+		    			" to node-" + recvNode + " callbackName-" + callbackName + " vote-" + vote);
 		    	LOG.info("[DEBUG] Receive msg " + filename + " : hashId-" + hashId +  " from node-" + sendNode +
-		    			" to node-" + recvNode + " callbackName-" + callbackName + " msgContent-" + msgContent);
+		    			" to node-" + recvNode + " callbackName-" + callbackName + " vote-" + vote);
 		    	
-		    	SCMPacket packet = new SCMPacket(hashId, callbackName, sendNode, recvNode, filename, msgContent);
+		    	SCMPacket packet = new SCMPacket(hashId, callbackName, sendNode, recvNode, filename, vote);
 		    	checker.offerPacket(packet);
 	    	} else if (filename.startsWith("updatescm-")){
-		    	String msgContent = filename.substring(10);
+	    		int vote = Integer.parseInt(ev.getProperty("vote"));
 		    	
-		    	System.out.println("[DEBUG] Receive state update from node-" + sendNode + " msgContent-" + msgContent);
-		    	LOG.info("[DEBUG] Receive state update from node-" + sendNode + " msgContent-" + msgContent);
+		    	System.out.println("[DEBUG] Update receiver node-" + sendNode + " with vote-" + vote);
+		    	LOG.info("[DEBUG] Update receiver node-" + sendNode + " with vote-" + vote);
 		    	
-		    	checker.setSCMState(msgContent);
+		    	checker.setSCMState(vote);
 	    	}
 	    	
 	    	// remove the received msg

@@ -15,6 +15,7 @@ public class SCMReceiver {
 
     static String ipcDmckDir;
 	static String messageLocation;
+	static int vote;
 	static final int nodeId = 0;
 	
 	public static void main(String[] args) throws IOException {
@@ -27,8 +28,11 @@ public class SCMReceiver {
 		messageLocation = args[0];
 		ipcDmckDir = args[1];
 		int peers = Integer.parseInt(args[2]);
+		vote = peers + 1;
 		
 		LOG.info("Receiver going to start " + peers + " threads");
+		
+		updateState();
 		
 		for(int i=1; i<=peers; i++){
 			Receiver receiverThread = new Receiver(i);
@@ -36,6 +40,23 @@ public class SCMReceiver {
 		}
 
 	}
+	
+	public static void updateState(){
+		PrintWriter updateStateWriter;
+		try {
+			updateStateWriter = new PrintWriter(ipcDmckDir + "/new/updatescm-receiver", "UTF-8");
+    		updateStateWriter.println("sendNode=" + nodeId);
+    		updateStateWriter.println("vote=" + vote);
+    		updateStateWriter.close();
+    		
+    		// commit msg order update
+    		Runtime.getRuntime().exec("mv " + ipcDmckDir + "/new/updatescm-receiver " + 
+    				ipcDmckDir + "/send/updatescm-receiver");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	
 	public static int getHash(int fromId){
 		final int prime = 31;
@@ -66,23 +87,20 @@ public class SCMReceiver {
 	        	Properties ev = new Properties();
 				FileInputStream evInputStream = new FileInputStream(messageLocation + "/send/" + msgName);
 		    	ev.load(evInputStream);
-		    	String msgContent = ev.getProperty("msgContent");
+		    	int senderVote = Integer.parseInt(ev.getProperty("vote"));
 
-    			LOG.info("receiver-" + fromId + " has received message " + msgName + " which contains " + msgContent);
-	    	
-		    	// inform msg order update
-    			PrintWriter updateStateWriter = new PrintWriter(ipcDmckDir + "/new/updatescm-" + msgContent, "UTF-8");
-        		updateStateWriter.println("sendNode=" + nodeId);
-        		updateStateWriter.close();
-        		
-        		// commit msg order update
-        		Runtime.getRuntime().exec("mv " + ipcDmckDir + "/new/updatescm-" + msgContent + " " + 
-        				ipcDmckDir + "/send/updatescm-" + msgContent);
+    			LOG.info("receiver-" + fromId + " has received message " + msgName + " which vote " + senderVote);
+    			
+    			// reaction on sender message
+    			if(senderVote > vote){
+    				vote = senderVote;
+			    	updateState();
+    			}
     		} catch (Exception e){
     			LOG.error("receiver failed to update state to dmck");
     		}
 		}
-		
+				
 		public void deleteMessage(){
 			try{
         		Runtime.getRuntime().exec("rm " + messageLocation + "/send/" + msgName);

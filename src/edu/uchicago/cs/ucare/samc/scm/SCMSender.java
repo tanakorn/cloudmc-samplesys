@@ -17,8 +17,8 @@ public class SCMSender {
 	
 	static int msgId;
 	static int nodeId;
+	static int vote;
 	static String msgName;
-	static char msgContent;
 	
 	public static void main(String[] args) throws IOException {
 		
@@ -32,7 +32,7 @@ public class SCMSender {
 		nodeId = Integer.parseInt(args[2]);
 		msgId = getHash(nodeId, 0);
 		msgName = "scm-" + msgId;
-		msgContent = (char)(96 + nodeId);
+		vote = nodeId;
 		
 		createMessage();
 		sendMessage();
@@ -45,7 +45,7 @@ public class SCMSender {
     	try{
         	PrintWriter writer = new PrintWriter(messageLocation + "/new/" + msgName, "UTF-8");
         	writer.println("msgId=" + msgId);
-        	writer.println("msgContent=" + msgContent);
+        	writer.println("vote=" + vote);
         	writer.close();
         	
 			LOG.info("sender-" + msgId + " has successfully created its message " + msgName);
@@ -58,7 +58,6 @@ public class SCMSender {
 		try{
     		Runtime.getRuntime().exec("mv " + messageLocation + "/new/" + msgName + " " + 
     				messageLocation + "/send/" + msgName);
-
 			LOG.info("sender-" + msgId + " has sent its message " + msgName);
     	} catch (Exception e){
 			LOG.error("sender-" + msgId + " has not sent its message " + msgName);
@@ -72,7 +71,7 @@ public class SCMSender {
         	writer.println("callbackName=SCMCallback" + msgId);
         	writer.println("sendNode=" + nodeId);
         	writer.println("recvNode=" + 0);
-        	writer.println("msgContent=" + msgContent);
+        	writer.println("vote=" + vote);
         	writer.close();
         	
         	Runtime.getRuntime().exec("mv " + ipcDmckDir + "/new/" + msgName + " " + 

@@ -113,7 +113,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected int waitEndExploration;
     
     public LeaderElectionLocalState[] localStates;
-    public String scmStates;
+    public int receiverState;
     
     protected String ipcDir;
 
@@ -154,7 +154,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
         localEventQueue = new LinkedList<InterceptPacket>();
         localStates = new LeaderElectionLocalState[numNode];
-        scmStates = "";
+        receiverState = 0;
         ipcDir = "";
         getDMCKConfig();
         this.resetTest();
@@ -200,7 +200,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
         localEventQueue = new LinkedList<InterceptPacket>();
         localStates = new LeaderElectionLocalState[numNode];
-        scmStates = "";
+        receiverState = 0;
         this.ipcDir = ipcDir;
         getDMCKConfig();
         this.resetTest();
@@ -300,8 +300,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     	localStates[nodeId] = (LeaderElectionLocalState) localState;
     }
     
-    public void setSCMState(String msg){
-    	scmStates += msg;
+    public void setSCMState(int vote){
+    	receiverState = vote;
     }
     
     public void waitForWrite(DiskWrite write) throws InterruptedException {
@@ -819,7 +819,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         initialPathCounter = 0;
         this.hasFinishedInitialPath = !hasInitialPath;
         localState = new int[numNode];
-        scmStates = "";
+        receiverState = 0;
         globalState = 0;
         isInitGlobalState = false;
         if (pathRecordFile != null) {
