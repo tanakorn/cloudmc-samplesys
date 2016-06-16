@@ -132,7 +132,7 @@ public class FileWatcher implements Runnable{
 		    	System.out.println("[DEBUG] Update receiver node-" + sendNode + " with vote-" + vote);
 		    	LOG.info("[DEBUG] Update receiver node-" + sendNode + " with vote-" + vote);
 		    	
-		    	checker.setSCMState(vote);
+		    	checker.setSCMState(0, vote);
 	    	}
 	    	
 	    	// remove the received msg

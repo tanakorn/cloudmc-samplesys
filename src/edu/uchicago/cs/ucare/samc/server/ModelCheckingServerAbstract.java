@@ -29,6 +29,7 @@ import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.samc.event.DiskWrite;
 import edu.uchicago.cs.ucare.samc.event.DiskWriteAck;
 import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
+import edu.uchicago.cs.ucare.samc.scm.SCMState;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeStartTransition;
 import edu.uchicago.cs.ucare.samc.transition.DiskWriteTransition;
@@ -113,7 +114,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected int waitEndExploration;
     
     public LeaderElectionLocalState[] localStates;
-    public int receiverState;
+    public SCMState[] scmStates;
     
     protected String ipcDir;
 
@@ -154,7 +155,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
         localEventQueue = new LinkedList<InterceptPacket>();
         localStates = new LeaderElectionLocalState[numNode];
-        receiverState = 0;
+        scmStates = new SCMState[numNode];
         ipcDir = "";
         getDMCKConfig();
         this.resetTest();
@@ -200,7 +201,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
         localEventQueue = new LinkedList<InterceptPacket>();
         localStates = new LeaderElectionLocalState[numNode];
-        receiverState = 0;
+        scmStates = new SCMState[numNode];
         this.ipcDir = ipcDir;
         getDMCKConfig();
         this.resetTest();
@@ -300,8 +301,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     	localStates[nodeId] = (LeaderElectionLocalState) localState;
     }
     
-    public void setSCMState(int vote){
-    	receiverState = vote;
+    public void setSCMState(int node, int vote){
+    	scmStates[node].setVote(vote);
     }
     
     public void waitForWrite(DiskWrite write) throws InterruptedException {
@@ -819,7 +820,9 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         initialPathCounter = 0;
         this.hasFinishedInitialPath = !hasInitialPath;
         localState = new int[numNode];
-        receiverState = 0;
+        for(int i=0; i< scmStates.length; i++){
+        	scmStates[i] = new SCMState();
+        }
         globalState = 0;
         isInitGlobalState = false;
         if (pathRecordFile != null) {

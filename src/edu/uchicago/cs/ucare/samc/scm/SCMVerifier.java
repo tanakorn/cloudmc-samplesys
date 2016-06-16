@@ -12,11 +12,11 @@ public class SCMVerifier extends SpecVerifier {
 	protected static final Logger LOG = LoggerFactory.getLogger(SCMVerifier.class);
     
 	boolean error;
-	int receiverVote;
+	SCMState receiverVote;
 	
     public SCMVerifier() {
     	error = false;
-    	receiverVote = 0;
+    	receiverVote = new SCMState();
     }
     
     public SCMVerifier(ModelCheckingServerAbstract modelCheckingServer) {
@@ -25,8 +25,8 @@ public class SCMVerifier extends SpecVerifier {
 
     @Override
     public boolean verify(){
-    	receiverVote = modelCheckingServer.receiverState;
-    	if(modelCheckingServer.receiverState != 4){
+    	receiverVote = modelCheckingServer.scmStates[0];
+    	if(receiverVote.getVote() != 4){
     		error = true;
     		return false;
     	} else {

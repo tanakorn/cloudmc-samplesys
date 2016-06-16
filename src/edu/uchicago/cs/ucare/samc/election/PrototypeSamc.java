@@ -454,7 +454,10 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                     if (dporInitialPaths.size() == 0) {
                         exploredBranchRecorder.resetTraversal();
                         exploredBranchRecorder.markBelowSubtreeFinished();
-                        LOG.warn("Finished exploring all states");
+                        System.out.println("There is no more interesting Initial Paths. "
+                        		+ "Finished exploring all states.");
+                        LOG.warn("There is no more interesting Initial Paths. "
+                        		+ "Finished exploring all states.");
                         workloadDriver.stopEnsemble();
                         System.exit(0);
                     } else {
@@ -511,6 +514,10 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                     if (dporInitialPaths.size() == 0) {
                         exploredBranchRecorder.resetTraversal();
                         exploredBranchRecorder.markBelowSubtreeFinished();
+                        System.out.println("There is no more interesting Initial Paths. "
+                        		+ "Finished exploring all states.");
+                        LOG.warn("There is no more interesting Initial Paths. "
+                        		+ "Finished exploring all states.");
                         System.exit(0);
                     } else {
                         currentDporPath = dporInitialPaths.remove();
@@ -529,6 +536,8 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
 		private void addGlobalStateHistory() {
 			if(interceptorName.equals("sampleLEModelChecker")){
 				prevLocalStates.add(localStates.clone());
+			} else if(interceptorName.equals("scmChecker")){
+				prevLocalStates.add(scmStates.clone());
 			}
 		}
 
