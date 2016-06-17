@@ -73,7 +73,7 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
         exploredBranchRecorder.noteThisNode(".test_id", testId + "");
     }
     
-    protected void adjustCrashReboot(LinkedList<Transition> enabledTransitions) {
+    protected void adjustCrashAndReboot(LinkedList<Transition> enabledTransitions) {
         int numOnline = 0;
         for (int i = 0; i < numNode; ++i) {
             if (isNodeOnline(i)) {
@@ -113,7 +113,7 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
             int numWaitTime = 0;
             while (true) {
                 getOutstandingTcpPacketTransition(currentEnabledTransitions);
-                adjustCrashReboot(currentEnabledTransitions);
+                adjustCrashAndReboot(currentEnabledTransitions);
                 printTransitionQueues(currentEnabledTransitions);
                 boolean terminationPoint = checkTerminationPoint(currentEnabledTransitions);
                 if (terminationPoint && numWaitTime >= 2) {

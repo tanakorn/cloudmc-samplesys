@@ -160,7 +160,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         }
     }
 
-    protected void adjustCrashReboot(LinkedList<Transition> enabledTransitions) {
+    protected void adjustCrashAndReboot(LinkedList<Transition> enabledTransitions) {
         int numOnline = 0;
         for (int i = 0; i < numNode; ++i) {
             if (isNodeOnline(i)) {
@@ -346,7 +346,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                 for (TransitionTuple tuple : currentDporPath) {
                     getOutstandingTcpPacketTransition(currentEnabledTransitions);
                     getOutstandingDiskWrite(currentEnabledTransitions);
-                    adjustCrashReboot(currentEnabledTransitions);
+                    adjustCrashAndReboot(currentEnabledTransitions);
                     updateGlobalState2();
                     recordEnabledTransitions(globalState2, currentEnabledTransitions);
                     printTransitionQueues(currentEnabledTransitions);
@@ -370,7 +370,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                                 Thread.sleep(100);
                                 getOutstandingTcpPacketTransition(currentEnabledTransitions);
                                 getOutstandingDiskWrite(currentEnabledTransitions);
-                                adjustCrashReboot(currentEnabledTransitions);
+                                adjustCrashAndReboot(currentEnabledTransitions);
                             } catch (InterruptedException e) {
                                 LOG.error("", e);
                             }
@@ -436,7 +436,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
             while (true) {
                 getOutstandingTcpPacketTransition(currentEnabledTransitions);
                 getOutstandingDiskWrite(currentEnabledTransitions);
-                adjustCrashReboot(currentEnabledTransitions);
+                adjustCrashAndReboot(currentEnabledTransitions);
                 updateGlobalState2();
                 recordEnabledTransitions(globalState2, currentEnabledTransitions);
                 printTransitionQueues(currentEnabledTransitions);
