@@ -67,7 +67,19 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
         if (numCurrentCrash < numCrash) {
             for (int i = 0; i < isNodeOnline.length; ++i) {
                 if (isNodeOnline(i)) {
-                    transitions.add(new NodeCrashTransition(this, i));
+                	// only add crash event if the crash event doesn't exist
+                	NodeCrashTransition crashEvent = new NodeCrashTransition(this, i);
+                	if(!transitions.contains(crashEvent)){
+                		transitions.add(crashEvent);
+                	}
+                    // if existing transitions has startTransition node i in the list,
+                	// but the node i now is already online, then remove the start node i events
+                    for(int j=transitions.size()-1; j>= 0; j--){
+                    	if(transitions.get(j) instanceof NodeStartTransition && ((NodeStartTransition) transitions.get(j)).getId() == i){
+                    		System.out.println("remove event: " + transitions.get(j).toString());
+                    		transitions.remove(j);
+                    	}
+                    }
                 }
             }
         } else {
@@ -81,7 +93,11 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
         if (numCurrentReboot < numReboot) {
             for (int i = 0; i < isNodeOnline.length; ++i) {
                 if (!isNodeOnline(i)) {
-                    transitions.add(new NodeStartTransition(this, i));
+                	// only add crash event if the crash event doesn't exist
+                	NodeStartTransition rebootEvent = new NodeStartTransition(this, i);
+                	if(!transitions.contains(rebootEvent)){
+                		transitions.add(new NodeStartTransition(this, i));
+                	}
                 }
             }
         } else {
