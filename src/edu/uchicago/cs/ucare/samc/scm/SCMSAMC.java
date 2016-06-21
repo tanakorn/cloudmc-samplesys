@@ -19,7 +19,7 @@ public class SCMSAMC extends DporModelChecker {
 		SCMState receiverState = (SCMState) state;
 		int v1 = (int) e1.getValue(SCMPacket.VOTE);
 		int v2 = (int) e2.getValue(SCMPacket.VOTE);
-		if(receiverState.getVote() <= v1 || receiverState.getVote() <= v2){
+		if(receiverState.getVote() < v1 || receiverState.getVote() < v2){
 			return true;
 		}
 		return false;
