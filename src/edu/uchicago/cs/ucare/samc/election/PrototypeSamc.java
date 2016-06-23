@@ -16,8 +16,6 @@ import java.util.Set;
 
 import com.almworks.sqlite4java.SQLiteException;
 
-import edu.uchicago.cs.ucare.samc.event.DiskWrite;
-import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeOperationTransition;
@@ -333,7 +331,6 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     
     class PathTraversalWorker extends Thread {
         
-        @SuppressWarnings("unused")
 		@Override
         public void run() {
             if (currentDporPath != null) {
@@ -344,12 +341,9 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                 }
                 LOG.info(tmp);
                 for (TransitionTuple tuple : currentDporPath) {
-                    getOutstandingTcpPacketTransition(currentEnabledTransitions);
-                    getOutstandingDiskWrite(currentEnabledTransitions);
-                    adjustCrashAndReboot(currentEnabledTransitions);
+                	updateSAMCQueue();
                     updateGlobalState2();
                     recordEnabledTransitions(globalState2, currentEnabledTransitions);
-                    printTransitionQueues(currentEnabledTransitions);
                     boolean isThereThisTuple = false;
                     for (int i = 0; i < 35; ++i) {
                         if (tuple.transition instanceof NodeCrashTransition) {
@@ -409,46 +403,28 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                             tuple.transition = ((AbstractNodeOperationTransition) tuple.transition).getRealNodeOperationTransition();
                             nodeOperationTransition.id = ((NodeOperationTransition) tuple.transition).getId();
                         }
-                        pathRecordFile.write((tuple.transition.toString() + "\n").getBytes());
                         if (tuple.transition.apply()) {
+                            pathRecordFile.write((tuple.transition.toString() + "\n").getBytes());
                             updateGlobalState();
-                            if (tuple.transition instanceof PacketSendTransition) {
-                                InterceptPacket p = ((PacketSendTransition) tuple.transition).getPacket();
-                                int toId = p.getToId();
-                            } else if (tuple.transition instanceof DiskWriteTransition) {
-                                if (!((DiskWriteTransition) tuple.transition).isObsolete()) {
-                                    DiskWrite write = ((DiskWriteTransition) tuple.transition).getWrite();
-                                }
-                            }
+                            updateSAMCQueueAfterEventExecution(tuple.transition);
                         }
                     } catch (IOException e) {
                         LOG.error("", e);
                     }
                     exploredBranchRecorder.createChild(tuple.transition.getTransitionId());
                     exploredBranchRecorder.traverseDownTo(tuple.transition.getTransitionId());
-                    if (tuple.transition instanceof NodeCrashTransition) {
-                        markPacketsObsolete(currentExploringPath.size() - 1, ((NodeCrashTransition) tuple.transition).getId(), currentEnabledTransitions);
-                    } 
                 }
             }
             LOG.info("Try to find new path/Continue from DPOR initial path");
             boolean hasWaited = false;
             while (true) {
-                getOutstandingTcpPacketTransition(currentEnabledTransitions);
-                getOutstandingDiskWrite(currentEnabledTransitions);
-                adjustCrashAndReboot(currentEnabledTransitions);
+            	updateSAMCQueue();
                 updateGlobalState2();
                 recordEnabledTransitions(globalState2, currentEnabledTransitions);
-                printTransitionQueues(currentEnabledTransitions);
                 if (currentEnabledTransitions.isEmpty() && hasWaited) {
                     boolean verifiedResult = verifier.verify();
                     String detail = verifier.verificationDetail();
                     saveResult(verifiedResult + " ; " + detail + "\n");
-                    String mainPath = "";
-                    for (TransitionTuple tuple : currentExploringPath) {
-                        mainPath += tuple.toString() + "\n";
-                    }
-                    LOG.info("Main path\n" + mainPath);
                     exploredBranchRecorder.markBelowSubtreeFinished();
                     findDPORInitialPaths();
                     if (dporInitialPaths.size() == 0) {
@@ -488,19 +464,10 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                             transition = ((AbstractNodeOperationTransition) transition).getRealNodeOperationTransition();
                             nodeOperationTransition.id = ((NodeOperationTransition) transition).getId();
                         }
-                        pathRecordFile.write((transition.toString() + "\n").getBytes());
                         if (transition.apply()) {
+                        	pathRecordFile.write((transition.toString() + "\n").getBytes());
                             updateGlobalState();
-                            if (transition instanceof PacketSendTransition) {
-                                InterceptPacket p = ((PacketSendTransition) transition).getPacket();
-                                int toId = p.getToId();
-                            } else if (transition instanceof NodeCrashTransition) {
-                                markPacketsObsolete(currentExploringPath.size() - 1, ((NodeCrashTransition) transition).getId(), currentEnabledTransitions);
-                            } else if (transition instanceof DiskWriteTransition) {
-                                if (!((DiskWriteTransition) transition).isObsolete()) {
-                                    DiskWrite write = ((DiskWriteTransition) transition).getWrite();
-                                }
-                            }
+                            updateSAMCQueueAfterEventExecution(transition);
                         }
                     } catch (IOException e) {
                         LOG.error("", e);

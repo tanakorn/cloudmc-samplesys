@@ -9,8 +9,6 @@ import java.rmi.RemoteException;
 import java.util.LinkedList;
 
 import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
-import edu.uchicago.cs.ucare.samc.transition.NodeCrashTransition;
-import edu.uchicago.cs.ucare.samc.transition.NodeStartTransition;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
@@ -58,7 +56,7 @@ public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
             while (parser != null && (instruction = parser.readNextInstruction()) != null) {
                 getOutstandingTcpPacketTransition(currentEnabledTransitions);
                 printTransitionQueues(currentEnabledTransitions);
-                Transition transition = instruction.getRealTransition(checker);
+                Transition transition = instruction.getRealTransition(checker, currentEnabledTransitions);
                 if (transition == null) {
                     break;
                 }
@@ -99,10 +97,10 @@ public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
                 if (tokens[0].equals("packetsend")) {
                     String packetTransitionIdString = tokens[1].split("=")[1];
                     if (packetTransitionIdString.equals("*")) {
-                        return new PacketSendInstuctionTransition(0);
+                        return new PacketSendInstructionTransition(0);
                     } else {
                         long packetTransitionId = Long.parseLong(packetTransitionIdString);
-                        return new PacketSendInstuctionTransition(packetTransitionId);
+                        return new PacketSendInstructionTransition(packetTransitionId);
                     }
                 } else if (tokens[0].equals("nodecrash")) {
                     int id = Integer.parseInt(tokens[1].split("=")[1]);
@@ -123,134 +121,16 @@ public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
         }
         
     }
-    
-    abstract class InstructionTransition {
-
-        abstract Transition getRealTransition(ModelCheckingServerAbstract checker);
-
-    }
-    
-    class PacketSendInstuctionTransition extends InstructionTransition {
-        
-        long packetId;
-        
-        public PacketSendInstuctionTransition(long packetId) {
-            this.packetId = packetId;
-        }
-        
-        @Override
-        Transition getRealTransition(ModelCheckingServerAbstract checker) {
-            if (packetId == 0) {
-                return (Transition) currentEnabledTransitions.peekFirst();
-            }
-            for (int i = 0; i < 15; ++i) {
-                for (Object t : currentEnabledTransitions) {
-                    PacketSendTransition p = (PacketSendTransition) t;
-                    if (p.getTransitionId() == packetId) {
-                        return p;
-                    }
-                }
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    LOG.error("", e);
-                }
-                getOutstandingTcpPacketTransition(currentEnabledTransitions);
-            }
-            throw new RuntimeException("No expected enabled packet for " + packetId);
-        }
-        
-    }
-    
-    class NodeCrashInstructionTransition extends InstructionTransition {
-        
-        int id;
-
-        private NodeCrashInstructionTransition(int id) {
-            this.id = id;
-        }
-
-        @Override
-        Transition getRealTransition(ModelCheckingServerAbstract checker) {
-            return new NodeCrashTransition(checker, id);
-        }
-        
-    }
-    
-    class NodeStartInstructionTransition extends InstructionTransition {
-        
-        int id;
-
-        private NodeStartInstructionTransition(int id) {
-            this.id = id;
-        }
-
-        @Override
-        Transition getRealTransition(ModelCheckingServerAbstract checker) {
-            return new NodeStartTransition(checker, id);
-        }
-        
-    }
-    
-    class SleepInstructionTransition extends InstructionTransition {
-        
-        long sleep;
-        
-        private SleepInstructionTransition(long sleep) {
-            this.sleep = sleep;
-        }
-
-        @SuppressWarnings("serial")
-		@Override
-        Transition getRealTransition(ModelCheckingServerAbstract checker) {
-            return new Transition() {
-
-                @Override
-                public boolean apply() {
-                    try {
-                        Thread.sleep(sleep);
-                    } catch (InterruptedException e) {
-                        return false;
-                    }
-                    return true;
-                }
-
-                @Override
-                public int getTransitionId() {
-                    return 0;
-                }
-                
-            };
-        }
-    }
-    
-    class ExitInstructionTransaction extends InstructionTransition {
-
-        @SuppressWarnings("serial")
-		@Override
-        Transition getRealTransition(ModelCheckingServerAbstract checker) {
-            return new Transition() {
-                
-                @Override
-                public int getTransitionId() {
-                    return 0;
-                }
-                
-                @Override
-                public boolean apply() {
-                    System.exit(0);
-                    return true;
-                }
-            };
-        }
-        
-    }
 
 	@Override
 	public void setLocalState(int nodeId, LocalState localState)
 			throws RemoteException {
 		// TODO Auto-generated method stub
-		
+	}
+
+	@Override
+	protected void adjustCrashAndReboot(LinkedList<Transition> transitions) {
+		// TODO Auto-generated method stub
 	}
     
 }

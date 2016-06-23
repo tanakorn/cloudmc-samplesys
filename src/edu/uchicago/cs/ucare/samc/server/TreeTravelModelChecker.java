@@ -4,14 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.ListIterator;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 import com.almworks.sqlite4java.SQLiteException;
 
-import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
 import edu.uchicago.cs.ucare.samc.transition.NodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeStartTransition;
-import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.ExploredBranchRecorder;
@@ -140,9 +136,7 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
             LinkedList<LinkedList<Transition>> pastEnabledTransitionList = 
                     new LinkedList<LinkedList<Transition>>();
             while (true) {
-            	getOutstandingTcpPacketTransition(currentEnabledTransitions);
-            	adjustCrashAndReboot(currentEnabledTransitions);
-            	printTransitionQueues(currentEnabledTransitions);
+            	updateSAMCQueue();
             	boolean terminationPoint = checkTerminationPoint(currentEnabledTransitions);
                 if (terminationPoint && hasWaited) {
                 	boolean verifiedResult = verifier.verify();
@@ -209,9 +203,7 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                             if (nextTransition == null) {
                                 exploredBranchRecorder.markBelowSubtreeFinished();
                                 saveFinishedPath();
-                            	hasExploredAll = true;
                             } else {
-                            	hasExploredAll = false;
                                 break;
                             }
                         }
@@ -224,22 +216,7 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                         if (transition.apply()) {
                             pathRecordFile.write((transition.toString() + "\n").getBytes());
                             updateGlobalState();
-                            if (transition instanceof NodeCrashTransition) {
-                                NodeCrashTransition crash = (NodeCrashTransition) transition;
-                                ListIterator<Transition> iter = currentEnabledTransitions.listIterator();
-                                while (iter.hasNext()) {
-                                    Transition t = iter.next();
-                                    if (t instanceof PacketSendTransition) {
-                                        PacketSendTransition p = (PacketSendTransition) t;
-                                        if (p.getPacket().getFromId() == crash.getId()) {
-                                            iter.remove();
-                                        }
-                                    }
-                                }
-                                for (ConcurrentLinkedQueue<InterceptPacket> queue : senderReceiverQueues[crash.getId()]) {
-                                    queue.clear();
-                                }
-                            }
+                            updateSAMCQueueAfterEventExecution(transition);
                         }
                     } catch (Exception e) {
                         LOG.error("", e);
