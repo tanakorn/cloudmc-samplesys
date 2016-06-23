@@ -31,7 +31,7 @@ public abstract class DporModelChecker extends PrototypeSamc {
 	@Override
     protected void calculateDPORInitialPaths() {
         TransitionTuple lastTransition;
-        while ((lastTransition = currentExploringPath.pollLast()) != null) {
+        while ((lastTransition = currentExploringPath.pollLast()) != null && currentExploringPath.size() > initialPath.size()+1) {
             boolean[] oldOnlineStatus = prevOnlineStatus.removeLast();
             LocalState[] oldLocalStates = prevLocalStates.removeLast();
             LinkedList<TransitionTuple> tmpPath = (LinkedList<TransitionTuple>) currentExploringPath.clone();
@@ -54,13 +54,15 @@ public abstract class DporModelChecker extends PrototypeSamc {
                     addToDporInitialPathList(interestingPath);
                 }
             }
+            int reverseCounter = currentExploringPath.size();
             Iterator<TransitionTuple> reverseIter = currentExploringPath.descendingIterator();
             Iterator<LocalState[]> reverseLocalStateIter = prevLocalStates.descendingIterator();
             Iterator<boolean[]> reverseOnlineStatusIter = prevOnlineStatus.descendingIterator();
-            while (reverseIter.hasNext()) {
+            while (reverseCounter > initialPath.size() && reverseIter.hasNext()) {
                 TransitionTuple tuple = reverseIter.next();
                 oldLocalStates = reverseLocalStateIter.next();
                 oldOnlineStatus = reverseOnlineStatusIter.next();
+                reverseCounter--;
                 Set<Transition> enabledPackets = enabledPacketTable.get(tuple.state);
                 if (enabledPackets.contains(lastTransition.transition)) {
                     tmpPath.pollLast();
@@ -79,7 +81,8 @@ public abstract class DporModelChecker extends PrototypeSamc {
                                     if (isDependent(oldLocalStates[toId], lastPacket, tuplePacket.getPacket())) {
                                         addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
                                     }
-                                    break;
+//                                    break;
+//                                    continue;
                                 }
                             } else if (tuplePacket.getPacket().getToId() == lastPacket.getToId() && tuplePacket.getPacket().getFromId() == lastPacket.getFromId()) {
                                 break;
@@ -91,20 +94,23 @@ public abstract class DporModelChecker extends PrototypeSamc {
                                     if (lastPacket.getObsoleteBy() == crashTransition.getId()) {
                                         lastPacket.setObsolete(false);
                                         addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
-                                        break;
+//                                        break;
+//                                        continue;
                                     }
                                 }
                             } else {
                             	// reorder crash and reboot
                                 addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
-                                break;
+//                                break;
+//                                continue;
                             }
                         }
                     }
                 } else {
-                	// reorder crash and reboot - korn remove this?
+                	// reorder crash and reboot
                 	addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
-                    break;
+//                    break;
+//                	continue;
                 }
             }
         }

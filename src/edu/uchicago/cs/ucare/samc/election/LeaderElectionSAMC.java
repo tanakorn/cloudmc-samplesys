@@ -9,7 +9,7 @@ import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 import edu.uchicago.cs.ucare.samc.util.LocalState;
 
-public class LeaderElectionSemanticAwareModelChecker extends DporModelChecker {
+public class LeaderElectionSAMC extends DporModelChecker {
 
     public boolean isDependent(LocalState state, Event e1, Event e2) {
         LeaderElectionLocalState leState = (LeaderElectionLocalState) state;
@@ -26,7 +26,7 @@ public class LeaderElectionSemanticAwareModelChecker extends DporModelChecker {
         return false;
     }
 
-    public LeaderElectionSemanticAwareModelChecker(String interceptorName,
+    public LeaderElectionSAMC(String interceptorName,
             String ackName, int maxId, int numCrash, int numReboot,
             String globalStatePathDir, String packetRecordDir, String workingDir,
             WorkloadDriver workloadDriver, String ipcDir) {
