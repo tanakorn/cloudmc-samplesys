@@ -9,7 +9,7 @@ import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 
-public class RelayModelChecker extends ProgrammableModelChecker {
+public class RelayModelChecker extends GuideModelChecker {
     
     protected LinkedList<PacketSendTransition> currentLevelPackets;
     

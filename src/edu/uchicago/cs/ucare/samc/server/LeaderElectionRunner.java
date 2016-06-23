@@ -102,14 +102,14 @@ public class LeaderElectionRunner {
             LOG.info("State exploration strategy is " + strategy);
             Class<? extends ModelCheckingServerAbstract> modelCheckerClass = (Class<? extends ModelCheckingServerAbstract>) Class.forName(strategy);
             
-            if(ProgrammableModelChecker.class.isAssignableFrom(modelCheckerClass)){
+            if(GuideModelChecker.class.isAssignableFrom(modelCheckerClass)){
             	String programFileName = prop.getProperty("program");
                 if (programFileName == null) {
                     throw new RuntimeException("No program file specified");
                 }
                 LOG.info("Inspect potential bug in: " + programFileName);
                 File program = new File(programFileName);
-                modelCheckingServerAbstract = new ProgrammableModelChecker(interceptorName, ackName, numNode, 
+                modelCheckingServerAbstract = new GuideModelChecker(interceptorName, ackName, numNode, 
                         testRecordDir, program, workingDir, workloadDriver, ipcDir);
             } else {
                 Constructor<? extends ModelCheckingServerAbstract> modelCheckerConstructor = modelCheckerClass.getConstructor(

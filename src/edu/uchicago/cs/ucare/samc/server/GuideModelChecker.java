@@ -14,14 +14,14 @@ import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.LocalState;
 
-public class ProgrammableModelChecker extends ModelCheckingServerAbstract {
+public class GuideModelChecker extends ModelCheckingServerAbstract {
     
     protected ProgramParser parser;
     protected LinkedList<InterceptPacket> enabledPackets;
     protected Thread afterProgramModelChecker;
     protected File program;
     
-    public ProgrammableModelChecker(String interceptorName, String ackName, 
+    public GuideModelChecker(String interceptorName, String ackName, 
             int numNode, String globalStatePathDir, File program, 
             String workingDir, WorkloadDriver workloadDriver, String ipcDir) throws FileNotFoundException {
         super(interceptorName, ackName, numNode, globalStatePathDir, workingDir, workloadDriver, ipcDir);
