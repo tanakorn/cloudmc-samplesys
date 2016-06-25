@@ -10,7 +10,7 @@ import edu.uchicago.cs.ucare.samc.election.LeaderElectionAspectProperties;
 import edu.uchicago.cs.ucare.samc.election.LeaderElectionPacketGenerator;
 import edu.uchicago.cs.ucare.samc.event.Event;
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServer;
-import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
+import edu.uchicago.cs.ucare.samc.util.LocalState;
 import edu.uchicago.cs.ucare.samc.util.PacketReceiveAck;
 
 public class LeaderElectionInterposition {
@@ -34,7 +34,7 @@ public class LeaderElectionInterposition {
     public static int numNode;
 	public static boolean[] isReading;
 	
-	public static LeaderElectionLocalState localState;
+	public static LocalState localState;
 	
 	public static boolean firstSent = false;
 
@@ -46,7 +46,7 @@ public class LeaderElectionInterposition {
             msgSenderMap = new HashMap<Integer, Sender>();
             packetGenerator2 = new LeaderElectionPacketGenerator();
             isBound = false;
-            localState = new LeaderElectionLocalState();
+            localState = new LocalState();
 		    try {
                 modelCheckingServer = (ModelCheckingServer) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName());
                 ack = (PacketReceiveAck) Naming.lookup(LeaderElectionAspectProperties.getInterceptorName() + "Ack");

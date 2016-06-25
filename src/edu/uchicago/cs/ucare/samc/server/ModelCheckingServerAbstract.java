@@ -35,7 +35,6 @@ import edu.uchicago.cs.ucare.samc.transition.NodeStartTransition;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
-import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 import edu.uchicago.cs.ucare.samc.util.LocalState;
 import edu.uchicago.cs.ucare.samc.util.PacketReceiveAck;
 import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
@@ -108,7 +107,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected int initSteadyStateTimeout;
     protected int waitEndExploration;
     
-    public LeaderElectionLocalState[] localStates;
+    public LocalState[] localStates;
     public SCMState[] scmStates;
     
     protected String ipcDir;
@@ -139,7 +138,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         isNodeOnline = new boolean[numNode];
         messagesQueues = new ConcurrentLinkedQueue[numNode][numNode];
         localEventQueue = new LinkedList<Event>();
-        localStates = new LeaderElectionLocalState[numNode];
+        localStates = new LocalState[numNode];
         scmStates = new SCMState[numNode];
         this.ipcDir = ipcDir;
         getDMCKConfig();
@@ -219,7 +218,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     }
     
     public void setLocalState(int nodeId, LocalState localState) throws RemoteException {
-    	localStates[nodeId] = (LeaderElectionLocalState) localState;
+    	localStates[nodeId] = localState;
     }
     
     public void setSCMState(int node, int vote){
@@ -859,9 +858,9 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         isStarted = false;
         numPacketSentToId = new int[numNode];
         for (int i = 0; i < localStates.length; ++i) {
-        	localStates[i] = new LeaderElectionLocalState();
-        	localStates[i].setLeader(i);
-        	localStates[i].setRole(LeaderElectionMain.LOOKING);
+        	localStates[i] = new LocalState(i);
+        	localStates[i].addKeyValue("role", LeaderElectionMain.LOOKING);
+        	localStates[i].addKeyValue("leader", i);
         }
     }
     

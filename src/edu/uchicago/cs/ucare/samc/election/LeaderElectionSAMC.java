@@ -6,20 +6,18 @@ import java.util.Map;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.samc.event.Event;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
-import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 import edu.uchicago.cs.ucare.samc.util.LocalState;
 
 public class LeaderElectionSAMC extends DporModelChecker {
 
     public boolean isDependent(LocalState state, Event e1, Event e2) {
-        LeaderElectionLocalState leState = (LeaderElectionLocalState) state;
-        if (leState.getRole() == LeaderElectionMain.LOOKING) {
-            int currSup = leState.getLeader();
+        if ((int)state.getValue("role") == LeaderElectionMain.LOOKING) {
+            int currSup = (int) state.getValue("leader");
             int sup1 = (Integer) e1.getValue("leader");
             int sup2 = (Integer) e2.getValue("leader");
             if (currSup < sup1 || currSup < sup2) {
                 return true;
-            } else if (isFinished(leState)) {
+            } else if (isFinished(state)) {
                 return true;
             }
         }
@@ -34,18 +32,19 @@ public class LeaderElectionSAMC extends DporModelChecker {
                 globalStatePathDir, packetRecordDir, workingDir, workloadDriver, ipcDir);                
     }
 
-    public boolean isFinished(LeaderElectionLocalState state) {
+    public boolean isFinished(LocalState state) {
         int totalNode = this.numNode;
         Map<Integer, Integer> count = new HashMap<Integer, Integer>();
-        Map<Integer, Integer> electionTable = state.getElectionTable();
-        for (Integer electedLeader : electionTable.values()){
-            count.put(electedLeader, count.containsKey(electedLeader) ? count.get(electedLeader) + 1 : 1);
+        String[] electionTable = state.getValue("electionTable").toString().split(",");
+        for(String row : electionTable){
+        	int electedLeader = Integer.parseInt(row.split(":")[1]);
+        	count.put(electedLeader, count.containsKey(electedLeader) ? count.get(electedLeader) + 1 : 1);
         }
-        for (Integer electedLeader : count.keySet()) {
-            int totalElect = count.get(electedLeader);
-            if (totalElect > totalNode / 2) {
-                return true;
-            }
+        for(Integer electedLeader : count.keySet()){
+        	int totalElect = count.get(electedLeader);
+        	if(totalElect > totalNode / 2){
+        		return true;
+        	}
         }
         return false;
     }

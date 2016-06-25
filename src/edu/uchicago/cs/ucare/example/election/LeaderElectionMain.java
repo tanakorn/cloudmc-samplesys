@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.example.election.interposition.LeaderElectionInterposition;
 import edu.uchicago.cs.ucare.samc.event.Event;
-import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
+import edu.uchicago.cs.ucare.samc.util.LocalState;
 
 public class LeaderElectionMain {
 	
@@ -264,7 +264,7 @@ public class LeaderElectionMain {
 		if (LeaderElectionInterposition.SAMC_ENABLED) {
             LOG.info("Enable SAMC without IPC");
 		}
-		LeaderElectionInterposition.localState = new LeaderElectionLocalState();
+		LeaderElectionInterposition.localState = new LocalState();
 		
 		id = Integer.parseInt(args[0]);
 		role = LOOKING;
@@ -277,9 +277,9 @@ public class LeaderElectionMain {
 
 		if (LeaderElectionInterposition.SAMC_ENABLED) {
 		    LeaderElectionInterposition.id = id;
-            LeaderElectionInterposition.localState.setRole(role);
-            LeaderElectionInterposition.localState.setLeader(leader);
-            LeaderElectionInterposition.localState.setElectionTable(electionTable);
+            LeaderElectionInterposition.localState.addKeyValue("role", role);
+            LeaderElectionInterposition.localState.addKeyValue("leader", leader);
+            LeaderElectionInterposition.localState.addKeyValue("electionTable", electionTable.toString());
 			LeaderElectionInterposition.modelCheckingServer.setLocalState(id, LeaderElectionInterposition.localState);
 			LeaderElectionInterposition.modelCheckingServer.updateLocalState(id, LeaderElectionInterposition.localState.hashCode());
 		}
@@ -578,8 +578,8 @@ public class LeaderElectionMain {
 									}
 								}
 								if (LeaderElectionInterposition.SAMC_ENABLED) {
-						            LeaderElectionInterposition.localState.setRole(role);
-						            LeaderElectionInterposition.localState.setLeader(leader);
+						            LeaderElectionInterposition.localState.addKeyValue("role", role);
+						            LeaderElectionInterposition.localState.addKeyValue("leader", leader);
 						            try {
                                         LeaderElectionInterposition.modelCheckingServer.setLocalState(id, LeaderElectionInterposition.localState);
                                         LeaderElectionInterposition.modelCheckingServer.updateLocalState(id, LeaderElectionInterposition.localState.hashCode());
@@ -616,8 +616,8 @@ public class LeaderElectionMain {
 								}
 							}
 							if (LeaderElectionInterposition.SAMC_ENABLED) {
-                                LeaderElectionInterposition.localState.setRole(role);
-                                LeaderElectionInterposition.localState.setLeader(leader);
+					            LeaderElectionInterposition.localState.addKeyValue("role", role);
+					            LeaderElectionInterposition.localState.addKeyValue("leader", leader);
                                 try {
                                     LeaderElectionInterposition.modelCheckingServer.setLocalState(id, LeaderElectionInterposition.localState);
                                     LeaderElectionInterposition.modelCheckingServer.updateLocalState(id, LeaderElectionInterposition.localState.hashCode());
