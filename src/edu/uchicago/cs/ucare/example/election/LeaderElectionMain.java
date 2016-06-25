@@ -342,8 +342,8 @@ public class LeaderElectionMain {
                     ElectionMessage msg = new ElectionMessage(otherId, buffer);
                     LOG.info("Get message : " + msg.toString());
                     if (LeaderElectionInterposition.SAMC_ENABLED) {
-                      Event packet = LeaderElectionInterposition.packetGenerator2.createNewLeaderElectionPacket("LeaderElectionCallback" + 
-                    		  id, msg.getSender(), id, msg.getRole(), msg.getLeader());
+                      Event packet = LeaderElectionInterposition.packetGenerator2.createNewLeaderElectionPacket(msg.getSender(), 
+                    		  id, msg.getRole(), msg.getLeader());
                         try {
                             LeaderElectionInterposition.ack.ack(packet.getId(), id);
                         } catch (RemoteException e) {
@@ -424,8 +424,7 @@ public class LeaderElectionMain {
                             LOG.error("", e);
                         }
                     } else if(ipcDir != "") {
-                    	interceptMessage(msg, "LeaderElectionCallback" + id, id, msg.getRole(), this.otherId, 
-                    			msg.getLeader());
+                    	interceptMessage(msg, id, msg.getRole(), this.otherId, msg.getLeader());
                         write(msg);
                     } else {
                     	write(msg);
@@ -458,8 +457,7 @@ public class LeaderElectionMain {
 		}
 		
 		// ipc interceptor
-		public void interceptMessage(ElectionMessage msg, String callbackName, int sender, int senderRole, 
-				int receiver, int leader){
+		public void interceptMessage(ElectionMessage msg, int sender, int senderRole, int receiver, int leader){
 
         	LOG.info("[DEBUG] before hash in node " + id);
         	int eventId = LeaderElectionInterposition.hash(msg, receiver);
@@ -468,7 +466,6 @@ public class LeaderElectionMain {
         	// create new file
         	try{
 	        	PrintWriter writer = new PrintWriter(ipcDir + "/new/le-" + eventId, "UTF-8");
-	        	writer.println("callbackName=" + callbackName);
 		        writer.println("sendNode=" + sender);
 		        writer.println("recvNode=" + receiver);
 		        writer.println("sendRole=" + senderRole);

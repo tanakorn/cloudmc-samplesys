@@ -8,7 +8,6 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.io.IOException;
-import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,7 +38,6 @@ import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 import edu.uchicago.cs.ucare.samc.util.LocalState;
 import edu.uchicago.cs.ucare.samc.util.PacketReceiveAck;
-import edu.uchicago.cs.ucare.samc.util.PacketReleaseCallback;
 import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
 
 public abstract class ModelCheckingServerAbstract implements ModelCheckingServer {
@@ -55,7 +53,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected LinkedBlockingQueue<Event> packetQueue;
     protected LinkedBlockingQueue<DiskWrite> writeQueue;
     protected HashMap<DiskWrite, Boolean> writeFinished;
-    protected HashMap<String, PacketReleaseCallback> callbackMap;
     
     protected PacketReceiveAck ack;
     protected DiskWriteAck writeAck;
@@ -125,7 +122,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         packetQueue = new LinkedBlockingQueue<Event>();
         writeQueue = new LinkedBlockingQueue<DiskWrite>();
         writeFinished = new HashMap<DiskWrite, Boolean>();
-        callbackMap = new HashMap<String, PacketReleaseCallback>();
         ack = new PacketReceiveAckImpl();
         writeAck = new DiskWriteAckImpl();
         ackedIds = new LinkedBlockingQueue<Integer>();
@@ -207,20 +203,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         }
         LOG.debug("Enable write " + write.toString());
         writeFinished.remove(write);
-    }
-    
-    public void registerCallback(int id, String callbackName) throws RemoteException {
-        try {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Registering callback from node " + id + 
-                        ", callbackname " + callbackName);
-            }
-            PacketReleaseCallback callback =  (PacketReleaseCallback) 
-                    Naming.lookup(interceptorName + callbackName);
-            callbackMap.put(callbackName, callback);
-        } catch (Exception e) {
-            LOG.error("", e);
-        }
     }
     
     public void waitForAck(int packetId) throws InterruptedException {

@@ -91,23 +91,20 @@ public class FileWatcher implements Runnable{
 	    		LeaderElectionLocalState state = new LeaderElectionLocalState(leader, sendRole, electionTable);
 	    		checker.setLocalState(sendNode, state);
 	    	} else if(filename.startsWith("le-")) {
-		    	String callbackName = ev.getProperty("callbackName");
 		    	int recvNode = Integer.parseInt(ev.getProperty("recvNode"));
 		    	int sendRole = Integer.parseInt(ev.getProperty("sendRole"));
 		    	int leader = Integer.parseInt(ev.getProperty("leader"));
 		    	int eventId = Integer.parseInt(filename.substring(3));
 		    	int hashId = commonHashId(eventId);
 		    	
-		    	System.out.println("[DEBUG] Process new File " + filename + " : hashId-" + hashId +  " callbackName-" + callbackName +
+		    	System.out.println("[DEBUG] Process new File " + filename + " : hashId-" + hashId +
 		    			" sendNode-" + sendNode + " sendRole-" + sendRole + " recvNode-" + recvNode + 
 		    			" leader-" + leader);
-		    	LOG.info("[DEBUG] Process new File " + filename + " : hashId-" + hashId +  " callbackName-" + callbackName +
+		    	LOG.info("[DEBUG] Process new File " + filename + " : hashId-" + hashId +
 		    			" sendNode-" + sendNode + " sendRole-" + sendRole + " recvNode-" + recvNode + 
 		    			" leader-" + leader);
 		    	
 		    	// create eventPacket and store it to DMCK queue
-//		    	LeaderElectionPacket packet = new LeaderElectionPacket(hashId, callbackName, 
-//		    			sendNode, recvNode, filename, sendRole, leader);
 		    	Event packet = new Event(hashId);
 		    	packet.addKeyValue("sendNode", sendNode);
 		    	packet.addKeyValue("recvNode", recvNode);
@@ -118,18 +115,16 @@ public class FileWatcher implements Runnable{
 	    	} else
 	    	// SCM
 	    	if(filename.startsWith("scm-")){
-		    	String callbackName = ev.getProperty("callbackName");
 	    		int eventId = Integer.parseInt(filename.substring(4));
 	    		int hashId = commonHashId(eventId);
 		    	int recvNode = Integer.parseInt(ev.getProperty("recvNode"));
 		    	int vote = Integer.parseInt(ev.getProperty("vote"));
 	    		
 		    	System.out.println("[DEBUG] Receive msg " + filename + " : hashId-" + hashId +  " from node-" + sendNode +
-		    			" to node-" + recvNode + " callbackName-" + callbackName + " vote-" + vote);
+		    			" to node-" + recvNode + " vote-" + vote);
 		    	LOG.info("[DEBUG] Receive msg " + filename + " : hashId-" + hashId +  " from node-" + sendNode +
-		    			" to node-" + recvNode + " callbackName-" + callbackName + " vote-" + vote);
+		    			" to node-" + recvNode + " vote-" + vote);
 		    	
-//		    	SCMPacket packet = new SCMPacket(hashId, callbackName, sendNode, recvNode, filename, vote);
 		    	Event packet = new Event(hashId);
 		    	packet.addKeyValue(Event.FROM_ID, sendNode);
 		    	packet.addKeyValue(Event.TO_ID, recvNode);

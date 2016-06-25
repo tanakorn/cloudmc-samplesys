@@ -68,7 +68,6 @@ public class SCMSender {
 		try{
         	PrintWriter writer = new PrintWriter(ipcDmckDir + "/new/" + msgName, "UTF-8");
         	writer.println("msgId=" + msgId);
-        	writer.println("callbackName=SCMCallback" + msgId);
         	writer.println("sendNode=" + nodeId);
         	writer.println("recvNode=" + 0);
         	writer.println("vote=" + vote);

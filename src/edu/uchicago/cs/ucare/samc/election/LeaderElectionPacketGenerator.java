@@ -13,7 +13,7 @@ public class LeaderElectionPacketGenerator {
         packetCount = new HashMap<Integer, Integer>();
     }
     
-    public Event createNewLeaderElectionPacket(String callbackName, int fromId, int toId, int role, int leader) {
+    public Event createNewLeaderElectionPacket(int fromId, int toId, int role, int leader) {
         int hash = leaderElectionHashCodeWithoutId(fromId, toId, role, leader);
         Integer count = packetCount.get(hash);
         if (count == null) {
