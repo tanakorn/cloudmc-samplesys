@@ -6,10 +6,6 @@ public class DiskWrite extends Event {
     public static final String WRITE_NODE_KEY = "writeNode";
     public static final String DATA_HASH_KEY = "dataHash";
     
-    public DiskWrite() {
-        
-    }
-    
     public DiskWrite(int id, int nodeId, int dataHash) {
         super(id);
         addKeyValue(WRITE_NODE_KEY, nodeId);

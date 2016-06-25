@@ -218,7 +218,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         globalState2 = prime * globalState2 + currentEnabledTransitions.hashCode();
         for (int i = 0; i < numNode; ++i) {
             for (int j = 0; j < numNode; ++j) {
-                globalState2 = prime * globalState2 + Arrays.hashCode(senderReceiverQueues[i][j].toArray());
+                globalState2 = prime * globalState2 + Arrays.hashCode(messagesQueues[i][j].toArray());
             }
         }
     }

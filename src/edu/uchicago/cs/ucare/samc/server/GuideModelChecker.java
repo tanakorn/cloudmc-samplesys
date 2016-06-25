@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.LinkedList;
 
-import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
+import edu.uchicago.cs.ucare.samc.event.Event;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
@@ -17,7 +17,7 @@ import edu.uchicago.cs.ucare.samc.util.LocalState;
 public class GuideModelChecker extends ModelCheckingServerAbstract {
     
     protected ProgramParser parser;
-    protected LinkedList<InterceptPacket> enabledPackets;
+    protected LinkedList<Event> enabledPackets;
     protected Thread afterProgramModelChecker;
     protected File program;
     
@@ -41,7 +41,7 @@ public class GuideModelChecker extends ModelCheckingServerAbstract {
             throw new RuntimeException(e.getMessage());
         }
         modelChecking = new ProgramExecutor(this);
-        enabledPackets = new LinkedList<InterceptPacket>();
+        enabledPackets = new LinkedList<Event>();
     }
     
     class ProgramExecutor extends ModelCheckingServerAbstract.Explorer {

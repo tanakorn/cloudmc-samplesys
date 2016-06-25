@@ -5,7 +5,7 @@ import java.io.FileNotFoundException;
 import java.util.LinkedList;
 
 import edu.uchicago.cs.ucare.samc.event.DiskWrite;
-import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
+import edu.uchicago.cs.ucare.samc.event.Event;
 import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 
@@ -49,7 +49,7 @@ public class RelayModelChecker extends GuideModelChecker {
         
         public void run() {
             currentLevelPackets = PacketSendTransition.buildTransitions(checker, enabledPackets); 
-            LinkedList<InterceptPacket> thisLevelPackets = new LinkedList<InterceptPacket>();
+            LinkedList<Event> thisLevelPackets = new LinkedList<Event>();
             while (true) {
                 while (!writeQueue.isEmpty()) {
                     DiskWrite write = writeQueue.peek();

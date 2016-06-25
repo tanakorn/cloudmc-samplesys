@@ -4,14 +4,14 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 import edu.uchicago.cs.ucare.samc.event.DiskWrite;
-import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
+import edu.uchicago.cs.ucare.samc.event.Event;
 import edu.uchicago.cs.ucare.samc.util.LocalState;
 
 public interface ModelCheckingServer extends Remote {
     
     public void registerCallback(int id, String callbackName) throws RemoteException;
-    
-    public void offerPacket(InterceptPacket packet) throws RemoteException;
+
+    public void offerPacket(Event packet) throws RemoteException;
     public boolean waitPacket(int toId) throws RemoteException;
     
     public void requestWrite(DiskWrite write) throws RemoteException;

@@ -5,7 +5,6 @@ import java.util.LinkedList;
 import java.util.Set;
 
 import edu.uchicago.cs.ucare.samc.event.Event;
-import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeStartTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeCrashTransition;
@@ -67,7 +66,7 @@ public abstract class DporModelChecker extends PrototypeSamc {
                 if (enabledPackets.contains(lastTransition.transition)) {
                     tmpPath.pollLast();
                     if (lastTransition.transition instanceof PacketSendTransition) {
-                        InterceptPacket lastPacket = ((PacketSendTransition) lastTransition.transition).getPacket();
+                    	Event lastPacket = ((PacketSendTransition) lastTransition.transition).getPacket();
                         if (tuple.transition instanceof PacketSendTransition) {
                             PacketSendTransition tuplePacket = (PacketSendTransition) tuple.transition;
                             if (lastPacket.isObsolete() || tuplePacket.getPacket().isObsolete()) {
@@ -82,7 +81,7 @@ public abstract class DporModelChecker extends PrototypeSamc {
                                         addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
                                     }
 //                                    break;
-//                                    continue;
+                                    LOG.info("It should break 1, but it continue.");
                                 }
                             } else if (tuplePacket.getPacket().getToId() == lastPacket.getToId() && tuplePacket.getPacket().getFromId() == lastPacket.getFromId()) {
                                 break;
@@ -95,22 +94,22 @@ public abstract class DporModelChecker extends PrototypeSamc {
                                         lastPacket.setObsolete(false);
                                         addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
 //                                        break;
-//                                        continue;
+                                        LOG.info("It should break 2, but it continue.");
                                     }
                                 }
                             } else {
                             	// reorder crash and reboot
                                 addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
 //                                break;
-//                                continue;
+                                LOG.info("It should break 3, but it continue.");
                             }
                         }
                     }
                 } else {
                 	// reorder crash and reboot
                 	addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
+                    LOG.info("It should break 4, but it continue.");
 //                    break;
-//                	continue;
                 }
             }
         }

@@ -8,7 +8,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
+import edu.uchicago.cs.ucare.samc.event.Event;
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
 
 @SuppressWarnings("serial")
@@ -27,9 +27,9 @@ public class PacketSendTransition extends Transition implements Serializable {
     };
 
     protected ModelCheckingServerAbstract checker;
-    protected InterceptPacket packet;
+    protected Event packet;
 
-    public PacketSendTransition(ModelCheckingServerAbstract checker, InterceptPacket packet) {
+    public PacketSendTransition(ModelCheckingServerAbstract checker, Event packet) {
         this.checker = checker;
         this.packet = packet;
     }
@@ -85,7 +85,7 @@ public class PacketSendTransition extends Transition implements Serializable {
     }
     
     public static PacketSendTransition[] buildTransitions(ModelCheckingServerAbstract checker, 
-            InterceptPacket[] packets) {
+          Event[] packets) {
         PacketSendTransition[] packetTransitions = new PacketSendTransition[packets.length];
         for (int i = 0; i < packets.length; ++i) {
             packetTransitions[i] = new PacketSendTransition(checker, packets[i]);
@@ -94,16 +94,16 @@ public class PacketSendTransition extends Transition implements Serializable {
     }
     
     public static LinkedList<PacketSendTransition> buildTransitions(ModelCheckingServerAbstract checker, 
-            List<InterceptPacket> packets) {
+            List<Event> packets) {
         LinkedList<PacketSendTransition> packetTransitions = 
                 new LinkedList<PacketSendTransition>();
-        for (InterceptPacket packet : packets) {
+        for (Event packet : packets) {
             packetTransitions.add(new PacketSendTransition(checker, packet));
         }
         return packetTransitions;
     }
     
-    public InterceptPacket getPacket() {
+    public Event getPacket() {
         return packet;
     }
 

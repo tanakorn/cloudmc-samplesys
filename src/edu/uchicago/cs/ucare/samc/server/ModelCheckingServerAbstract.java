@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.samc.event.DiskWrite;
 import edu.uchicago.cs.ucare.samc.event.DiskWriteAck;
-import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
+import edu.uchicago.cs.ucare.samc.event.Event;
 import edu.uchicago.cs.ucare.samc.scm.SCMState;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeStartTransition;
@@ -52,7 +52,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
 	
     protected final Logger LOG;
     protected String interceptorName;
-    protected LinkedBlockingQueue<InterceptPacket> packetQueue;
+    protected LinkedBlockingQueue<Event> packetQueue;
     protected LinkedBlockingQueue<DiskWrite> writeQueue;
     protected HashMap<DiskWrite, Boolean> writeFinished;
     protected HashMap<String, PacketReleaseCallback> callbackMap;
@@ -68,8 +68,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected int[] localState;
     public boolean[] isNodeOnline;
 
-    protected ConcurrentLinkedQueue<InterceptPacket>[][] senderReceiverQueues;
-    protected LinkedList<InterceptPacket> localEventQueue;
+    protected ConcurrentLinkedQueue<Event>[][] messagesQueues;
+    protected LinkedList<Event> localEventQueue;
 
     protected int testId;
 
@@ -122,7 +122,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
             String ipcDir) {
         this.interceptorName = interceptorName;
         LOG = LoggerFactory.getLogger(this.getClass() + "." + interceptorName);
-        packetQueue = new LinkedBlockingQueue<InterceptPacket>();
+        packetQueue = new LinkedBlockingQueue<Event>();
         writeQueue = new LinkedBlockingQueue<DiskWrite>();
         writeFinished = new HashMap<DiskWrite, Boolean>();
         callbackMap = new HashMap<String, PacketReleaseCallback>();
@@ -141,8 +141,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         protocolRecordFile = null;
         resultFile = null;
         isNodeOnline = new boolean[numNode];
-        senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
-        localEventQueue = new LinkedList<InterceptPacket>();
+        messagesQueues = new ConcurrentLinkedQueue[numNode][numNode];
+        localEventQueue = new LinkedList<Event>();
         localStates = new LeaderElectionLocalState[numNode];
         scmStates = new SCMState[numNode];
         this.ipcDir = ipcDir;
@@ -267,14 +267,13 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         return false;
     }
     
-    public void offerPacket(InterceptPacket packet) throws RemoteException {
-        senderReceiverQueues[packet.getFromId()][packet.getToId()].add(packet);
-        LOG.info("Intercept packet " + packet.toString());
+    public void offerPacket(Event event){
+    	messagesQueues[(int)event.getValue("sendNode")][(int)event.getValue("recvNode")].add(event);
+    	LOG.info("Intercept event " + event.toString() +" to messagesQueue");
     }
     
-    public void offerLocalEvent(InterceptPacket packet) {
-    	localEventQueue.add(packet);
-        LOG.info("Intercept packet " + packet.toString());
+    public void offerLocalEvent(Event event){
+    	localEventQueue.add(event);
     }
     
     abstract protected void adjustCrashAndReboot(LinkedList<Transition> transitions);
@@ -298,7 +297,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
                     }
                 }
             }
-            for (ConcurrentLinkedQueue<InterceptPacket> queue : senderReceiverQueues[crash.getId()]) {
+            for (ConcurrentLinkedQueue<Event> queue : messagesQueues[crash.getId()]) {
                 queue.clear();
             }
         }
@@ -319,8 +318,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         for (int i = 0; i < numNode; ++i) {
             for (int j = 0; j < numNode; ++j) {
             	// reorder
-                if (filter[i][j] && !senderReceiverQueues[i][j].isEmpty()) {
-                    buffer.add(new PacketSendTransition(this, senderReceiverQueues[i][j].remove()));
+            	if (filter[i][j] && !messagesQueues[i][j].isEmpty()) {
+            		buffer.add(new PacketSendTransition(this, messagesQueues[i][j].remove()));
                 }
             }
         }
@@ -337,25 +336,26 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         getLocalEvents(transitionList);
     }
     
-    public void getOutstandingTcpPacket(LinkedList<InterceptPacket> packetList) {
+    public void getOutstandingTcpPacket(LinkedList<Event> packetList) {
         boolean[][] filter = new boolean[numNode][numNode];
         for (int i = 0; i < numNode; ++i) {
             Arrays.fill(filter[i], true);
         }
-        for (InterceptPacket p : packetList) {
+        for (Event p : packetList) {
             filter[p.getFromId()][p.getToId()] = false;
         }
-        LinkedList<InterceptPacket> buffer = new LinkedList<InterceptPacket>();
+        LinkedList<Event> buffer = new LinkedList<Event>();
         for (int i = 0; i < numNode; ++i) {
             for (int j = 0; j < numNode; ++j) {
             	// reorder
-                if (filter[i][j] && !senderReceiverQueues[i][j].isEmpty()) {
-                    buffer.add(senderReceiverQueues[i][j].remove());
+            	if (filter[i][j] && !messagesQueues[i][j].isEmpty()) {
+                  buffer.add(messagesQueues[i][j].remove());
                 }
             }
         }
-        Collections.sort(buffer, new Comparator<InterceptPacket>() {
-            public int compare(InterceptPacket o1, InterceptPacket o2) {
+        Collections.sort(buffer, new Comparator<Event>() {
+        	@Override
+        	public int compare(Event o1, Event o2) {
                 Integer i1 = o1.getId();
                 Integer i2 = o2.getId();
                 return i1.compareTo(i2);
@@ -398,11 +398,11 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         }
     }
     
-    public void printPacketQueues(LinkedList<InterceptPacket> packetList){
+    public void printPacketQueues(LinkedList<Event> packetList){
     	System.out.println("-----------------------------");
         System.out.println("[DEBUG] Packets in Queue : " + packetList.size());
         int counter = 1;
-        for (InterceptPacket p : packetList) {
+        for (Event p : packetList) {
         	if(p != null){
         		System.out.println(counter + ". " + p.toString());
         	} else {
@@ -435,7 +435,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         for (int i = 0; i < numNode; ++i) {
             for (int j = 0; j < numNode; ++j) {
             	// reorder
-                if (!senderReceiverQueues[i][j].isEmpty()) {
+//                if (!senderReceiverQueues[i][j].isEmpty()) {
+            	if (!messagesQueues[i][j].isEmpty()) {
                     return true;
                 }
             }
@@ -486,9 +487,9 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     public void recordProtocol(int nodeId, int protocolHash)
             throws RemoteException {
         
-        int fromHash = Arrays.hashCode(senderReceiverQueues[nodeId]);
+        int fromHash = Arrays.hashCode(messagesQueues[nodeId]);
         int toHash = 1;
-        for (ConcurrentLinkedQueue<InterceptPacket>[] toQueue : senderReceiverQueues) {
+        for (ConcurrentLinkedQueue<Event>[] toQueue : messagesQueues) {
             toHash = toHash * 31 + toQueue[nodeId].hashCode();
         }
         int protocol2Hash = protocolHash;
@@ -540,18 +541,48 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         }
     }
 
-    public void waitForAck(InterceptPacket packet) throws InterruptedException {
+    public void waitForAck(Event packet) throws InterruptedException {
         if (isNodeOnline(packet.getToId())) {
         	waitForAck(packet.getId());
         }
     }
 
+    public boolean runNode(int id) {
+    	if (isNodeOnline(id)) {
+            return true;
+        }
+        workloadDriver.startNode(id);
+        setNodeOnline(id, true);
+        setNodeSteady(id, false);
+        try {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Waiting new started node " + id + " to be in real steady state");
+            }
+       
+            int timeoutCounter = 0;
+            int timeoutFraction = 20;
+            while (!isNodeSteady(id) && timeoutCounter >= timeoutFraction) {
+                Thread.sleep(initSteadyStateTimeout/timeoutFraction);
+                timeoutCounter++;
+            }
+            
+            if(timeoutCounter >= timeoutFraction){
+                LOG.warn("Steady state for new started node " + id + " triggered by timeout");
+            }
+            
+            setNodeSteady(id, true);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return true;
+    }
+    
     public boolean killNode(int id) {
         workloadDriver.stopNode(id);
         setNodeOnline(id, false);
         for (int i = 0; i < numNode; ++i) {
-            senderReceiverQueues[i][id].clear();
-            senderReceiverQueues[id][i].clear();
+            messagesQueues[i][id].clear();
+            messagesQueues[id][i].clear();
         }
         return true;
     }
@@ -569,8 +600,8 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         for (int i = 0; i < numNode; ++i) {
             setNodeOnline(i, false);
             for (int j = 0; j < numNode; ++j) {
-                senderReceiverQueues[i][j].clear();
-                senderReceiverQueues[j][i].clear();
+            	messagesQueues[i][j].clear();
+                messagesQueues[j][i].clear();
             }
         }
         return true;
@@ -643,29 +674,23 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         return numPacketInSenderReceiverQueue() != 0 || isThereProcessingEnabledPacket;
     }
     
-    public boolean commit(InterceptPacket packet) {
+    public boolean commit(Event packet) {
     	boolean result;
     	try {
-    		if(ipcDir != ""){
-    			try{
-    	        	PrintWriter writer = new PrintWriter(ipcDir + "/new/" + packet.getValue(InterceptPacket.FILENAME), "UTF-8");
-    	        	writer.println("eventId=" + packet.getId());
-    		        writer.close();
-    		        
-    		    	System.out.println("Enable event with ID : " + packet.getId());
-    		        
-    		        Runtime.getRuntime().exec("mv " + ipcDir + "/new/" + packet.getValue(InterceptPacket.FILENAME) + " " + 
-    		        		ipcDir + "/ack/" + packet.getValue(InterceptPacket.FILENAME));
-            	} catch (Exception e) {
-            		System.out.println("[DEBUG] error in creating new file : " + packet.getValue(InterceptPacket.FILENAME));
-            	}
-            	
-    			result = true;
-    		} else {
-    			PacketReleaseCallback callback = callbackMap.get(packet.getCallbackId());
-                LOG.info("Commiting " + packet.toString());
-                result = callback.callback(packet.getId());
-    		}
+			try{
+				PrintWriter writer = new PrintWriter(ipcDir + "/new/" + packet.getValue(Event.FILENAME), "UTF-8");
+	        	writer.println("eventId=" + packet.getId());
+		        writer.close();
+		        
+		    	System.out.println("Enable event with ID : " + packet.getId());
+		        
+		        Runtime.getRuntime().exec("mv " + ipcDir + "/new/" + packet.getValue(Event.FILENAME) + " " + 
+		        		ipcDir + "/ack/" + packet.getValue(Event.FILENAME));
+        	} catch (Exception e) {
+        		System.out.println("[DEBUG] error in creating new file : " + packet.getValue(Event.FILENAME));
+        	}
+        	
+			result = true;
         } catch (Exception e) {
             LOG.warn("There is an error when committing this packet, " + packet.toString());
             result = false;
@@ -725,7 +750,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         int num = 0;
         for (int i = 0; i < numNode; ++i) {
             for (int j = 0; j < numNode; ++j) {
-                num += senderReceiverQueues[i][j].size();
+                num += messagesQueues[i][j].size();
             }
         }
         return num;
@@ -759,11 +784,11 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         setNodeSteady(id, true);
     }
     
-    public boolean commitAndWait(InterceptPacket packet) throws InterruptedException {
+    public boolean commitAndWait(Event packet) throws InterruptedException {
         setNodeSteady(packet.getToId(), false);
         boolean result = false;
         if (commit(packet)) {
-            waitForAck(packet);
+            waitForAck(packet.getId());
             result = true;
         }
         if (result) {
@@ -779,7 +804,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
 	public void resetTest() {
         LOG.debug("Test reset");
         writeQueue.clear();
-        senderReceiverQueues = new ConcurrentLinkedQueue[numNode][numNode];
+        messagesQueues = new ConcurrentLinkedQueue[numNode][numNode];
         testId = -1;
         numCurrentCrash = 0;
         numCurrentReboot = 0;
@@ -845,7 +870,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         }
         for (int i = 0; i < numNode; ++i) {
             for (int j = 0; j < numNode; ++j) {
-                senderReceiverQueues[i][j] = new ConcurrentLinkedQueue<InterceptPacket>();
+                messagesQueues[i][j] = new ConcurrentLinkedQueue<Event>();
             }
         }
         isNodeSteady = new boolean[numNode];
@@ -856,36 +881,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         	localStates[i].setLeader(i);
         	localStates[i].setRole(LeaderElectionMain.LOOKING);
         }
-    }
-
-    public boolean runNode(int id) {
-    	if (isNodeOnline(id)) {
-            return true;
-        }
-        workloadDriver.startNode(id);
-        setNodeOnline(id, true);
-        setNodeSteady(id, false);
-        try {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Waiting new started node " + id + " to be in real steady state");
-            }
-       
-            int timeoutCounter = 0;
-            int timeoutFraction = 20;
-            while (!isNodeSteady(id) && timeoutCounter >= timeoutFraction) {
-                Thread.sleep(initSteadyStateTimeout/timeoutFraction);
-                timeoutCounter++;
-            }
-            
-            if(timeoutCounter >= timeoutFraction){
-                LOG.warn("Steady state for new started node " + id + " triggered by timeout");
-            }
-            
-            setNodeSteady(id, true);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return true;
     }
     
     protected Transition nextInitialTransition(LinkedList<Transition> queue){
@@ -979,7 +974,4 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         
     }
     
-    // for initialPaths
-    
-
 }

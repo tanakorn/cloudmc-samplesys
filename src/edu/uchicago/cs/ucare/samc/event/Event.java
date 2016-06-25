@@ -7,18 +7,14 @@ import java.util.Map;
 @SuppressWarnings("serial")
 public class Event implements Serializable {
     
+	public static final String FILENAME = "filename";
     public static final String HASH_ID_KEY = "hashId";
+    public static final String FROM_ID = "recvNode";
+    public static final String TO_ID = "sendNode";
     
     protected Map<String, Serializable> keyValuePairs;
-    protected String callbackId;
     protected boolean obsolete;
     protected int obsoleteBy;
-    
-    public Event() {
-        keyValuePairs = new HashMap<String, Serializable>();
-        obsolete = false;
-        obsoleteBy = -1;
-    }
     
     public Event(int hashId) {
         keyValuePairs = new HashMap<String, Serializable>();
@@ -27,35 +23,24 @@ public class Event implements Serializable {
         obsoleteBy = -1;
     }
     
-    public Event(int hashId, String callbackId) {
-        keyValuePairs = new HashMap<String, Serializable>();
-        addKeyValue(HASH_ID_KEY, hashId);
-        this.callbackId = callbackId;
-        obsolete = false;
-        obsoleteBy = -1;
-    }
-    
-    public Event(String callbackId) {
-        keyValuePairs = new HashMap<String, Serializable>();
-        this.callbackId = callbackId;
-        obsolete = false;
-        obsoleteBy = -1;
-    }
-    
     public void addKeyValue(String key, Serializable value) {
         keyValuePairs.put(key, value);
     }
-    
+
     public Object getValue(String key) {
         return keyValuePairs.get(key);
     }
     
-    public String getCallbackId() {
-        return callbackId;
+    public int getId(){
+    	return (int) getValue(HASH_ID_KEY);
     }
-
-    public void setCallbackId(String callbackId) {
-        this.callbackId = callbackId;
+    
+    public int getFromId(){
+    	return (int) getValue(FROM_ID);
+    }
+    
+    public int getToId(){
+    	return (int) getValue(TO_ID);
     }
 
     public boolean isObsolete() {
@@ -86,8 +71,6 @@ public class Event implements Serializable {
         final int prime = 31;
         int result = 1;
         result = prime * result
-                + ((callbackId == null) ? 0 : callbackId.hashCode());
-        result = prime * result
                 + ((keyValuePairs == null) ? 0 : keyValuePairs.hashCode());
         result = prime * result + (obsolete ? 1231 : 1237);
         result = prime * result + obsoleteBy;
@@ -103,11 +86,6 @@ public class Event implements Serializable {
         if (getClass() != obj.getClass())
             return false;
         Event other = (Event) obj;
-        if (callbackId == null) {
-            if (other.callbackId != null)
-                return false;
-        } else if (!callbackId.equals(other.callbackId))
-            return false;
         if (keyValuePairs == null) {
             if (other.keyValuePairs != null)
                 return false;

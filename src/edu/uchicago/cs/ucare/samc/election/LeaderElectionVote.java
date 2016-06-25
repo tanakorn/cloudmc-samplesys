@@ -2,6 +2,7 @@ package edu.uchicago.cs.ucare.samc.election;
 
 import java.io.Serializable;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
+import edu.uchicago.cs.ucare.samc.event.Event;
 
 @SuppressWarnings("serial")
 public class LeaderElectionVote implements Serializable {
@@ -14,10 +15,10 @@ public class LeaderElectionVote implements Serializable {
         
     }
     
-    public LeaderElectionVote(LeaderElectionPacket leaderElectionPacket) {
+    public LeaderElectionVote(Event leaderElectionPacket) {
         sender = leaderElectionPacket.getFromId();
-        role = leaderElectionPacket.getRole();
-        leader = leaderElectionPacket.getLeader();
+        role = (int)leaderElectionPacket.getValue("role");
+        leader = (int)leaderElectionPacket.getValue("leader");
     }
     
     public LeaderElectionVote(int sender, int role, int leader) {
@@ -26,23 +27,7 @@ public class LeaderElectionVote implements Serializable {
 		this.role = role;
 		this.leader = leader;
 	}
-    
-    /*
-    public static boolean isMoreInteresting(LeaderElectionVote newVote, 
-            LeaderElectionVote oldVote) {
-    	if (oldVote.role == LeaderElectionMain.LOOKING) {
-    		if (newVote.role == LeaderElectionMain.LOOKING) {
-    			if (newVote.leader > oldVote.leader) {
-    				return true;
-    			}
-    		} else {
-    			return true;
-    		}
-    	}
-    	return false;
-    }
-    */
-    
+        
     public static boolean isMoreInteresting(LeaderElectionVote newVote, 
             LeaderElectionVote oldVote, int currentRole, int currentLeader) {
     	if (currentRole == LeaderElectionMain.LOOKING) {

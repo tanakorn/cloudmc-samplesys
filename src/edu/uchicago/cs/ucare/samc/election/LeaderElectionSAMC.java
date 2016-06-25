@@ -15,8 +15,8 @@ public class LeaderElectionSAMC extends DporModelChecker {
         LeaderElectionLocalState leState = (LeaderElectionLocalState) state;
         if (leState.getRole() == LeaderElectionMain.LOOKING) {
             int currSup = leState.getLeader();
-            int sup1 = (Integer) e1.getValue(LeaderElectionPacket.LEADER_KEY);
-            int sup2 = (Integer) e2.getValue(LeaderElectionPacket.LEADER_KEY);
+            int sup1 = (Integer) e1.getValue("leader");
+            int sup2 = (Integer) e2.getValue("leader");
             if (currSup < sup1 || currSup < sup2) {
                 return true;
             } else if (isFinished(leState)) {

@@ -3,6 +3,7 @@ package edu.uchicago.cs.ucare.samc.election;
 import java.util.HashMap;
 
 import edu.uchicago.cs.ucare.example.election.ElectionMessage;
+import edu.uchicago.cs.ucare.samc.event.Event;
 
 public class LeaderElectionPacketGenerator {
 	
@@ -12,7 +13,7 @@ public class LeaderElectionPacketGenerator {
         packetCount = new HashMap<Integer, Integer>();
     }
     
-    public LeaderElectionPacket createNewLeaderElectionPacket(String callbackName, int fromId, int toId, int role, int leader) {
+    public Event createNewLeaderElectionPacket(String callbackName, int fromId, int toId, int role, int leader) {
         int hash = leaderElectionHashCodeWithoutId(fromId, toId, role, leader);
         Integer count = packetCount.get(hash);
         if (count == null) {
@@ -21,7 +22,12 @@ public class LeaderElectionPacketGenerator {
         ++count;
         int id = 31 * hash + count;
         packetCount.put(hash, count);
-        return new LeaderElectionPacket(id, callbackName, fromId, toId, "le-" + id, role, leader);
+        Event event = new Event(id);
+        event.addKeyValue(Event.FROM_ID, fromId);
+        event.addKeyValue(Event.TO_ID, toId);
+        event.addKeyValue("role", role);
+        event.addKeyValue("leader", leader);
+        return event;
     }
     
     private static int leaderElectionHashCodeWithoutId(int fromId, int toId, int role, int leader) {

@@ -84,7 +84,6 @@ public class DfsLevelModelChecker extends LevelModelChecker {
         }
         int hash = 0;
         for (LinkedList<NodeOperationTransition> crashes : allCrashes) {
-//            result.add(packetTransition.removeFirst());
             Transition t = packetTransition.removeFirst();
             result.add(t);
             hash = mergePacketsAndCrashes(packetTransition, crashes, result);
@@ -93,7 +92,6 @@ public class DfsLevelModelChecker extends LevelModelChecker {
                 packetTransition.addAll(result);
                 return hash;
             }
-//            packetTransition.addFirst(result.removeFirst());
             packetTransition.addFirst(t);
             result.clear();
         }
@@ -108,40 +106,12 @@ public class DfsLevelModelChecker extends LevelModelChecker {
             result.addAll(packets);
             result.addAll(crashes);
             transitionHash = result.hashCode();
-//            exploredTransitionRecorder.createChild(transitionHash);
-//            exploredTransitionRecorder.traverseDownTo(transitionHash);
-//            byte[] tmp = exploredTransitionRecorder.readThisNode(".next_level");
-//            exploredTransitionRecorder.traverseUpward(1);
-//            if (tmp == null) {
-//                if (exploredTransitionRecorder.isSubtreeBelowChildFinished(transitionHash)) {
-//                    result.removeAll(packets);
-//                    result.removeAll(crashes);
-//                    return 0;
-//                }   
-//                log.info("louise +++ " + result.toString()+ " " + packets.toString() + " " + crashes.toString());
-//                return transitionHash;
-//            } else {
-//                boolean isThereNextLevel = Boolean.parseBoolean(new String(tmp));
-//                if (isThereNextLevel && !exploredTransitionRecorder.isSubtreeBelowChildFinished(transitionHash)) {
-//                    log.info("louise +++ " + result.toString()+ " " + packets.toString() + " " + crashes.toString());
-//                    log.info("louise tmp != null && there is next level && not explored");
-//                    return transitionHash;
-//                } else if (numCurrentCrash < numCrash || numCurrentReboot < numReboot) {
-//                    log.info("louise --- " + result.toString()+ " " + packets.toString() + " " + crashes.toString());
-//                    result.removeAll(packets);
-//                    result.removeAll(crashes);
-//                    return 0;
-//                }
-//            }
             if (exploredTransitionRecorder.isSubtreeBelowChildFinished(transitionHash)) {
                 result.removeAll(packets);
                 result.removeAll(crashes);
                 return 0;
             }   
             return transitionHash;
-//            result.removeAll(packets);
-//            result.removeAll(crashes);
-//            return 0;
         }   
         Transition nextTransition;
         nextTransition = packets.removeFirst();
@@ -273,110 +243,6 @@ public class DfsLevelModelChecker extends LevelModelChecker {
           resetTest();
       }
   }
-    
-//    @Override
-//    public int nextTransitionOrder(LinkedList<PacketSendTransition> packetTransition, 
-//            LinkedList<Transition> nextTransitionOrder) {
-//        Collections.sort(packetTransition, new Comparator<Transition>() {
-//            @Override
-//            public int compare(Transition o1, Transition o2) {
-//                Long id1 = o1.getTransitionId();
-//                Long id2 = o2.getTransitionId();
-//                return id1.compareTo(id2);
-//            }
-//        });
-//        nextTransitionOrder.clear();
-//        nextTransitionOrder.addAll(packetTransition);
-//        return nextTransitionOrder(nextTransitionOrder, packetTransition.size());
-//    }
-//    
-//    protected int nextTransitionOrder(LinkedList<Transition> transitions, int n) {
-//        if (n == 1) {
-//            int hash;
-//            for (int i = 0; i <= numCrash - currentCrash; ++i) {
-//                hash = injectCrash(transitions, i);
-//                if (hash != 0) {
-//                    return hash;
-//                }
-//            }
-//            return 0;
-//        } else {
-//            for (int i = 0; i < n; ++i) {
-//                Collections.swap(transitions, i, n - 1);
-//                int hash = nextTransitionOrder(transitions, n - 1);
-//                if (hash != 0) {
-//                    return hash;
-//                }
-//                Collections.swap(transitions, i, n - 1);
-//            }
-//            return 0;
-//        }
-//    }
-//    
-//    protected int injectCrash(LinkedList<Transition> packetTransition, int numCrash) {
-//        LinkedList<LinkedList<Transition>> allCrashes = getAllCrashes(numCrash);
-//        LinkedList<Transition> result = new LinkedList<Transition>();
-//        if (allCrashes.size() == 0) {
-//            return packetTransition.hashCode();
-//        }
-//        int hash = 0;
-//        for (LinkedList<Transition> crashes : allCrashes) {
-//            hash = mergePacketsAndCrashes(packetTransition, crashes, result);
-//            if (hash != 0) {
-//                packetTransition.clear();
-//                packetTransition.addAll(result);
-//                return hash;
-//            }
-//            result.clear();
-//        }
-//        return 0;
-//    }
-//    
-//    @SuppressWarnings("unchecked")
-//    public int mergePacketsAndCrashes(LinkedList<Transition> packets, 
-//            LinkedList<Transition> crashes, LinkedList<Transition> result) {
-//        int transitionHash;
-//        if (crashes.isEmpty() || packets.isEmpty()) {
-//            result.addAll(packets);
-//            result.addAll(crashes);
-//            transitionHash = result.hashCode();
-//            if (exploredTransitionRecorder.isSubtreeBelowChildFinished(transitionHash)) {
-//                result.removeAll(packets);
-//                result.removeAll(crashes);
-//                return 0;
-//            }   
-//            return transitionHash;
-//        }   
-//        Transition nextTransition;
-//        nextTransition = packets.removeFirst();
-//        result.add(nextTransition);
-//        transitionHash = mergePacketsAndCrashes(packets, crashes, result);
-//        if (transitionHash != 0) {
-//            return transitionHash;
-//        }   
-//        result.removeLast();
-//        packets.addFirst(nextTransition);
-//        LinkedList<Transition> clonedPackets = (LinkedList<Transition>) packets.clone();
-//        nextTransition = crashes.removeFirst();
-//        result.add(nextTransition);
-//        if (nextTransition instanceof NodeCrashTransition) {
-//            long crashId = ((NodeCrashTransition) nextTransition).getId();
-//            ListIterator<Transition> iter = clonedPackets.listIterator();
-//            while (iter.hasNext()) {
-//                PacketSendTransition t = (PacketSendTransition) iter.next();
-//                if (t.getPacket().getFromId() == crashId) {
-//                    iter.remove();
-//                }   
-//            }   
-//        }
-//        transitionHash = mergePacketsAndCrashes(clonedPackets, crashes, result);
-//        if (transitionHash != 0) {
-//            return transitionHash;
-//        }   
-//        result.removeLast();
-//        crashes.addFirst(nextTransition);
-//        return 0;
-//    } 
 
 }
 

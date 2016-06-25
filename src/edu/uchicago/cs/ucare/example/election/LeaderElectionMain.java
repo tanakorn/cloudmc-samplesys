@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.example.election.interposition.LeaderElectionInterposition;
-import edu.uchicago.cs.ucare.samc.election.LeaderElectionPacket;
+import edu.uchicago.cs.ucare.samc.event.Event;
 import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 
 public class LeaderElectionMain {
@@ -190,7 +190,6 @@ public class LeaderElectionMain {
         }
 
         if (LeaderElectionInterposition.SAMC_ENABLED) {
-            LeaderElectionInterposition.bindCallback();
             LeaderElectionInterposition.isBound = true;
             if (LeaderElectionInterposition.isReadingForAll() && !LeaderElectionInterposition.isThereSendingMessage() && LeaderElectionInterposition.isBound) {
                 try {
@@ -343,9 +342,8 @@ public class LeaderElectionMain {
                     ElectionMessage msg = new ElectionMessage(otherId, buffer);
                     LOG.info("Get message : " + msg.toString());
                     if (LeaderElectionInterposition.SAMC_ENABLED) {
-                        LeaderElectionPacket packet = LeaderElectionInterposition.packetGenerator2
-                                .createNewLeaderElectionPacket("LeaderElectionCallback" + id, 
-                                msg.getSender(), id, msg.getRole(), msg.getLeader());
+                      Event packet = LeaderElectionInterposition.packetGenerator2.createNewLeaderElectionPacket("LeaderElectionCallback" + 
+                    		  id, msg.getSender(), id, msg.getRole(), msg.getLeader());
                         try {
                             LeaderElectionInterposition.ack.ack(packet.getId(), id);
                         } catch (RemoteException e) {
@@ -411,14 +409,12 @@ public class LeaderElectionMain {
                     LOG.info("Send message : " + msg.toString() + " to " + otherId);
                     if (LeaderElectionInterposition.SAMC_ENABLED) {
                         try {
-                            LeaderElectionPacket packet = new LeaderElectionPacket("LeaderElectionCallback" + id);
-                            packet.addKeyValue(LeaderElectionPacket.HASH_ID_KEY, LeaderElectionInterposition.hash(msg, this.otherId));
-                            packet.addKeyValue(LeaderElectionPacket.SOURCE_KEY, id);
-                            packet.addKeyValue(LeaderElectionPacket.DESTINATION_KEY, this.otherId);
-                            packet.addKeyValue(LeaderElectionPacket.LEADER_KEY, msg.getLeader());
-                            packet.addKeyValue(LeaderElectionPacket.ROLE_KEY, msg.getRole());
-                            LeaderElectionInterposition.nodeSenderMap.put(packet.getId(), packet);
-                            LeaderElectionInterposition.msgSenderMap.put(packet.getId(), this);
+                        	Event packet = new Event(LeaderElectionInterposition.hash(msg, this.otherId));
+                        	packet.addKeyValue(Event.FROM_ID, id);
+                        	packet.addKeyValue(Event.TO_ID, this.otherId);
+                        	packet.addKeyValue("leader", msg.getLeader());
+                        	packet.addKeyValue("role", msg.getRole());
+                        	LeaderElectionInterposition.nodeSenderMap.put(packet.getId(), packet);
                             try {
                                 LeaderElectionInterposition.modelCheckingServer.offerPacket(packet);
                             } catch (RemoteException e) {

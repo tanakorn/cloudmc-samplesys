@@ -10,8 +10,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.uchicago.cs.ucare.samc.election.LeaderElectionPacket;
-import edu.uchicago.cs.ucare.samc.scm.SCMPacket;
+import edu.uchicago.cs.ucare.samc.event.Event;
 import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 
 public class FileWatcher implements Runnable{
@@ -107,8 +106,14 @@ public class FileWatcher implements Runnable{
 		    			" leader-" + leader);
 		    	
 		    	// create eventPacket and store it to DMCK queue
-		    	LeaderElectionPacket packet = new LeaderElectionPacket(hashId, callbackName, 
-		    			sendNode, recvNode, filename, sendRole, leader);
+//		    	LeaderElectionPacket packet = new LeaderElectionPacket(hashId, callbackName, 
+//		    			sendNode, recvNode, filename, sendRole, leader);
+		    	Event packet = new Event(hashId);
+		    	packet.addKeyValue("sendNode", sendNode);
+		    	packet.addKeyValue("recvNode", recvNode);
+		    	packet.addKeyValue("filename", filename);
+		    	packet.addKeyValue("role", sendRole);
+		    	packet.addKeyValue("leader", leader);
 		    	checker.offerPacket(packet);
 	    	} else
 	    	// SCM
@@ -124,7 +129,12 @@ public class FileWatcher implements Runnable{
 		    	LOG.info("[DEBUG] Receive msg " + filename + " : hashId-" + hashId +  " from node-" + sendNode +
 		    			" to node-" + recvNode + " callbackName-" + callbackName + " vote-" + vote);
 		    	
-		    	SCMPacket packet = new SCMPacket(hashId, callbackName, sendNode, recvNode, filename, vote);
+//		    	SCMPacket packet = new SCMPacket(hashId, callbackName, sendNode, recvNode, filename, vote);
+		    	Event packet = new Event(hashId);
+		    	packet.addKeyValue(Event.FROM_ID, sendNode);
+		    	packet.addKeyValue(Event.TO_ID, recvNode);
+		    	packet.addKeyValue(Event.FILENAME, filename);
+		    	packet.addKeyValue("vote", vote);
 		    	checker.offerPacket(packet);
 	    	} else if (filename.startsWith("updatescm-")){
 	    		int vote = Integer.parseInt(ev.getProperty("vote"));
