@@ -9,8 +9,8 @@ public class Event implements Serializable {
     
 	public static final String FILENAME = "filename";
     public static final String HASH_ID_KEY = "hashId";
-    public static final String FROM_ID = "recvNode";
-    public static final String TO_ID = "sendNode";
+    public static final String FROM_ID = "sendNode";
+    public static final String TO_ID = "recvNode";
     
     protected Map<String, Serializable> keyValuePairs;
     protected boolean obsolete;
