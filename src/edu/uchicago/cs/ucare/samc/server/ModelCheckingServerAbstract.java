@@ -849,8 +849,12 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         numPacketSentToId = new int[numNode];
         for (int i = 0; i < localStates.length; ++i) {
         	localStates[i] = new LocalState(i);
-        	localStates[i].addKeyValue("role", LeaderElectionMain.LOOKING);
-        	localStates[i].addKeyValue("leader", i);
+        	if(interceptorName.equals("scmChecker")){
+            	localStates[i].addKeyValue("vote", 0);
+        	} else if(interceptorName.equals("sampleLEModelChecker")) {
+            	localStates[i].addKeyValue("role", LeaderElectionMain.LOOKING);
+            	localStates[i].addKeyValue("leader", i);
+        	}
         }
     }
     
