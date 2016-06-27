@@ -3,7 +3,6 @@ package edu.uchicago.cs.ucare.samc.server;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.PrintWriter;
-//import java.util.Map;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -11,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.samc.event.Event;
-//import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 import edu.uchicago.cs.ucare.samc.util.LocalState;
 
 public class FileWatcher implements Runnable{
@@ -134,7 +132,7 @@ public class FileWatcher implements Runnable{
 		    	checker.offerPacket(event);
 	    	} else if (filename.startsWith("updatescm-")){
 		    	int sendNode = Integer.parseInt(ev.getProperty("sendNode"));
-	    		String vote = ev.getProperty("vote");
+	    		int vote = Integer.parseInt(ev.getProperty("vote"));
 		    	
 		    	System.out.println("[DEBUG] Update receiver node-" + sendNode + " with vote-" + vote);
 		    	LOG.info("[DEBUG] Update receiver node-" + sendNode + " with vote-" + vote);

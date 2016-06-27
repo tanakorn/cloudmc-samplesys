@@ -415,11 +415,7 @@ public class LeaderElectionMain {
                         	packet.addKeyValue("leader", msg.getLeader());
                         	packet.addKeyValue("role", msg.getRole());
                         	LeaderElectionInterposition.nodeSenderMap.put(packet.getId(), packet);
-                            try {
-                                LeaderElectionInterposition.modelCheckingServer.offerPacket(packet);
-                            } catch (RemoteException e) {
-                                e.printStackTrace();
-                            }
+                            LeaderElectionInterposition.modelCheckingServer.offerPacket(packet);
                         } catch (Exception e) {
                             LOG.error("", e);
                         }

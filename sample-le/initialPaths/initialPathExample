@@ -2,5 +2,3 @@ packetsend transition_id=-1743760670 Event={eventId=888427234, leader=0, sourceN
 packetsend transition_id=-1743754653 Event={eventId=889350755, leader=0, sourceNode=0, role=0, filename=le-28688734, destinationNode=2}
 packetsend transition_id=-1743775807 Event={eventId=916133825, leader=1, sourceNode=1, role=0, filename=le-29552704, destinationNode=0}
 packetsend transition_id=-1743763773 Event={eventId=917980867, leader=1, sourceNode=1, role=0, filename=le-29612286, destinationNode=2}
-packetsend transition_id=-1743719391 Event={eventId=944763937, leader=2, sourceNode=2, role=0, filename=le-30476256, destinationNode=0}
-packetsend transition_id=-1743778910 Event={eventId=945687458, leader=2, sourceNode=2, role=0, filename=le-30506047, destinationNode=1}

@@ -16,10 +16,9 @@ public class SCMSAMC extends DporModelChecker {
 
 	@Override
 	public boolean isDependent(LocalState state, Event e1, Event e2) {
-		SCMState receiverState = (SCMState) state;
 		int v1 = (int) e1.getValue("vote");
 		int v2 = (int) e2.getValue("vote");
-		if(receiverState.getVote() < v1 || receiverState.getVote() < v2){
+		if((int)state.getValue("vote") < v1 || (int)state.getValue("vote") < v2){
 			return true;
 		}
 		return false;

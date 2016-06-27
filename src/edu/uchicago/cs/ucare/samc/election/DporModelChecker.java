@@ -79,9 +79,8 @@ public abstract class DporModelChecker extends PrototypeSamc {
                                     int toId = tuplePacket.getPacket().getToId();
                                     if (isDependent(oldLocalStates[toId], lastPacket, tuplePacket.getPacket())) {
                                         addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
+                                        break;
                                     }
-//                                    break;
-                                    LOG.info("It should break 1, but it continue.");
                                 }
                             } else if (tuplePacket.getPacket().getToId() == lastPacket.getToId() && tuplePacket.getPacket().getFromId() == lastPacket.getFromId()) {
                                 break;
@@ -93,24 +92,21 @@ public abstract class DporModelChecker extends PrototypeSamc {
                                     if (lastPacket.getObsoleteBy() == crashTransition.getId()) {
                                         lastPacket.setObsolete(false);
                                         addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
-//                                        break;
-                                        LOG.info("It should break 2, but it continue.");
+                                        break;
                                     }
                                 }
                             } else {
                             	// reorder crash and reboot
                                 addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
-//                                break;
-                                LOG.info("It should break 3, but it continue.");
+                                break;
                             }
                         }
+                    } else {
+                    	// reorder crash and reboot
+                    	addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
+                        break;
                     }
-                } else {
-                	// reorder crash and reboot
-                	addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
-                    LOG.info("It should break 4, but it continue.");
-//                    break;
-                }
+                } 
             }
         }
     }

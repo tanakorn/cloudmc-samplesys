@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
+import edu.uchicago.cs.ucare.samc.util.LocalState;
 import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
 
 public class SCMVerifier extends SpecVerifier {
@@ -12,11 +13,11 @@ public class SCMVerifier extends SpecVerifier {
 	protected static final Logger LOG = LoggerFactory.getLogger(SCMVerifier.class);
     
 	boolean error;
-	SCMState receiverVote;
+	LocalState receiver;
 	
     public SCMVerifier() {
     	error = false;
-    	receiverVote = new SCMState();
+    	receiver = new LocalState();
     }
     
     public SCMVerifier(ModelCheckingServerAbstract modelCheckingServer) {
@@ -25,8 +26,8 @@ public class SCMVerifier extends SpecVerifier {
 
     @Override
     public boolean verify(){
-    	receiverVote = modelCheckingServer.scmStates[0];
-    	if(receiverVote.getVote() != 4){
+    	receiver = modelCheckingServer.localStates[0];
+    	if((int)receiver.getValue("vote") != 4){
     		error = true;
     		return false;
     	} else {
@@ -43,9 +44,9 @@ public class SCMVerifier extends SpecVerifier {
     @Override
     public String verificationDetail(){
     	if(error){
-        	return "Receiver vote is not 4, but " + receiverVote;
+        	return "Receiver vote is not 4, but " + receiver;
     	} else {
-        	return "Receiver is in correct state. The vote is " + receiverVote;
+        	return "Receiver is in correct state. The vote is " + receiver;
     	}
     }
 

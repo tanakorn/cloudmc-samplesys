@@ -9,7 +9,7 @@ import edu.uchicago.cs.ucare.samc.util.LocalState;
 
 public interface ModelCheckingServer extends Remote {
     
-    public void offerPacket(Event packet) throws RemoteException;
+    public void offerPacket(Event packet);
     public boolean waitPacket(int toId) throws RemoteException;
     
     public void requestWrite(DiskWrite write) throws RemoteException;

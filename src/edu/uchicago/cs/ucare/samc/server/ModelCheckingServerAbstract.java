@@ -26,7 +26,6 @@ import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.samc.event.DiskWrite;
 import edu.uchicago.cs.ucare.samc.event.DiskWriteAck;
 import edu.uchicago.cs.ucare.samc.event.Event;
-import edu.uchicago.cs.ucare.samc.scm.SCMState;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeStartTransition;
 import edu.uchicago.cs.ucare.samc.transition.DiskWriteTransition;
@@ -108,7 +107,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     protected int waitEndExploration;
     
     public LocalState[] localStates;
-    public SCMState[] scmStates;
     
     protected String ipcDir;
 
@@ -139,7 +137,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         messagesQueues = new ConcurrentLinkedQueue[numNode][numNode];
         localEventQueue = new LinkedList<Event>();
         localStates = new LocalState[numNode];
-        scmStates = new SCMState[numNode];
         this.ipcDir = ipcDir;
         getDMCKConfig();
         this.resetTest();
@@ -219,10 +216,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
     
     public void setLocalState(int nodeId, LocalState localState) throws RemoteException {
     	localStates[nodeId] = localState;
-    }
-    
-    public void setSCMState(int node, int vote){
-    	scmStates[node].setVote(vote);
     }
     
     public void waitForWrite(DiskWrite write) throws InterruptedException {
@@ -792,9 +785,6 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         initialPathCounter = 0;
         this.hasFinishedInitialPath = !hasInitialPath;
         localState = new int[numNode];
-        for(int i=0; i< scmStates.length; i++){
-        	scmStates[i] = new SCMState();
-        }
         globalState = 0;
         isInitGlobalState = false;
         if (pathRecordFile != null) {
