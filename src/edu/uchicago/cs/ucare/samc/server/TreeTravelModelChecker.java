@@ -147,8 +147,8 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                     saveFinishedPath();
                     for (LinkedList<Transition> pastTransitions : pastEnabledTransitionList) {
                         exploredBranchRecorder.traverseUpward(1);
-                        Transition nextTransition = nextTransition(pastTransitions);
-                        if (nextTransition == null) {
+                        Transition transition = nextTransition(pastTransitions);
+                        if (transition == null) {
                             exploredBranchRecorder.markBelowSubtreeFinished();
                             saveFinishedPath();
                         	hasExploredAll = true;
@@ -184,6 +184,7 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                     transition = nextTransition(currentEnabledTransitions);
                 }
                 if (transition != null) {
+                	saveNextTransition(transition.toString());
                 	if(recordPath){
 	                    exploredBranchRecorder.createChild(transition.getTransitionId());
 	                    exploredBranchRecorder.traverseDownTo(transition.getTransitionId());
@@ -212,6 +213,7 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                         resetTest();
                         break;
                 	}
+                	System.out.println("[NEXT TRANSITION] " + transition.toString());
                     try {
                         if (transition.apply()) {
                             pathRecordFile.write((transition.toString() + "\n").getBytes());

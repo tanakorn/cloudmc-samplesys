@@ -28,14 +28,16 @@ public class DporTreeTravelModelChecker extends TreeTravelModelChecker {
         LinkedList<NodeCrashTransition> nodeCrashes = new LinkedList<NodeCrashTransition>();
         LinkedList<NodeStartTransition> nodeReboot = new LinkedList<NodeStartTransition>();
         for (Transition t : transitions) {
-            if (t instanceof PacketSendTransition) {
-                PacketSendTransition p = (PacketSendTransition) t;
-                groups[p.getPacket().getToId()].add(p);
-            } else if (t instanceof NodeCrashTransition) {
-                nodeCrashes.add((NodeCrashTransition) t);
-            } else if (t instanceof NodeStartTransition) {
-                nodeReboot.add((NodeStartTransition) t);
-            }
+        	if(transitions.size() > initialPath.size()){
+	            if (t instanceof PacketSendTransition) {
+	                PacketSendTransition p = (PacketSendTransition) t;
+	                groups[p.getPacket().getToId()].add(p);
+	            } else if (t instanceof NodeCrashTransition) {
+	                nodeCrashes.add((NodeCrashTransition) t);
+	            } else if (t instanceof NodeStartTransition) {
+	                nodeReboot.add((NodeStartTransition) t);
+	            }
+        	}
         }
         for (LinkedList<Transition> group : groups) {
             group.addAll(nodeCrashes);
