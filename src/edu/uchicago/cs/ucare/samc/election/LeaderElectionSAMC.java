@@ -5,6 +5,7 @@ import java.util.Map;
 
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.samc.event.Event;
+import edu.uchicago.cs.ucare.samc.server.DporModelChecker;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.LocalState;
 

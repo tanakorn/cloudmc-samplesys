@@ -98,11 +98,6 @@ public class SCMWorkloadDriver extends WorkloadDriver{
             }
         }
 		this.testId = testId;
-		try {
-			Runtime.getRuntime().exec("mkdir " + workingDir + "/" + this.testId);
-		} catch (IOException e) {
-            LOG.error("", e);
-		}
 	}
 	
 	class LogWriter implements Runnable {

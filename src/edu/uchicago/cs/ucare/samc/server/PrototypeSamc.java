@@ -1,4 +1,4 @@
-package edu.uchicago.cs.ucare.samc.election;
+package edu.uchicago.cs.ucare.samc.server;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,7 +16,6 @@ import java.util.Set;
 
 import com.almworks.sqlite4java.SQLiteException;
 
-import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeOperationTransition;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeStartTransition;

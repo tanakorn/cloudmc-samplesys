@@ -1,4 +1,4 @@
-package edu.uchicago.cs.ucare.samc.election;
+package edu.uchicago.cs.ucare.samc.server;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -30,7 +30,10 @@ public abstract class DporModelChecker extends PrototypeSamc {
 	@Override
     protected void calculateDPORInitialPaths() {
         TransitionTuple lastTransition;
-        while ((lastTransition = currentExploringPath.pollLast()) != null && currentExploringPath.size() > initialPath.size()+1) {
+        while ((lastTransition = currentExploringPath.pollLast()) != null) {
+        	if(hasInitialPath && currentExploringPath.size() < initialPath.size()){
+        		break;
+        	}
             boolean[] oldOnlineStatus = prevOnlineStatus.removeLast();
             LocalState[] oldLocalStates = prevLocalStates.removeLast();
             LinkedList<TransitionTuple> tmpPath = (LinkedList<TransitionTuple>) currentExploringPath.clone();
@@ -57,7 +60,10 @@ public abstract class DporModelChecker extends PrototypeSamc {
             Iterator<TransitionTuple> reverseIter = currentExploringPath.descendingIterator();
             Iterator<LocalState[]> reverseLocalStateIter = prevLocalStates.descendingIterator();
             Iterator<boolean[]> reverseOnlineStatusIter = prevOnlineStatus.descendingIterator();
-            while (reverseCounter > initialPath.size() && reverseIter.hasNext()) {
+            while (reverseIter.hasNext()) {
+            	if(hasInitialPath && reverseCounter <= initialPath.size()){
+            		break;
+            	}
                 TransitionTuple tuple = reverseIter.next();
                 oldLocalStates = reverseLocalStateIter.next();
                 oldOnlineStatus = reverseOnlineStatusIter.next();
