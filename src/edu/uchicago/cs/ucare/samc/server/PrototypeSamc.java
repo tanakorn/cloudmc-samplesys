@@ -325,6 +325,17 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         }
         saveDPORInitialPaths();
     }
+    
+    protected int findTransition(Transition transition){
+    	int result = -1;
+    	for(int index = 0; index<currentEnabledTransitions.size(); index++){
+    		if(transition.getTransitionId() == currentEnabledTransitions.get(index).getTransitionId()){
+    			result = index;
+    			break;
+    		}
+    	}
+    	return result;
+    }
 
     protected abstract void calculateDPORInitialPaths();
     
@@ -352,7 +363,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                         } else if (tuple.transition instanceof NodeStartTransition) {
                             isThereThisTuple = currentEnabledTransitions.remove(new AbstractNodeStartTransition(null));
                         } else {
-                            int indexOfTuple = currentEnabledTransitions.indexOf(tuple.transition);
+                            int indexOfTuple = findTransition(tuple.transition);
                             isThereThisTuple = indexOfTuple != -1;
                             if (isThereThisTuple) {
                                 tuple.transition = (Transition) currentEnabledTransitions.remove(indexOfTuple);
@@ -363,9 +374,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                         } else {
                             try {
                                 Thread.sleep(100);
-                                getOutstandingTcpPacketTransition(currentEnabledTransitions);
-                                getOutstandingDiskWrite(currentEnabledTransitions);
-                                adjustCrashAndReboot(currentEnabledTransitions);
+                                updateSAMCQueue();
                             } catch (InterruptedException e) {
                                 LOG.error("", e);
                             }
@@ -424,7 +433,8 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
             	updateSAMCQueue();
                 updateGlobalState2();
                 recordEnabledTransitions(globalState2, currentEnabledTransitions);
-                if (currentEnabledTransitions.isEmpty() && hasWaited) {
+            	boolean terminationPoint = checkTerminationPoint(currentEnabledTransitions);
+                if (terminationPoint && hasWaited) {
                     boolean verifiedResult = verifier.verify();
                     String detail = verifier.verificationDetail();
                     saveResult(verifiedResult + " ; " + detail + "\n");
@@ -445,7 +455,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                 	System.out.println("---- End of Path Execution ----");
                     resetTest();
                     break;
-                } else if (currentEnabledTransitions.isEmpty()) {
+                } else if (terminationPoint) {
                     try {
                     	System.out.println("[DEBUG] wait for any long process");
                         hasWaited = true;
