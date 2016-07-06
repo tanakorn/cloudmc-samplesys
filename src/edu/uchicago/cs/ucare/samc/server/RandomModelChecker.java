@@ -107,11 +107,11 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
         
         @Override
         public void run() {
-            int numWaitTime = 0;
+            boolean hasWaited = false;
             while (true) {
                 updateSAMCQueue();
                 boolean terminationPoint = checkTerminationPoint(currentEnabledTransitions);
-                if (terminationPoint && numWaitTime >= 2) {
+                if (terminationPoint && hasWaited) {
                     boolean verifiedResult = verifier.verify();
                     String detail = verifier.verificationDetail();
                     saveResult(verifiedResult + " ; " + detail + "\n");
@@ -122,13 +122,14 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
                     break;
                 } else if (terminationPoint) {
                     try {
-                        numWaitTime++;
+                        hasWaited = true;
                         Thread.sleep(100);
                     } catch (InterruptedException e) {
+                    	e.printStackTrace();
                     }
                     continue;
                 }
-                numWaitTime = 0;
+                hasWaited = false;
                 Transition transition;
                 // take next path based on initial path or current policy
                 boolean recordPath = true;
