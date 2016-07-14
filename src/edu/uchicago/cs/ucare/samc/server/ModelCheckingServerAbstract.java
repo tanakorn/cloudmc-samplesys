@@ -746,7 +746,7 @@ public abstract class ModelCheckingServerAbstract implements ModelCheckingServer
         
         int timeoutCounter = 0;
         int timeoutFraction = 20;
-        while (!isNodeSteady(id) && timeoutCounter >= timeoutFraction) {
+        while (!isNodeSteady(id) && timeoutCounter <= timeoutFraction) {
             Thread.sleep(steadyStateTimeout/timeoutFraction);
             timeoutCounter++;
         }
