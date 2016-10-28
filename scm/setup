@@ -30,15 +30,10 @@ echo test_record_dir=$working_dir/record >> $working_dir/target-sys.conf
 mkdir $working_dir/record
 mkdir $working_dir/state
 mkdir $working_dir/console
+mkdir $working_dir/log
 
 cp $scriptdir/scm_log.properties $working_dir/
 cp $scriptdir/mc_log.properties $working_dir/
-
-i=0
-while [ $i -lt $num_node ]; do
-	mkdir -p $working_dir/log/$i
-	i=`expr $i + 1`
-done
 
 echo "DMCK is ready in $working_dir"
 

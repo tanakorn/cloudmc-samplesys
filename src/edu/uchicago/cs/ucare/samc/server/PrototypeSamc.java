@@ -1,4 +1,4 @@
-package edu.uchicago.cs.ucare.samc.election;
+package edu.uchicago.cs.ucare.samc.server;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,9 +16,6 @@ import java.util.Set;
 
 import com.almworks.sqlite4java.SQLiteException;
 
-import edu.uchicago.cs.ucare.samc.event.DiskWrite;
-import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
-import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeOperationTransition;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeStartTransition;
@@ -31,7 +28,7 @@ import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.transition.TransitionTuple;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.ExploredBranchRecorder;
-import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
+import edu.uchicago.cs.ucare.samc.util.LocalState;
 import edu.uchicago.cs.ucare.samc.util.SqliteExploredBranchRecorder;
 
 public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
@@ -57,7 +54,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
     int globalState2;
     LinkedList<boolean[]> prevOnlineStatus;
     
-    LinkedList<LeaderElectionLocalState[]> prevLocalStates;
+    LinkedList<LocalState[]> prevLocalStates;
     
     @SuppressWarnings("unchecked")
 	public PrototypeSamc(String interceptorName, String ackName, int numNode,
@@ -137,7 +134,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         } catch (IOException e) {
             LOG.error("", e);
         }
-        prevLocalStates = new LinkedList<LeaderElectionLocalState[]>();
+        prevLocalStates = new LinkedList<LocalState[]>();
     }
     
     public Transition nextTransition(LinkedList<Transition> transitions) {
@@ -160,7 +157,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         }
     }
 
-    protected void adjustCrashReboot(LinkedList<Transition> enabledTransitions) {
+    protected void adjustCrashAndReboot(LinkedList<Transition> enabledTransitions) {
         int numOnline = 0;
         for (int i = 0; i < numNode; ++i) {
             if (isNodeOnline(i)) {
@@ -220,7 +217,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         globalState2 = prime * globalState2 + currentEnabledTransitions.hashCode();
         for (int i = 0; i < numNode; ++i) {
             for (int j = 0; j < numNode; ++j) {
-                globalState2 = prime * globalState2 + Arrays.hashCode(senderReceiverQueues[i][j].toArray());
+                globalState2 = prime * globalState2 + Arrays.hashCode(messagesQueues[i][j].toArray());
             }
         }
     }
@@ -328,12 +325,22 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
         }
         saveDPORInitialPaths();
     }
+    
+    protected int findTransition(Transition transition){
+    	int result = -1;
+    	for(int index = 0; index<currentEnabledTransitions.size(); index++){
+    		if(transition.getTransitionId() == currentEnabledTransitions.get(index).getTransitionId()){
+    			result = index;
+    			break;
+    		}
+    	}
+    	return result;
+    }
 
     protected abstract void calculateDPORInitialPaths();
     
     class PathTraversalWorker extends Thread {
         
-        @SuppressWarnings("unused")
 		@Override
         public void run() {
             if (currentDporPath != null) {
@@ -343,13 +350,12 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                     tmp += tuple.toString() + "\n";
                 }
                 LOG.info(tmp);
+                int tupleCounter = 0;
                 for (TransitionTuple tuple : currentDporPath) {
-                    getOutstandingTcpPacketTransition(currentEnabledTransitions);
-                    getOutstandingDiskWrite(currentEnabledTransitions);
-                    adjustCrashReboot(currentEnabledTransitions);
+                	tupleCounter++;
+                	updateSAMCQueue();
                     updateGlobalState2();
                     recordEnabledTransitions(globalState2, currentEnabledTransitions);
-                    printTransitionQueues(currentEnabledTransitions);
                     boolean isThereThisTuple = false;
                     for (int i = 0; i < 35; ++i) {
                         if (tuple.transition instanceof NodeCrashTransition) {
@@ -357,7 +363,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                         } else if (tuple.transition instanceof NodeStartTransition) {
                             isThereThisTuple = currentEnabledTransitions.remove(new AbstractNodeStartTransition(null));
                         } else {
-                            int indexOfTuple = currentEnabledTransitions.indexOf(tuple.transition);
+                            int indexOfTuple = findTransition(tuple.transition);
                             isThereThisTuple = indexOfTuple != -1;
                             if (isThereThisTuple) {
                                 tuple.transition = (Transition) currentEnabledTransitions.remove(indexOfTuple);
@@ -368,9 +374,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                         } else {
                             try {
                                 Thread.sleep(100);
-                                getOutstandingTcpPacketTransition(currentEnabledTransitions);
-                                getOutstandingDiskWrite(currentEnabledTransitions);
-                                adjustCrashReboot(currentEnabledTransitions);
+                                updateSAMCQueue();
                             } catch (InterruptedException e) {
                                 LOG.error("", e);
                             }
@@ -399,6 +403,10 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                         resetTest();
                         return;
                     }
+                    if(tupleCounter >= initialPath.size()){
+	                    exploredBranchRecorder.createChild(tuple.transition.getTransitionId());
+	                    exploredBranchRecorder.traverseDownTo(tuple.transition.getTransitionId());
+                    }
                     try {
                         currentExploringPath.add(new TransitionTuple(globalState2, tuple.transition));
                         prevOnlineStatus.add(isNodeOnline.clone());
@@ -409,52 +417,36 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                             tuple.transition = ((AbstractNodeOperationTransition) tuple.transition).getRealNodeOperationTransition();
                             nodeOperationTransition.id = ((NodeOperationTransition) tuple.transition).getId();
                         }
-                        pathRecordFile.write((tuple.transition.toString() + "\n").getBytes());
                         if (tuple.transition.apply()) {
+                            pathRecordFile.write((tuple.transition.toString() + "\n").getBytes());
                             updateGlobalState();
-                            if (tuple.transition instanceof PacketSendTransition) {
-                                InterceptPacket p = ((PacketSendTransition) tuple.transition).getPacket();
-                                int toId = p.getToId();
-                            } else if (tuple.transition instanceof DiskWriteTransition) {
-                                if (!((DiskWriteTransition) tuple.transition).isObsolete()) {
-                                    DiskWrite write = ((DiskWriteTransition) tuple.transition).getWrite();
-                                }
-                            }
+                            updateSAMCQueueAfterEventExecution(tuple.transition);
                         }
                     } catch (IOException e) {
                         LOG.error("", e);
                     }
-                    exploredBranchRecorder.createChild(tuple.transition.getTransitionId());
-                    exploredBranchRecorder.traverseDownTo(tuple.transition.getTransitionId());
-                    if (tuple.transition instanceof NodeCrashTransition) {
-                        markPacketsObsolete(currentExploringPath.size() - 1, ((NodeCrashTransition) tuple.transition).getId(), currentEnabledTransitions);
-                    } 
                 }
             }
             LOG.info("Try to find new path/Continue from DPOR initial path");
             boolean hasWaited = false;
             while (true) {
-                getOutstandingTcpPacketTransition(currentEnabledTransitions);
-                getOutstandingDiskWrite(currentEnabledTransitions);
-                adjustCrashReboot(currentEnabledTransitions);
+            	updateSAMCQueue();
                 updateGlobalState2();
                 recordEnabledTransitions(globalState2, currentEnabledTransitions);
-                printTransitionQueues(currentEnabledTransitions);
-                if (currentEnabledTransitions.isEmpty() && hasWaited) {
+            	boolean terminationPoint = checkTerminationPoint(currentEnabledTransitions);
+                if (terminationPoint && hasWaited) {
                     boolean verifiedResult = verifier.verify();
                     String detail = verifier.verificationDetail();
                     saveResult(verifiedResult + " ; " + detail + "\n");
-                    String mainPath = "";
-                    for (TransitionTuple tuple : currentExploringPath) {
-                        mainPath += tuple.toString() + "\n";
-                    }
-                    LOG.info("Main path\n" + mainPath);
                     exploredBranchRecorder.markBelowSubtreeFinished();
                     findDPORInitialPaths();
                     if (dporInitialPaths.size() == 0) {
                         exploredBranchRecorder.resetTraversal();
                         exploredBranchRecorder.markBelowSubtreeFinished();
-                        LOG.warn("Finished exploring all states");
+                        System.out.println("There is no more interesting Initial Paths. "
+                        		+ "Finished exploring all states.");
+                        LOG.warn("There is no more interesting Initial Paths. "
+                        		+ "Finished exploring all states.");
                         workloadDriver.stopEnsemble();
                         System.exit(0);
                     } else {
@@ -463,7 +455,7 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                 	System.out.println("---- End of Path Execution ----");
                     resetTest();
                     break;
-                } else if (currentEnabledTransitions.isEmpty()) {
+                } else if (terminationPoint) {
                     try {
                     	System.out.println("[DEBUG] wait for any long process");
                         hasWaited = true;
@@ -473,11 +465,45 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                     continue;
                 }
                 hasWaited = false;
-                Transition transition = nextTransition(currentEnabledTransitions);
+                Transition transition;
+                boolean recordPath = true;
+                if(hasInitialPath && !hasFinishedInitialPath && currentDporPath == null){
+                	transition = nextInitialTransition(currentEnabledTransitions);
+                	System.out.println("[INFO] next transition is directed by initialPath");
+                	recordPath = false;
+                } else {
+                	transition = nextTransition(currentEnabledTransitions);
+                }
                 if (transition != null) {
+                    if(recordPath){
+	                    exploredBranchRecorder.createChild(transition.getTransitionId());
+	                    exploredBranchRecorder.traverseDownTo(transition.getTransitionId());
+                    }
+                    boolean cleanTransition = verifier.verifyNextTransition(transition);
+                	if(!cleanTransition){
+                		boolean verifiedResult = verifier.verify();
+                        String detail = verifier.verificationDetail();
+                        saveResult(verifiedResult + " ; " + detail + "\n");
+                        exploredBranchRecorder.markBelowSubtreeFinished();
+                        findDPORInitialPaths();
+                        if (dporInitialPaths.size() == 0) {
+                            exploredBranchRecorder.resetTraversal();
+                            exploredBranchRecorder.markBelowSubtreeFinished();
+                            System.out.println("There is no more interesting Initial Paths. "
+                            		+ "Finished exploring all states.");
+                            LOG.warn("There is no more interesting Initial Paths. "
+                            		+ "Finished exploring all states.");
+                            workloadDriver.stopEnsemble();
+                            System.exit(0);
+                        } else {
+                            currentDporPath = dporInitialPaths.remove();
+                        }
+                    	System.out.println("---- End of Path Execution ----");
+                        resetTest();
+                        break;
+                	}
                     try {
                         currentExploringPath.add(new TransitionTuple(globalState2, transition));
-                        prevOnlineStatus.add(isNodeOnline.clone());
                         prevOnlineStatus.add(isNodeOnline.clone());
                         prevLocalStates.add(localStates.clone());
                         saveLocalState();
@@ -486,25 +512,14 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                             transition = ((AbstractNodeOperationTransition) transition).getRealNodeOperationTransition();
                             nodeOperationTransition.id = ((NodeOperationTransition) transition).getId();
                         }
-                        pathRecordFile.write((transition.toString() + "\n").getBytes());
                         if (transition.apply()) {
+                        	pathRecordFile.write((transition.toString() + "\n").getBytes());
                             updateGlobalState();
-                            if (transition instanceof PacketSendTransition) {
-                                InterceptPacket p = ((PacketSendTransition) transition).getPacket();
-                                int toId = p.getToId();
-                            } else if (transition instanceof NodeCrashTransition) {
-                                markPacketsObsolete(currentExploringPath.size() - 1, ((NodeCrashTransition) transition).getId(), currentEnabledTransitions);
-                            } else if (transition instanceof DiskWriteTransition) {
-                                if (!((DiskWriteTransition) transition).isObsolete()) {
-                                    DiskWrite write = ((DiskWriteTransition) transition).getWrite();
-                                }
-                            }
+                            updateSAMCQueueAfterEventExecution(transition);
                         }
                     } catch (IOException e) {
                         LOG.error("", e);
                     }
-                    exploredBranchRecorder.createChild(transition.getTransitionId());
-                    exploredBranchRecorder.traverseDownTo(transition.getTransitionId());
                 } else if (exploredBranchRecorder.getCurrentDepth() == 0) {
                 	System.out.println("Finished exploring all states");
                     LOG.warn("Finished exploring all states");
@@ -512,6 +527,10 @@ public abstract class PrototypeSamc extends ModelCheckingServerAbstract {
                     if (dporInitialPaths.size() == 0) {
                         exploredBranchRecorder.resetTraversal();
                         exploredBranchRecorder.markBelowSubtreeFinished();
+                        System.out.println("There is no more interesting Initial Paths. "
+                        		+ "Finished exploring all states.");
+                        LOG.warn("There is no more interesting Initial Paths. "
+                        		+ "Finished exploring all states.");
                         System.exit(0);
                     } else {
                         currentDporPath = dporInitialPaths.remove();

@@ -4,14 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.ListIterator;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 import com.almworks.sqlite4java.SQLiteException;
 
-import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
 import edu.uchicago.cs.ucare.samc.transition.NodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeStartTransition;
-import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.ExploredBranchRecorder;
@@ -67,7 +63,19 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
         if (numCurrentCrash < numCrash) {
             for (int i = 0; i < isNodeOnline.length; ++i) {
                 if (isNodeOnline(i)) {
-                    transitions.add(new NodeCrashTransition(this, i));
+                	// only add crash event if the crash event doesn't exist
+                	NodeCrashTransition crashEvent = new NodeCrashTransition(this, i);
+                	if(!transitions.contains(crashEvent)){
+                		transitions.add(crashEvent);
+                	}
+                    // if existing transitions has startTransition node i in the list,
+                	// but the node i now is already online, then remove the start node i events
+                    for(int j=transitions.size()-1; j>= 0; j--){
+                    	if(transitions.get(j) instanceof NodeStartTransition && ((NodeStartTransition) transitions.get(j)).getId() == i){
+                    		System.out.println("remove event: " + transitions.get(j).toString());
+                    		transitions.remove(j);
+                    	}
+                    }
                 }
             }
         } else {
@@ -81,7 +89,11 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
         if (numCurrentReboot < numReboot) {
             for (int i = 0; i < isNodeOnline.length; ++i) {
                 if (!isNodeOnline(i)) {
-                    transitions.add(new NodeStartTransition(this, i));
+                	// only add crash event if the crash event doesn't exist
+                	NodeStartTransition rebootEvent = new NodeStartTransition(this, i);
+                	if(!transitions.contains(rebootEvent)){
+                		transitions.add(new NodeStartTransition(this, i));
+                	}
                 }
             }
         } else {
@@ -98,6 +110,22 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
         exploredBranchRecorder.noteThisNode(".test_id", testId + "");
     }
     
+    protected void saveNextTransition(String nextTransition) {
+    	try {
+            localRecordFile.write(("Next Execute: " + nextTransition + "\n").getBytes());
+        } catch (IOException e) {
+            LOG.error("", e);
+        }
+    }
+    
+    protected void saveFinishedPath() {
+    	try {
+            localRecordFile.write(("Finished Path: " + exploredBranchRecorder.getCurrentPath() + "\n").getBytes());
+        } catch (IOException e) {
+            LOG.error("", e);
+        }
+    }
+    
     class PathTraversalWorker extends Thread {
 
         @Override
@@ -108,9 +136,7 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
             LinkedList<LinkedList<Transition>> pastEnabledTransitionList = 
                     new LinkedList<LinkedList<Transition>>();
             while (true) {
-            	getOutstandingTcpPacketTransition(currentEnabledTransitions);
-            	adjustCrashAndReboot(currentEnabledTransitions);
-            	printTransitionQueues(currentEnabledTransitions);
+            	updateSAMCQueue();
             	boolean terminationPoint = checkTerminationPoint(currentEnabledTransitions);
                 if (terminationPoint && hasWaited) {
                 	boolean verifiedResult = verifier.verify();
@@ -118,11 +144,13 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                     saveResult(verifiedResult + " ; " + detail + "\n");
                     recordTestId();
                     exploredBranchRecorder.markBelowSubtreeFinished();
+                    saveFinishedPath();
                     for (LinkedList<Transition> pastTransitions : pastEnabledTransitionList) {
                         exploredBranchRecorder.traverseUpward(1);
-                        Transition nextTransition = nextTransition(pastTransitions);
-                        if (nextTransition == null) {
+                        Transition transition = nextTransition(pastTransitions);
+                        if (transition == null) {
                             exploredBranchRecorder.markBelowSubtreeFinished();
+                            saveFinishedPath();
                         	hasExploredAll = true;
                         } else {
                         	hasExploredAll = false;
@@ -156,6 +184,7 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                     transition = nextTransition(currentEnabledTransitions);
                 }
                 if (transition != null) {
+                	saveNextTransition(transition.toString());
                 	if(recordPath){
 	                    exploredBranchRecorder.createChild(transition.getTransitionId());
 	                    exploredBranchRecorder.traverseDownTo(transition.getTransitionId());
@@ -168,31 +197,28 @@ public abstract class TreeTravelModelChecker extends ModelCheckingServerAbstract
                         saveResult(cleanTransition + " ; " + detail + "\n");
                         recordTestId();
                         exploredBranchRecorder.markBelowSubtreeFinished();
+                        saveFinishedPath();
+                        for (LinkedList<Transition> pastTransitions : pastEnabledTransitionList) {
+                            exploredBranchRecorder.traverseUpward(1);
+                            Transition nextTransition = nextTransition(pastTransitions);
+                            if (nextTransition == null) {
+                                exploredBranchRecorder.markBelowSubtreeFinished();
+                                saveFinishedPath();
+                            } else {
+                                break;
+                            }
+                        }
                     	System.out.println("[NEXT TRANSITION] False next transition");
                     	System.out.println("---- End of Path Execution ----");
                         resetTest();
                         break;
                 	}
+                	System.out.println("[NEXT TRANSITION] " + transition.toString());
                     try {
                         if (transition.apply()) {
                             pathRecordFile.write((transition.toString() + "\n").getBytes());
                             updateGlobalState();
-                            if (transition instanceof NodeCrashTransition) {
-                                NodeCrashTransition crash = (NodeCrashTransition) transition;
-                                ListIterator<Transition> iter = currentEnabledTransitions.listIterator();
-                                while (iter.hasNext()) {
-                                    Transition t = iter.next();
-                                    if (t instanceof PacketSendTransition) {
-                                        PacketSendTransition p = (PacketSendTransition) t;
-                                        if (p.getPacket().getFromId() == crash.getId()) {
-                                            iter.remove();
-                                        }
-                                    }
-                                }
-                                for (ConcurrentLinkedQueue<InterceptPacket> queue : senderReceiverQueues[crash.getId()]) {
-                                    queue.clear();
-                                }
-                            }
+                            updateSAMCQueueAfterEventExecution(transition);
                         }
                     } catch (Exception e) {
                         LOG.error("", e);

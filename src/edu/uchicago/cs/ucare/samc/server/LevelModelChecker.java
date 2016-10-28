@@ -17,7 +17,7 @@ import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
 import edu.uchicago.cs.ucare.samc.util.ExploredBranchRecorder;
 import edu.uchicago.cs.ucare.samc.util.SqliteExploredBranchRecorder;
 
-public abstract class LevelModelChecker extends ProgrammableModelChecker {
+public abstract class LevelModelChecker extends GuideModelChecker {
     
     protected int numCrash;
     protected int numReboot;

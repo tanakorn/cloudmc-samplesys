@@ -1,11 +1,10 @@
-package edu.uchicago.cs.ucare.samc.election;
+package edu.uchicago.cs.ucare.samc.server;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
 import edu.uchicago.cs.ucare.samc.event.Event;
-import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.AbstractNodeStartTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeCrashTransition;
@@ -14,21 +13,15 @@ import edu.uchicago.cs.ucare.samc.transition.PacketSendTransition;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
 import edu.uchicago.cs.ucare.samc.transition.TransitionTuple;
 import edu.uchicago.cs.ucare.samc.util.WorkloadDriver;
-import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
 import edu.uchicago.cs.ucare.samc.util.LocalState;
 
 public abstract class DporModelChecker extends PrototypeSamc {
 
     public DporModelChecker(String interceptorName, String ackName, int maxId,
-            int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir,
-            WorkloadDriver workloadDriver, String ipcDir) {
-        this(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, "/tmp", workloadDriver, ipcDir);
-    }
-    
-    public DporModelChecker(String inceptorName, String ackName, int maxId,
             int numCrash, int numReboot, String globalStatePathDir, String packetRecordDir, String cacheDir,
             WorkloadDriver workloadDriver, String ipcDir) {
-        super(inceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, cacheDir, workloadDriver, ipcDir);
+        super(interceptorName, ackName, maxId, numCrash, numReboot, globalStatePathDir, packetRecordDir, 
+        		cacheDir, workloadDriver, ipcDir);
     }
     
     public abstract boolean isDependent(LocalState state, Event e1, Event e2);
@@ -38,8 +31,11 @@ public abstract class DporModelChecker extends PrototypeSamc {
     protected void calculateDPORInitialPaths() {
         TransitionTuple lastTransition;
         while ((lastTransition = currentExploringPath.pollLast()) != null) {
+        	if(hasInitialPath && currentExploringPath.size() < initialPath.size()){
+        		break;
+        	}
             boolean[] oldOnlineStatus = prevOnlineStatus.removeLast();
-            LeaderElectionLocalState[] oldLocalStates = prevLocalStates.removeLast();
+            LocalState[] oldLocalStates = prevLocalStates.removeLast();
             LinkedList<TransitionTuple> tmpPath = (LinkedList<TransitionTuple>) currentExploringPath.clone();
             if (lastTransition.transition instanceof AbstractNodeCrashTransition) {
                 AbstractNodeCrashTransition abstractNodeCrashTransition = (AbstractNodeCrashTransition) lastTransition.transition;
@@ -60,18 +56,23 @@ public abstract class DporModelChecker extends PrototypeSamc {
                     addToDporInitialPathList(interestingPath);
                 }
             }
+            int reverseCounter = currentExploringPath.size();
             Iterator<TransitionTuple> reverseIter = currentExploringPath.descendingIterator();
-            Iterator<LeaderElectionLocalState[]> reverseLocalStateIter = prevLocalStates.descendingIterator();
+            Iterator<LocalState[]> reverseLocalStateIter = prevLocalStates.descendingIterator();
             Iterator<boolean[]> reverseOnlineStatusIter = prevOnlineStatus.descendingIterator();
             while (reverseIter.hasNext()) {
+            	if(hasInitialPath && reverseCounter <= initialPath.size()){
+            		break;
+            	}
                 TransitionTuple tuple = reverseIter.next();
                 oldLocalStates = reverseLocalStateIter.next();
                 oldOnlineStatus = reverseOnlineStatusIter.next();
+                reverseCounter--;
                 Set<Transition> enabledPackets = enabledPacketTable.get(tuple.state);
                 if (enabledPackets.contains(lastTransition.transition)) {
                     tmpPath.pollLast();
                     if (lastTransition.transition instanceof PacketSendTransition) {
-                        InterceptPacket lastPacket = ((PacketSendTransition) lastTransition.transition).getPacket();
+                    	Event lastPacket = ((PacketSendTransition) lastTransition.transition).getPacket();
                         if (tuple.transition instanceof PacketSendTransition) {
                             PacketSendTransition tuplePacket = (PacketSendTransition) tuple.transition;
                             if (lastPacket.isObsolete() || tuplePacket.getPacket().isObsolete()) {
@@ -84,8 +85,8 @@ public abstract class DporModelChecker extends PrototypeSamc {
                                     int toId = tuplePacket.getPacket().getToId();
                                     if (isDependent(oldLocalStates[toId], lastPacket, tuplePacket.getPacket())) {
                                         addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
+                                        break;
                                     }
-                                    break;
                                 }
                             } else if (tuplePacket.getPacket().getToId() == lastPacket.getToId() && tuplePacket.getPacket().getFromId() == lastPacket.getFromId()) {
                                 break;
@@ -106,12 +107,12 @@ public abstract class DporModelChecker extends PrototypeSamc {
                                 break;
                             }
                         }
+                    } else {
+                    	// reorder crash and reboot
+                    	addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
+                        break;
                     }
-                } else {
-                	// reorder crash and reboot - korn remove this?
-                	addNewDporInitialPath(tmpPath, tuple, new TransitionTuple(0, lastTransition.transition));
-                    break;
-                }
+                } 
             }
         }
     }

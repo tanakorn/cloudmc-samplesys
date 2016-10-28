@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 import edu.uchicago.cs.ucare.example.election.LeaderElectionMain;
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
-import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
+import edu.uchicago.cs.ucare.samc.util.LocalState;
 import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
 
 public class LeaderElectionVerifier extends SpecVerifier {
@@ -37,14 +37,14 @@ public class LeaderElectionVerifier extends SpecVerifier {
             int numLooking = 0;
             for (int j = 0; j < modelCheckingServer.isNodeOnline.length; ++j) {
                 if (modelCheckingServer.isNodeOnline[j]) {
-                    LeaderElectionLocalState localState = modelCheckingServer.localStates[j];
-                    if (localState.getRole() == LeaderElectionMain.LEADING) {
+                    LocalState localState = modelCheckingServer.localStates[j];
+                    if ((int)localState.getValue("role") == LeaderElectionMain.LEADING) {
                         numLeader++;
                         supportTable[j] = j;
-                    } else if (localState.getRole() == LeaderElectionMain.FOLLOWING) {
+                    } else if ((int)localState.getValue("role") == LeaderElectionMain.FOLLOWING) {
                         numFollower++;
-                        supportTable[j] = localState.getLeader();
-                    } else if (localState.getRole() == LeaderElectionMain.LOOKING) {
+                        supportTable[j] = (int)localState.getValue("leader");
+                    } else if ((int)localState.getValue("role") == LeaderElectionMain.LOOKING) {
                         numLooking++; 
                         supportTable[j] = -1;
                     }
@@ -90,12 +90,12 @@ public class LeaderElectionVerifier extends SpecVerifier {
         StringBuilder strBuilder = new StringBuilder();
         for (int i = 0; i < modelCheckingServer.isNodeOnline.length; ++i) {
             if (modelCheckingServer.isNodeOnline[i]) {
-                LeaderElectionLocalState localState = modelCheckingServer.localStates[i];
-                if (localState.getRole() == LeaderElectionMain.LEADING) {
+                LocalState localState = modelCheckingServer.localStates[i];
+                if ((int)localState.getValue("role") == LeaderElectionMain.LEADING) {
                     strBuilder.append("node " + i + " is LEADING ; ");
-                } else if (localState.getRole() == LeaderElectionMain.FOLLOWING) {
-                    strBuilder.append("node " + i + " is FOLLOWING to " + localState.getLeader() + " ; ");
-                } else if (localState.getRole() == LeaderElectionMain.LOOKING) {
+                } else if ((int)localState.getValue("role") == LeaderElectionMain.FOLLOWING) {
+                    strBuilder.append("node " + i + " is FOLLOWING to " + localState.getValue("leader") + " ; ");
+                } else if ((int)localState.getValue("role") == LeaderElectionMain.LOOKING) {
                     strBuilder.append("node " + i + " is still LOOKING ; ");
                 }
             } else {

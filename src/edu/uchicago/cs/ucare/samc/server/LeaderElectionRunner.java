@@ -63,12 +63,12 @@ public class LeaderElectionRunner {
 	        ModelCheckingServerAbstract checker = createModelCheckerFromConf(workingDir + "/target-sys.conf", workingDir, ipcDir);
 	        
 	        // activate Directory Watcher
-	        Thread dirWatcher;   
-        	dirWatcher = new Thread(new FileWatcher(ipcDir, checker));
-        	dirWatcher.start();
+	        FileWatcher dirWatcher = new FileWatcher(ipcDir, checker);
+            Thread watcher = new Thread(dirWatcher);
+        	watcher.start();
         	Thread.sleep(500);
 	        
-	        startExploreTesting(checker, numNode, workingDir, isPausedEveryTest);
+	        startExploreTesting(checker, numNode, workingDir, isPausedEveryTest, dirWatcher);
     	} catch (Exception e){
     		e.printStackTrace();
     	}
@@ -102,14 +102,14 @@ public class LeaderElectionRunner {
             LOG.info("State exploration strategy is " + strategy);
             Class<? extends ModelCheckingServerAbstract> modelCheckerClass = (Class<? extends ModelCheckingServerAbstract>) Class.forName(strategy);
             
-            if(ProgrammableModelChecker.class.isAssignableFrom(modelCheckerClass)){
+            if(GuideModelChecker.class.isAssignableFrom(modelCheckerClass)){
             	String programFileName = prop.getProperty("program");
                 if (programFileName == null) {
                     throw new RuntimeException("No program file specified");
                 }
                 LOG.info("Inspect potential bug in: " + programFileName);
                 File program = new File(programFileName);
-                modelCheckingServerAbstract = new ProgrammableModelChecker(interceptorName, ackName, numNode, 
+                modelCheckingServerAbstract = new GuideModelChecker(interceptorName, ackName, numNode, 
                         testRecordDir, program, workingDir, workloadDriver, ipcDir);
             } else {
                 Constructor<? extends ModelCheckingServerAbstract> modelCheckerConstructor = modelCheckerClass.getConstructor(
@@ -128,9 +128,9 @@ public class LeaderElectionRunner {
     }
     
     protected static void startExploreTesting(final ModelCheckingServerAbstract checker, int numNode, String workingDir, 
-    		boolean isPausedEveryTest) throws IOException {
+    		boolean isPausedEveryTest, FileWatcher dirWatcher) throws IOException {
         File gspathDir = new File(workingDir + "/record");
-        int testNum = gspathDir.list().length + 1;
+        int testId = gspathDir.list().length + 1;
         File finishedFlag = new File(workingDir + "/state/.finished");
         File waitingFlag = new File(workingDir + "/state/.waiting");
         try {
@@ -141,13 +141,13 @@ public class LeaderElectionRunner {
                 }
             });
         	
-            for (; !finishedFlag.exists(); ++testNum) {
+            for (; !finishedFlag.exists(); ++testId) {
                 waitingFlag.delete();
-                checker.setTestId(testNum);
+                checker.setTestId(testId);
                 Process reset = Runtime.getRuntime().exec("./bin/resettest " + numNode + 
                         " " + workingDir);
                 reset.waitFor();
-                workloadDriver.resetTest();
+                workloadDriver.resetTest(testId);
                 checker.runEnsemble();
                 workloadDriver.runWorkload();
                 checker.waitOnSteadyStatesByTimeout(); // wait on first steady state timeout
@@ -155,6 +155,7 @@ public class LeaderElectionRunner {
                     Thread.sleep(30);
                 }
                 checker.stopEnsemble();
+                dirWatcher.resetPacketCount();
                 if (isPausedEveryTest) {
                     System.out.print("enter to continue");
                     System.in.read();

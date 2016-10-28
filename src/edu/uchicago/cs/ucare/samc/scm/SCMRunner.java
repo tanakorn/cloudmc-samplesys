@@ -61,13 +61,13 @@ public class SCMRunner{
 	        		workloadDriver, ipcDir);
 	        
 	        // activate Directory Watcher
-            Thread dirWatcher;
-        	dirWatcher = new Thread(new FileWatcher(ipcDir, checker));
-        	dirWatcher.start();
+	        FileWatcher dirWatcher = new FileWatcher(ipcDir, checker);
+            Thread watcher = new Thread(dirWatcher);
+        	watcher.start();
         	Thread.sleep(500);
         	
         	// start path explorations
-        	startExploreTesting(checker, numNode, workingDir, workloadDriver, pauseEveryPathExploration);
+        	startExploreTesting(checker, numNode, workingDir, workloadDriver, pauseEveryPathExploration, dirWatcher);
 	        
     	} catch (Exception e){
     		e.printStackTrace();
@@ -88,12 +88,6 @@ public class SCMRunner{
             String testRecordDir = prop.getProperty("test_record_dir");
             String traversalRecordDir = prop.getProperty("traversal_record_dir");
             String strategy = prop.getProperty("exploring_strategy");
-            
-            if(!strategy.equals("edu.uchicago.cs.ucare.samc.server.DfsTreeTravelModelChecker") && 
-            		!strategy.equals("edu.uchicago.cs.ucare.samc.server.RandomModelChecker")){
-            	System.out.println("SCM can only be verified with DFS or Random policies");
-            	System.exit(0);
-            }
             
             int numCrash = Integer.parseInt(prop.getProperty("num_crash"));
             int numReboot = Integer.parseInt(prop.getProperty("num_reboot"));
@@ -124,9 +118,9 @@ public class SCMRunner{
 	}
 	
 	protected static void startExploreTesting(final ModelCheckingServerAbstract checker, int numNode, String workingDir,
-            WorkloadDriver scmWorkloadDriver, boolean pauseEveryPathExploration) throws IOException {
+            WorkloadDriver scmWorkloadDriver, boolean pauseEveryPathExploration, FileWatcher dirWatcher) throws IOException {
         File gspathDir = new File(workingDir + "/record");
-        int testNum = gspathDir.list().length + 1;
+        int testId = gspathDir.list().length + 1;
         File finishedFlag = new File(workingDir + "/state/.finished");
         File waitingFlag = new File(workingDir + "/state/.waiting");
         
@@ -138,10 +132,10 @@ public class SCMRunner{
                 }
             });
         	
-            for (; !finishedFlag.exists(); ++testNum) {
+            for (; !finishedFlag.exists(); ++testId) {
                 waitingFlag.delete();
-                checker.setTestId(testNum);
-                scmWorkloadDriver.resetTest();
+                checker.setTestId(testId);
+                scmWorkloadDriver.resetTest(testId);
                 checker.runEnsemble();
                 workloadDriver.runWorkload();
                 checker.waitOnSteadyStatesByTimeout(); // wait on first steady state timeout
@@ -149,6 +143,7 @@ public class SCMRunner{
                     Thread.sleep(30);
                 }
                 checker.stopEnsemble();
+                dirWatcher.resetPacketCount();
                 if (pauseEveryPathExploration) {
                     System.out.print("enter to continue");
                     System.in.read();

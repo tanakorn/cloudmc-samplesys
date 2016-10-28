@@ -17,8 +17,8 @@ public class SCMSender {
 	
 	static int msgId;
 	static int nodeId;
+	static int vote;
 	static String msgName;
-	static char msgContent;
 	
 	public static void main(String[] args) throws IOException {
 		
@@ -32,7 +32,7 @@ public class SCMSender {
 		nodeId = Integer.parseInt(args[2]);
 		msgId = getHash(nodeId, 0);
 		msgName = "scm-" + msgId;
-		msgContent = (char)(96 + nodeId);
+		vote = nodeId;
 		
 		createMessage();
 		sendMessage();
@@ -45,7 +45,7 @@ public class SCMSender {
     	try{
         	PrintWriter writer = new PrintWriter(messageLocation + "/new/" + msgName, "UTF-8");
         	writer.println("msgId=" + msgId);
-        	writer.println("msgContent=" + msgContent);
+        	writer.println("vote=" + vote);
         	writer.close();
         	
 			LOG.info("sender-" + msgId + " has successfully created its message " + msgName);
@@ -58,7 +58,6 @@ public class SCMSender {
 		try{
     		Runtime.getRuntime().exec("mv " + messageLocation + "/new/" + msgName + " " + 
     				messageLocation + "/send/" + msgName);
-
 			LOG.info("sender-" + msgId + " has sent its message " + msgName);
     	} catch (Exception e){
 			LOG.error("sender-" + msgId + " has not sent its message " + msgName);
@@ -69,28 +68,27 @@ public class SCMSender {
 		try{
         	PrintWriter writer = new PrintWriter(ipcDmckDir + "/new/" + msgName, "UTF-8");
         	writer.println("msgId=" + msgId);
-        	writer.println("callbackName=SCMCallback" + msgId);
         	writer.println("sendNode=" + nodeId);
         	writer.println("recvNode=" + 0);
-        	writer.println("msgContent=" + msgContent);
+        	writer.println("vote=" + vote);
         	writer.close();
         	
         	Runtime.getRuntime().exec("mv " + ipcDmckDir + "/new/" + msgName + " " + 
         			ipcDmckDir + "/send/" + msgName);
         	
         	// wait for dmck signal
-        	File ackFile = new File(ipcDmckDir + "/ack/" + msgId);
-        	LOG.info("start waiting for file : " + msgId + " at " + ackFile.getPath());
+        	File ackFile = new File(ipcDmckDir + "/ack/" + msgName);
+        	LOG.info("start waiting for file : " + msgName + " at " + ackFile.getPath());
         	while(!ackFile.exists()){
         		// wait
         	}
         	
         	try{
         		// receive dmck signal
-            	LOG.info("DMCK has enabled this file : " + msgId);
-            	Runtime.getRuntime().exec("rm " + ipcDmckDir + "/ack/" + msgId);
+            	LOG.info("DMCK has enabled this file : " + msgName);
+            	Runtime.getRuntime().exec("rm " + ipcDmckDir + "/ack/" + msgName);
         	} catch (Exception e){
-            	LOG.error("ack file failed on file : " + msgId);
+            	LOG.error("ack file failed on file : " + msgName);
         	}
     	} catch (Exception e) {
     		e.printStackTrace();

@@ -5,11 +5,8 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Random;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 import com.almworks.sqlite4java.SQLiteException;
 
-import edu.uchicago.cs.ucare.samc.event.InterceptPacket;
 import edu.uchicago.cs.ucare.samc.transition.NodeCrashTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeOperationTransition;
 import edu.uchicago.cs.ucare.samc.transition.NodeStartTransition;
@@ -73,7 +70,7 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
         exploredBranchRecorder.noteThisNode(".test_id", testId + "");
     }
     
-    protected void adjustCrashReboot(LinkedList<Transition> enabledTransitions) {
+    protected void adjustCrashAndReboot(LinkedList<Transition> enabledTransitions) {
         int numOnline = 0;
         for (int i = 0; i < numNode; ++i) {
             if (isNodeOnline(i)) {
@@ -110,13 +107,11 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
         
         @Override
         public void run() {
-            int numWaitTime = 0;
+            boolean hasWaited = false;
             while (true) {
-                getOutstandingTcpPacketTransition(currentEnabledTransitions);
-                adjustCrashReboot(currentEnabledTransitions);
-                printTransitionQueues(currentEnabledTransitions);
+                updateSAMCQueue();
                 boolean terminationPoint = checkTerminationPoint(currentEnabledTransitions);
-                if (terminationPoint && numWaitTime >= 2) {
+                if (terminationPoint && hasWaited) {
                     boolean verifiedResult = verifier.verify();
                     String detail = verifier.verificationDetail();
                     saveResult(verifiedResult + " ; " + detail + "\n");
@@ -127,13 +122,14 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
                     break;
                 } else if (terminationPoint) {
                     try {
-                        numWaitTime++;
+                        hasWaited = true;
                         Thread.sleep(100);
                     } catch (InterruptedException e) {
+                    	e.printStackTrace();
                     }
                     continue;
                 }
-                numWaitTime = 0;
+                hasWaited = false;
                 Transition transition;
                 // take next path based on initial path or current policy
                 boolean recordPath = true;
@@ -173,27 +169,10 @@ public class RandomModelChecker extends ModelCheckingServerAbstract {
                             }
                             nodeOperationTransition.id = ((NodeOperationTransition) transition).getId();
                         }
-                        pathRecordFile.write((transition.toString() + "\n").getBytes());
                         if (transition.apply()) {
+                            pathRecordFile.write((transition.toString() + "\n").getBytes());
                             updateGlobalState();
-                            // jef : remove just crashed node events in queue
-                            if(transition instanceof NodeCrashTransition){
-                            	NodeCrashTransition crash = (NodeCrashTransition) transition;
-                                ListIterator<Transition> iter = currentEnabledTransitions.listIterator();
-                                while (iter.hasNext()) {
-                                    Transition t = iter.next();
-                                    if (t instanceof PacketSendTransition) {
-                                        PacketSendTransition p = (PacketSendTransition) t;
-                                        if (p.getPacket().getFromId() == crash.getId()) {
-                                        	System.out.println("[DEBUG] remove event: " + p.toString());
-                                            iter.remove();
-                                        }
-                                    }
-                                }
-                                for (ConcurrentLinkedQueue<InterceptPacket> queue : senderReceiverQueues[crash.getId()]) {
-                                    queue.clear();
-                                }
-                            }
+                            updateSAMCQueueAfterEventExecution(transition);
                         }
                     } catch (IOException e) {
                         LOG.error("", e);

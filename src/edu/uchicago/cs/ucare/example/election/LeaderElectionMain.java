@@ -20,8 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.example.election.interposition.LeaderElectionInterposition;
-import edu.uchicago.cs.ucare.samc.election.LeaderElectionPacket;
-import edu.uchicago.cs.ucare.samc.util.LeaderElectionLocalState;
+import edu.uchicago.cs.ucare.samc.event.Event;
+import edu.uchicago.cs.ucare.samc.util.LocalState;
 
 public class LeaderElectionMain {
 	
@@ -190,7 +190,6 @@ public class LeaderElectionMain {
         }
 
         if (LeaderElectionInterposition.SAMC_ENABLED) {
-            LeaderElectionInterposition.bindCallback();
             LeaderElectionInterposition.isBound = true;
             if (LeaderElectionInterposition.isReadingForAll() && !LeaderElectionInterposition.isThereSendingMessage() && LeaderElectionInterposition.isBound) {
                 try {
@@ -265,7 +264,7 @@ public class LeaderElectionMain {
 		if (LeaderElectionInterposition.SAMC_ENABLED) {
             LOG.info("Enable SAMC without IPC");
 		}
-		LeaderElectionInterposition.localState = new LeaderElectionLocalState();
+		LeaderElectionInterposition.localState = new LocalState();
 		
 		id = Integer.parseInt(args[0]);
 		role = LOOKING;
@@ -278,9 +277,9 @@ public class LeaderElectionMain {
 
 		if (LeaderElectionInterposition.SAMC_ENABLED) {
 		    LeaderElectionInterposition.id = id;
-            LeaderElectionInterposition.localState.setRole(role);
-            LeaderElectionInterposition.localState.setLeader(leader);
-            LeaderElectionInterposition.localState.setElectionTable(electionTable);
+            LeaderElectionInterposition.localState.addKeyValue("role", role);
+            LeaderElectionInterposition.localState.addKeyValue("leader", leader);
+            LeaderElectionInterposition.localState.addKeyValue("electionTable", electionTable.toString());
 			LeaderElectionInterposition.modelCheckingServer.setLocalState(id, LeaderElectionInterposition.localState);
 			LeaderElectionInterposition.modelCheckingServer.updateLocalState(id, LeaderElectionInterposition.localState.hashCode());
 		}
@@ -343,9 +342,8 @@ public class LeaderElectionMain {
                     ElectionMessage msg = new ElectionMessage(otherId, buffer);
                     LOG.info("Get message : " + msg.toString());
                     if (LeaderElectionInterposition.SAMC_ENABLED) {
-                        LeaderElectionPacket packet = LeaderElectionInterposition.packetGenerator2
-                                .createNewLeaderElectionPacket("LeaderElectionCallback" + id, 
-                                msg.getSender(), id, msg.getRole(), msg.getLeader());
+                      Event packet = LeaderElectionInterposition.packetGenerator2.createNewLeaderElectionPacket(msg.getSender(), 
+                    		  id, msg.getRole(), msg.getLeader());
                         try {
                             LeaderElectionInterposition.ack.ack(packet.getId(), id);
                         } catch (RemoteException e) {
@@ -411,25 +409,18 @@ public class LeaderElectionMain {
                     LOG.info("Send message : " + msg.toString() + " to " + otherId);
                     if (LeaderElectionInterposition.SAMC_ENABLED) {
                         try {
-                            LeaderElectionPacket packet = new LeaderElectionPacket("LeaderElectionCallback" + id);
-                            packet.addKeyValue(LeaderElectionPacket.EVENT_ID_KEY, LeaderElectionInterposition.hash(msg, this.otherId));
-                            packet.addKeyValue(LeaderElectionPacket.SOURCE_KEY, id);
-                            packet.addKeyValue(LeaderElectionPacket.DESTINATION_KEY, this.otherId);
-                            packet.addKeyValue(LeaderElectionPacket.LEADER_KEY, msg.getLeader());
-                            packet.addKeyValue(LeaderElectionPacket.ROLE_KEY, msg.getRole());
-                            LeaderElectionInterposition.nodeSenderMap.put(packet.getId(), packet);
-                            LeaderElectionInterposition.msgSenderMap.put(packet.getId(), this);
-                            try {
-                                LeaderElectionInterposition.modelCheckingServer.offerPacket(packet);
-                            } catch (RemoteException e) {
-                                e.printStackTrace();
-                            }
+                        	Event packet = new Event(LeaderElectionInterposition.hash(msg, this.otherId));
+                        	packet.addKeyValue(Event.FROM_ID, id);
+                        	packet.addKeyValue(Event.TO_ID, this.otherId);
+                        	packet.addKeyValue("leader", msg.getLeader());
+                        	packet.addKeyValue("role", msg.getRole());
+                        	LeaderElectionInterposition.nodeSenderMap.put(packet.getId(), packet);
+                            LeaderElectionInterposition.modelCheckingServer.offerPacket(packet);
                         } catch (Exception e) {
                             LOG.error("", e);
                         }
                     } else if(ipcDir != "") {
-                    	interceptMessage(msg, "LeaderElectionCallback" + id, id, msg.getRole(), this.otherId, 
-                    			msg.getLeader());
+                    	interceptMessage(msg, id, msg.getRole(), this.otherId, msg.getLeader());
                         write(msg);
                     } else {
                     	write(msg);
@@ -462,8 +453,7 @@ public class LeaderElectionMain {
 		}
 		
 		// ipc interceptor
-		public void interceptMessage(ElectionMessage msg, String callbackName, int sender, int senderRole, 
-				int receiver, int leader){
+		public void interceptMessage(ElectionMessage msg, int sender, int senderRole, int receiver, int leader){
 
         	LOG.info("[DEBUG] before hash in node " + id);
         	int eventId = LeaderElectionInterposition.hash(msg, receiver);
@@ -472,14 +462,13 @@ public class LeaderElectionMain {
         	// create new file
         	try{
 	        	PrintWriter writer = new PrintWriter(ipcDir + "/new/le-" + eventId, "UTF-8");
-	        	writer.println("callbackName=" + callbackName);
 		        writer.println("sendNode=" + sender);
 		        writer.println("recvNode=" + receiver);
 		        writer.println("sendRole=" + senderRole);
 		        writer.println("leader=" + leader);
 		        writer.close();
         	} catch (Exception e) {
-            	LOG.error("[DEBUG] error in creating new file : " + eventId);
+            	LOG.error("[DEBUG] error in creating new file : le-" + eventId);
         	}
         	
         	// move new file to send folder - commit message
@@ -514,8 +503,8 @@ public class LeaderElectionMain {
         	*/
         	
         	// wait for dmck signal
-        	File ackFile = new File(ipcDir + "/ack/", Integer.toString(eventId));
-        	LOG.info("[DEBUG] start waiting for file : " + eventId);
+        	File ackFile = new File(ipcDir + "/ack/le-" + eventId);
+        	LOG.info("[DEBUG] start waiting for file : le-" + eventId);
         	while(!ackFile.exists()){
         		// wait
         	}
@@ -524,7 +513,7 @@ public class LeaderElectionMain {
         	//msgIntercepted--;
 //        	LOG.info("[DEBUG] ack file : " + eventId);
         	try{
-            	Runtime.getRuntime().exec("rm " + ipcDir + "/ack/" + eventId);
+            	Runtime.getRuntime().exec("rm " + ipcDir + "/ack/le-" + eventId);
         	} catch (Exception e){
         		e.printStackTrace();
         	}
@@ -585,8 +574,8 @@ public class LeaderElectionMain {
 									}
 								}
 								if (LeaderElectionInterposition.SAMC_ENABLED) {
-						            LeaderElectionInterposition.localState.setRole(role);
-						            LeaderElectionInterposition.localState.setLeader(leader);
+						            LeaderElectionInterposition.localState.addKeyValue("role", role);
+						            LeaderElectionInterposition.localState.addKeyValue("leader", leader);
 						            try {
                                         LeaderElectionInterposition.modelCheckingServer.setLocalState(id, LeaderElectionInterposition.localState);
                                         LeaderElectionInterposition.modelCheckingServer.updateLocalState(id, LeaderElectionInterposition.localState.hashCode());
@@ -623,8 +612,8 @@ public class LeaderElectionMain {
 								}
 							}
 							if (LeaderElectionInterposition.SAMC_ENABLED) {
-                                LeaderElectionInterposition.localState.setRole(role);
-                                LeaderElectionInterposition.localState.setLeader(leader);
+					            LeaderElectionInterposition.localState.addKeyValue("role", role);
+					            LeaderElectionInterposition.localState.addKeyValue("leader", leader);
                                 try {
                                     LeaderElectionInterposition.modelCheckingServer.setLocalState(id, LeaderElectionInterposition.localState);
                                     LeaderElectionInterposition.modelCheckingServer.updateLocalState(id, LeaderElectionInterposition.localState.hashCode());

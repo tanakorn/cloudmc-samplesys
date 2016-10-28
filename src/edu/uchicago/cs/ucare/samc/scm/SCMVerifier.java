@@ -5,18 +5,19 @@ import org.slf4j.LoggerFactory;
 
 import edu.uchicago.cs.ucare.samc.server.ModelCheckingServerAbstract;
 import edu.uchicago.cs.ucare.samc.transition.Transition;
+import edu.uchicago.cs.ucare.samc.util.LocalState;
 import edu.uchicago.cs.ucare.samc.util.SpecVerifier;
 
 public class SCMVerifier extends SpecVerifier {
 	
 	protected static final Logger LOG = LoggerFactory.getLogger(SCMVerifier.class);
     
-	boolean pathState;
-	String pathOrder;
+	boolean error;
+	LocalState receiver;
 	
     public SCMVerifier() {
-    	pathState = true;
-    	pathOrder = "";
+    	error = false;
+    	receiver = new LocalState();
     }
     
     public SCMVerifier(ModelCheckingServerAbstract modelCheckingServer) {
@@ -25,15 +26,13 @@ public class SCMVerifier extends SpecVerifier {
 
     @Override
     public boolean verify(){
-    	pathOrder = modelCheckingServer.scmStates;
-    	if(modelCheckingServer.scmStates.length() > 2){
-    		if(modelCheckingServer.scmStates.indexOf("bac") >= 0){
-    			pathState = false;
-    			return false;
-    		}
+    	receiver = modelCheckingServer.localStates[0];
+    	if((int)receiver.getValue("vote") != 4){
+    		error = true;
+    		return false;
+    	} else {
+    		return true;
     	}
-    	pathState = true;
-    	return true;
     }
     
     @Override
@@ -44,10 +43,10 @@ public class SCMVerifier extends SpecVerifier {
 
     @Override
     public String verificationDetail(){
-    	if(pathState){
-        	return "Current path (" + pathOrder +") doesn't have 'bac' order in its order.";
+    	if(error){
+        	return "Receiver vote is not 4, but " + receiver;
     	} else {
-        	return "Current path (" + pathOrder +") has 'bac' order in its order. In this SCM example, this is an error order.";
+        	return "Receiver is in correct state. The vote is " + receiver;
     	}
     }
 
