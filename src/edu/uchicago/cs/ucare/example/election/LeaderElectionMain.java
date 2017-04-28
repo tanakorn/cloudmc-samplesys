@@ -20,31 +20,8 @@ public class LeaderElectionMain {
 	
     private static final Logger LOG = LoggerFactory.getLogger(LeaderElectionMain.class);
     
-	public static final int LOOKING = 0;
-	public static final int FOLLOWING = 1;
-	public static final int LEADING = 2;
-	
-	public static String getRoleName(int role) {
-		String name;
-		switch (role) {
-		case LeaderElectionMain.LOOKING:
-			name = "looking";
-			break;
-		case LeaderElectionMain.FOLLOWING:
-			name = "following";
-			break;
-		case LeaderElectionMain.LEADING:
-			name = "leading";
-			break;
-		default:
-			name = "unknown";
-			break;
-		}
-		return name;
-	}
-	
 	public static int id;
-	public static int role;
+	public static Role role;
 	public static int leader;
 	
 	public static Map<Integer, InetSocketAddress> nodeMap;
@@ -170,7 +147,7 @@ public class LeaderElectionMain {
         processor.sendAll(getCurrentMessage());
 	}
 	
-	static void updateState(int role,int leader) {
+	static void updateState(Role role, int leader) {
 		LeaderElectionMain.role = role;
 		LeaderElectionMain.leader = leader;
 		electionTable.put(id, leader);
@@ -209,10 +186,10 @@ public class LeaderElectionMain {
 		}
 
 		id = Integer.parseInt(args[0]);
-		role = LOOKING;
+		role = Role.LOOKING;
 		leader = id;
 		
-		LOG.info("Started:my id = " + id + " role = " + getRoleName(role) + " " + " leader = " + leader);
+		LOG.info("Started:my id = " + id + " role = " + role.toString() + " " + " leader = " + leader);
 		
         electionTable = new HashMap<Integer, Integer>();
         electionTable.put(id, leader);
@@ -350,8 +327,7 @@ public class LeaderElectionMain {
 			ElectionMessage msg;
 			while (true) {
 				try {
-					LOG.info("Current role is " + 
-							(role == LEADING ? "Leading" : role == FOLLOWING ? "Following" : "Looking") + 
+					LOG.info("Current role is " + role.toString() +
 							"; current leader is " + leader);
 					msg = queue.take();
 					LOG.info("Process message : " + msg.toString());
@@ -359,7 +335,7 @@ public class LeaderElectionMain {
 					switch (role) {
 					case LOOKING:
 						switch (msg.getRole()) {
-						case LOOKING:
+						case Role.LOOKING:
 							if (isBetterThanCurrentLeader(msg)) {
 								LOG.info("Message " + msg + " is better");
 								leader = msg.getLeader();

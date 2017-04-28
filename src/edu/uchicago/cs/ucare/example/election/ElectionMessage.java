@@ -7,11 +7,11 @@ public class ElectionMessage {
 public static final int SIZE = Integer.SIZE * 3;
 	
 	int sender;
-	int role;
+	Role role;
 	int leader;
 	
 	
-	public ElectionMessage(int sender, int role, int leader) {
+	public ElectionMessage(int sender, Role role, int leader) {
 		this.sender = sender;
 		this.role = role;
 		this.leader = leader;
@@ -30,11 +30,11 @@ public static final int SIZE = Integer.SIZE * 3;
 		this.sender = sender;
 	}
 
-	public int getRole() {
+	public Role getRole() {
 		return role;
 	}
 
-	public void setRole(int role) {
+	public void setRole(Role role) {
 		this.role = role;
 	}
 
@@ -47,14 +47,13 @@ public static final int SIZE = Integer.SIZE * 3;
 	}
 
 	public String toString() {
-		String roleName = LeaderElectionMain.getRoleName(role);
-		return "sender=" + sender + ":role=" + roleName + ":leader=" + leader;
+		return "sender=" + sender + ":role=" + role.toString() + ":leader=" + leader;
 	}
 	
 	public byte[] toBytes() {
 		ByteBuffer buffer = ByteBuffer.allocate(SIZE);
 		buffer.putInt(sender);
-		buffer.putInt(role);
+		buffer.putInt(role.ordinal());
 		buffer.putInt(leader);
 		return buffer.array();
 	}
@@ -63,7 +62,7 @@ public static final int SIZE = Integer.SIZE * 3;
 		assert content.length == SIZE;
 		ByteBuffer buffer = ByteBuffer.wrap(content);
 		sender = buffer.getInt();
-		role = buffer.getInt();
+		role = new Role(0);
 		leader = buffer.getInt();
 	}
 
